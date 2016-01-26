@@ -41,7 +41,7 @@ PhotonSplittingAlgorithm::~PhotonSplittingAlgorithm()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PhotonSplittingAlgorithm::Initialize()
+StatusCode PhotonSplittingAlgorithm::Run()
 {
     // ATTN Implicit assumption that individual physical layers in the ECAL will always correspond to individual pseudo layers
     // Also ECAL BARREL has same layer as ECAL ENDCAP and ecal is the first inner detector
@@ -51,13 +51,6 @@ StatusCode PhotonSplittingAlgorithm::Initialize()
             PandoraContentApi::GetGeometry(*this)->GetSubDetector(ECAL_BARREL).GetNLayers();
     }
 
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode PhotonSplittingAlgorithm::Run()
-{
     const TrackList *pTrackList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTrackList));
 
@@ -185,4 +178,5 @@ StatusCode PhotonSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     return STATUS_CODE_SUCCESS;
 }
-}
+
+} // namespace lc_content

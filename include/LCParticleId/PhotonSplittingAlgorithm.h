@@ -39,7 +39,6 @@ public:
     ~PhotonSplittingAlgorithm();
 
 private:
-    pandora::StatusCode Initialize();
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
