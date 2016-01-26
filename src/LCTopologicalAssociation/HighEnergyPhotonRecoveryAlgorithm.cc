@@ -10,7 +10,6 @@
 
 #include "LCHelpers/ClusterHelper.h"
 #include "LCHelpers/SortingHelper.h"
-#include "PandoraMonitoringApi.h"
 #include "LCTopologicalAssociation/HighEnergyPhotonRecoveryAlgorithm.h"
 
 using namespace pandora;
