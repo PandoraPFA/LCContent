@@ -60,7 +60,7 @@ PhotonReconstructionAlgorithm::~PhotonReconstructionAlgorithm()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PhotonReconstructionAlgorithm::Initialize()
+StatusCode PhotonReconstructionAlgorithm::Run()
 {
     // ATTN Implicit assumption that individual physical layers in the ECAL will always correspond to individual pseudo layers
     // Also ECAL BARREL has same layer as ECAL ENDCAP and ecal is the first inner detector
@@ -70,13 +70,6 @@ StatusCode PhotonReconstructionAlgorithm::Initialize()
             PandoraContentApi::GetGeometry(*this)->GetSubDetector(ECAL_BARREL).GetNLayers();
     }
 
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode PhotonReconstructionAlgorithm::Run()
-{
     std::string inputClusterListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitialiseInputClusterListName(inputClusterListName));
 

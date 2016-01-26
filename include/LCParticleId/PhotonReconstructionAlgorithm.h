@@ -73,7 +73,6 @@ private:
     typedef std::map<PDFVar, LikelihoodPDFObject>   PDFVarLikelihoodPDFMap;   /// The pdf variable to pdf object map
     typedef std::map<PDFVar, float>                 PDFVarFloatMap;           /// The pdf variable to float object map
 
-    pandora::StatusCode Initialize();
     pandora::StatusCode Run();
 
     /**

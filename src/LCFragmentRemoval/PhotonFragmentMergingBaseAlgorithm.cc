@@ -67,7 +67,7 @@ PhotonFragmentMergingBaseAlgorithm::PhotonFragmentMergingBaseAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PhotonFragmentMergingBaseAlgorithm::Initialize()
+StatusCode PhotonFragmentMergingBaseAlgorithm::Run()
 {
     // ATTN Implicit assumption that individual physical layers in the ECAL will always correspond to individual pseudo layers
     // Also ECAL BARREL has same layer as ECAL ENDCAP and ecal is the first inner detector
@@ -77,13 +77,6 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::Initialize()
             PandoraContentApi::GetGeometry(*this)->GetSubDetector(ECAL_BARREL).GetNLayers();
     }
 
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode PhotonFragmentMergingBaseAlgorithm::Run()
-{
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetAffectedClusterList(pClusterList));
 
@@ -445,4 +438,4 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::ReadSettings(const TiXmlHandle xm
     return STATUS_CODE_SUCCESS;
 }
 
-} // end namespace lc_content
+} // namespace lc_content

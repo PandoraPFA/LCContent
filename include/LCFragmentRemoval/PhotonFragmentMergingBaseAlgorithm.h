@@ -52,7 +52,6 @@ protected:
         bool            m_hasCrossedGap;                        ///< Whether the two clusters have crossed a gap between subdetectors
     };
 
-    pandora::StatusCode Initialize();
     pandora::StatusCode Run();
 
     /**
