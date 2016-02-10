@@ -554,7 +554,8 @@ StatusCode PhotonReconstructionAlgorithm::ReadHistogramSettings(const TiXmlHandl
 StatusCode PhotonReconstructionAlgorithm::InitialiseHistogramWriting(const pandora::TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NEnergyBins", m_nEnergyBins));
-    // ATTN sanity check m_nEnergyBins should have a reasonable value
+
+    // ATTN Sanity check: m_nEnergyBins should have a reasonable value
     if (0 == m_nEnergyBins || 10000 < m_nEnergyBins)
     {
         std::cout << "PhotonReconstructionAlgorithm::ReadHistogramSettings - Invalid number PDF energy bins specified." << std::endl;

@@ -461,8 +461,7 @@ void LCShowerProfilePlugin::FindTracksProjection(const Cluster *const pCluster, 
 
 float LCShowerProfilePlugin::GetCellLengthScale(const Cluster *const pCluster) const
 {
-    // ATTN it is not robust against step change in ECAL
-    
+    // ATTN This is not robust against step changes in ECAL cell sizes
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     if (orderedCaloHitList.empty())
@@ -474,7 +473,6 @@ float LCShowerProfilePlugin::GetCellLengthScale(const Cluster *const pCluster) c
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     CaloHitList::const_iterator caloHitListIter(orderedCaloHitListIter->second->begin());
-
     return (*caloHitListIter)->GetCellLengthScale();
 }
 
@@ -668,6 +666,7 @@ void LCShowerProfilePlugin::FindHitPositionProjection(const CartesianVector &hit
 {
     if (cellLengthScale < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
+
     const CartesianVector hitCoordinates((hitPosition - innerLayerCentroid) * (1.f / cellLengthScale));
     const float uValue(hitCoordinates.GetDotProduct(uAxis));
     const float vValue(hitCoordinates.GetDotProduct(vAxis));
