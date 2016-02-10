@@ -192,6 +192,15 @@ private:
         const pandora::CartesianVector &uAxis, const pandora::CartesianVector &vAxis, TwoDBinVector &trackProjectionVector) const;
 
     /**
+     *  @brief  Get cell length scale
+     *
+     *  @param  pCluster the address of the cluster
+     * 
+     *  @return Cell length scale
+     */
+    float GetCellLengthScale(const pandora::Cluster *const pCluster) const;
+
+    /**
      *  @brief  Mark region with low height unavailable
      *
      *  @param  showerProfile two dimensional shower profile to consider
@@ -296,7 +305,7 @@ private:
      *  @param  vBin projection in v direction
      */
     void FindHitPositionProjection(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &innerLayerCentroid, const pandora::CartesianVector &uAxis,
-        const pandora::CartesianVector &vAxis, const int nOffsetBins, const int cellLengthScale, int &uBin, int &vBin) const;
+        const pandora::CartesianVector &vAxis, const int nOffsetBins, const float cellLengthScale, int &uBin, int &vBin) const;
 
     /**
      *  @brief  Find the cloest boundary bin for a point outside the square
