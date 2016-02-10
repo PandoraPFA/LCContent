@@ -5,8 +5,6 @@
  * 
  *  $Log: $
  */
-#include <limits>
-
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LCPlugins/LCShowerProfilePlugin.h"
