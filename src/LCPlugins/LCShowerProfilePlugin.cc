@@ -440,24 +440,7 @@ void LCShowerProfilePlugin::InitialiseTwoDShowerProfile(const Cluster *const pCl
 void LCShowerProfilePlugin::FindTracksProjection(const Cluster *const pCluster, const TrackVector &trackVector, const CartesianVector &innerLayerCentroid,
     const CartesianVector &uAxis, const CartesianVector &vAxis, TwoDBinVector &trackProjectionVector) const
 {
-    // ATTN it is not robust against step change in ECAL
-    bool setFlag(false);
-    float cellLengthScale(0.f);
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
-    {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        {
-            const CaloHit *const pCaloHit = *hitIter;
-            cellLengthScale= (pCaloHit->GetCellLengthScale());
-            if (cellLengthScale < std::numeric_limits<float>::epsilon())
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-            setFlag = true;
-            break;
-        }
-        if (setFlag) break;
-    }
-
+    const float cellLengthScale(this->GetCellLengthScale(pCluster));
     const int nOffsetBins(m_transProfileNBins / 2);
     for (TrackVector::const_iterator iter = trackVector.begin(), iterEnd = trackVector.end(); iter != iterEnd; ++iter)
     {
@@ -472,6 +455,25 @@ void LCShowerProfilePlugin::FindTracksProjection(const Cluster *const pCluster, 
             trackProjectionVector.push_back(std::make_pair(uBin,vBin));
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LCShowerProfilePlugin::GetCellLengthScale(const Cluster *const pCluster) const
+{
+    // ATTN This is not robust against step changes in ECAL cell sizes
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    if (orderedCaloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    OrderedCaloHitList::const_iterator orderedCaloHitListIter(orderedCaloHitList.begin());
+
+    if (orderedCaloHitListIter->second->empty())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    CaloHitList::const_iterator caloHitListIter(orderedCaloHitListIter->second->begin());
+    return (*caloHitListIter)->GetCellLengthScale();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -660,8 +662,11 @@ void LCShowerProfilePlugin::ProcessShowerProfile(TwoDShowerProfile &showerProfil
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LCShowerProfilePlugin::FindHitPositionProjection(const CartesianVector &hitPosition, const CartesianVector &innerLayerCentroid, const CartesianVector &uAxis,
-    const CartesianVector &vAxis, const int nOffsetBins, const int cellLengthScale, int &uBin, int &vBin) const
+    const CartesianVector &vAxis, const int nOffsetBins, const float cellLengthScale, int &uBin, int &vBin) const
 {
+    if (cellLengthScale < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
     const CartesianVector hitCoordinates((hitPosition - innerLayerCentroid) * (1.f / cellLengthScale));
     const float uValue(hitCoordinates.GetDotProduct(uAxis));
     const float vValue(hitCoordinates.GetDotProduct(vAxis));
