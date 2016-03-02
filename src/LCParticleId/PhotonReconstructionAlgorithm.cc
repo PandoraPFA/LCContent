@@ -72,7 +72,6 @@ StatusCode PhotonReconstructionAlgorithm::Run()
 
     std::string inputClusterListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitialiseInputClusterListName(inputClusterListName));
-
     ClusterVector clusterVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateClustersOfInterest(clusterVector));
     TrackVector trackVector;
@@ -298,8 +297,6 @@ StatusCode PhotonReconstructionAlgorithm::CalculateForPhotonID(const ShowerProfi
     const ShowerProfilePlugin *const pShowerProfilePlugin(PandoraContentApi::GetPlugins(*this)->GetShowerProfilePlugin());
     float profileStart(0.f), profileDiscrepancy(0.f);
     pShowerProfilePlugin->CalculateLongitudinalProfile(pPeakCluster, profileStart, profileDiscrepancy);
-    const float longProfileStart(pPeakCluster->GetShowerProfileStart(this->GetPandora()));
-    const float longProfileDiscrepancy(pPeakCluster->GetShowerProfileDiscrepancy(this->GetPandora()));
     const float energyFraction(pPeakCluster->GetElectromagneticEnergy() / wholeClusuterEnergy);
     TrackVector trackVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetTrackVectors(trackVector));
@@ -309,8 +306,8 @@ StatusCode PhotonReconstructionAlgorithm::CalculateForPhotonID(const ShowerProfi
 
     if ((!pdfVarFloatMap.insert(PDFVarFloatMap::value_type(PEAKRMS, peakRMS)).second) ||
         (!pdfVarFloatMap.insert(PDFVarFloatMap::value_type(RMSXYRATIO, rmsRatio)).second) ||
-        (!pdfVarFloatMap.insert(PDFVarFloatMap::value_type(LONGPROFILESTART, longProfileStart)).second) ||
-        (!pdfVarFloatMap.insert(PDFVarFloatMap::value_type(LONGPROFILEDISCREPANCY, longProfileDiscrepancy)).second) ||
+        (!pdfVarFloatMap.insert(PDFVarFloatMap::value_type(LONGPROFILESTART, profileStart)).second) ||
+        (!pdfVarFloatMap.insert(PDFVarFloatMap::value_type(LONGPROFILEDISCREPANCY, profileDiscrepancy)).second) ||
         (!pdfVarFloatMap.insert(PDFVarFloatMap::value_type(PEAKENERGYFRACTION, energyFraction)).second) ||
         (!pdfVarFloatMap.insert(PDFVarFloatMap::value_type(MINDISTANCETOTRACK, minDistance)).second))
         return STATUS_CODE_FAILURE;
