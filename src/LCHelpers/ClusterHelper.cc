@@ -361,7 +361,8 @@ bool ClusterHelper::DoesFitCrossGapRegion(const Pandora &pandora, const ClusterF
 
         for (DetectorGapList::const_iterator iter = detectorGapList.begin(), iterEnd = detectorGapList.end(); iter != iterEnd; ++iter)
         {
-            if ((*iter)->IsInGap(fitPosition))
+            // ATTN Could pass (e.g. inner layer) hit type for cluster, but know that actually need to pass only any 3D hit type (hack)
+            if ((*iter)->IsInGap(fitPosition, ECAL))
                 return true;
         }
     }
