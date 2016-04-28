@@ -16,7 +16,7 @@ namespace lc_content
 /**
  *  @brief  LCSoftwareCompensation class. 
  */
-class LCSoftwareCompensation : public EnergyCorrectionPlugin
+class LCSoftwareCompensation : public pandora::EnergyCorrectionPlugin
 {
 public:
     /**
@@ -24,7 +24,7 @@ public:
      */
     LCSoftwareCompensation();
 
-    StatusCode MakeEnergyCorrections(const Cluster *const pCluster, float &correctedEnergy) const;
+    pandora::StatusCode MakeEnergyCorrections(const pandora::Cluster *const pCluster, float &correctedEnergy) const;
 
 private:
     /**
@@ -34,7 +34,7 @@ private:
      *  @param  isECalCluster is cluster fully contained in ECal
      *  @param  isHCalCluster is cluster fully contained in HCal
      */
-    StatusCode ClusterType(const CaloHitList &caloHitList, bool &isECalCluster, bool &isHCalCluster) const;
+    pandora::StatusCode ClusterType(const pandora::CaloHitList &caloHitList, bool &isECalCluster, bool &isHCalCluster) const;
 
     /**
      *  @brief  CleanCluster logic. Correct cluster energy by searching for constituent calo hits with anomalously high energy.
@@ -43,7 +43,7 @@ private:
      *  @param  pCluster the cluster 
      *  @param  correctedHadronicEnergy corrected hadronic energy of the cluster
      */
-    StatusCode CleanCluster(const Cluster *const pCluster, float &correctedHadronicEnergy) const;
+    pandora::StatusCode CleanCluster(const pandora::Cluster *const pCluster, float &correctedHadronicEnergy) const;
 
     /**
       *  @brief  Get the sum of the hadronic energies of all calo hits in a specified layer of an ordered calo hit list
@@ -51,7 +51,7 @@ private:
       *  @param  orderedCaloHitList the ordered calo hit list
       *  @param  pseudoLayer the specified pseudolayer
       */
-    float GetHadronicEnergyInLayer(const OrderedCaloHitList &orderedCaloHitList, const unsigned int pseudoLayer) const;
+    float GetHadronicEnergyInLayer(const pandora::OrderedCaloHitList &orderedCaloHitList, const unsigned int pseudoLayer) const;
 
     /**
       *  @brief  Calculation of the software compensated corrected hadronic energy for clusters contained within HCal
@@ -60,7 +60,7 @@ private:
       *  @param  caloHitList the calo hit list for the cluster where software compensation is being applied
       *  @param  energyCorrection corrected hadronic energy of the cluster
       */
-    StatusCode SoftCompHCalCluster(float clusterEnergyEstimation, const CaloHitList &caloHitList, float &energyCorrection) const;
+    pandora::StatusCode SoftCompHCalCluster(float clusterEnergyEstimation, const pandora::CaloHitList &caloHitList, float &energyCorrection) const;
 
     /**
       *  @brief  Calculate the energy density (binned) of a calo hit in units of GeV per cell
@@ -68,7 +68,7 @@ private:
       *  @param  pCaloHit the calo hit 
       *  @param  energyDensity the binned energy density of the calo hit
       */
-    StatusCode FindDensity(const CaloHit *const pCaloHit, float &energyDensity) const;
+    pandora::StatusCode FindDensity(const pandora::CaloHit *const pCaloHit, float &energyDensity) const;
 
     /**
       *  @brief  Calculation of the software compensated corrected hadronic energy for clusters split between the HCal and ECal
@@ -77,16 +77,16 @@ private:
       *  @param  caloHitList the calo hit list for the cluster where software compensation is being applied
       *  @param  energyCorrection corrected hadronic energy of the cluster
       */
-    StatusCode SoftCompECalHCalCluster(float clusterEnergyEstimation, const CaloHitList &caloHitList, float &energyCorrection) const;
+    pandora::StatusCode SoftCompECalHCalCluster(float clusterEnergyEstimation, const pandora::CaloHitList &caloHitList, float &energyCorrection) const;
 
-    StatusCode ReadSettings(const TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    FloatVector     m_softCompWeights;                 ///< Weights used in software compensation
-    FloatVector     m_softCompEnergyDensityBins;       ///< Energy density bins used for software compensation
-    float           m_energyDensityFinalBin;           ///< Energy density used for final bin entries in software compensation 
-    float           m_minCleanHitEnergy;               ///< Min calo hit hadronic energy to consider cleaning hit/cluster
-    float           m_minCleanHitEnergyFraction;       ///< Min fraction of cluster energy represented by hit to consider cleaning
-    float           m_minCleanCorrectedHitEnergy;      ///< Min value of new hit hadronic energy estimate after cleaning
+    pandora::FloatVector     m_softCompWeights;                 ///< Weights used in software compensation
+    pandora::FloatVector     m_softCompEnergyDensityBins;       ///< Energy density bins used for software compensation
+    float                    m_energyDensityFinalBin;           ///< Energy density used for final bin entries in software compensation 
+    float                    m_minCleanHitEnergy;               ///< Min calo hit hadronic energy to consider cleaning hit/cluster
+    float                    m_minCleanHitEnergyFraction;       ///< Min fraction of cluster energy represented by hit to consider cleaning
+    float                    m_minCleanCorrectedHitEnergy;      ///< Min value of new hit hadronic energy estimate after cleaning
 };
 
 } // namespace lc_content

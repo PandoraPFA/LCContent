@@ -7,7 +7,6 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-#include "PandoraMonitoringApi.h"
 
 #include "LCUtility/TrainingSoftwareCompensation.h"
 
@@ -42,7 +41,7 @@ StatusCode TrainingSoftwareCompensation::Run()
     }
 
     const pandora::Pfo *const pPfo = *pPfoList->begin();
-    const float pfoEnergy(pPfo->GetEnergy());
+    PANDORA_MONITORING_API(const float pfoEnergy(pPfo->GetEnergy()));
     const pandora::ClusterList *pClusterList = &pPfo->GetClusterList();
     const int numberOfClusters(pClusterList->size());
 
@@ -61,7 +60,7 @@ StatusCode TrainingSoftwareCompensation::Run()
     clusterCaloHitList.insert(nonIsolatedCaloHitList.begin(), nonIsolatedCaloHitList.end());
     clusterCaloHitList.insert(isolatedCaloHitList.begin(), isolatedCaloHitList.end());
 
-    const float rawEnergyOfCluster(pCluster->GetHadronicEnergy());
+    PANDORA_MONITORING_API(const float rawEnergyOfCluster(pCluster->GetHadronicEnergy()));
 
     std::vector<float> cellSize0;
     std::vector<float> cellSize1;

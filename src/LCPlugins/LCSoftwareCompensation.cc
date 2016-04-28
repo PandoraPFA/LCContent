@@ -21,13 +21,34 @@ LCSoftwareCompensation::LCSoftwareCompensation() :
   m_minCleanHitEnergyFraction(0.1f),
   m_minCleanCorrectedHitEnergy(0.1f)
 {
-    static const float weights[] = {2.49632, -0.0697302, 0.000946986, -0.112311, 0.0028182, -9.62602e-05, 0.168614, 0.224318, -0.0872853};
-    unsigned int weightsArraySize = sizeof(weights) / sizeof(weights[0]);
-    m_softCompWeights.insert(m_softCompWeights.insert.end(), &weights[0], &weights[weightsArraySize]);
+//    static const float weights[] = {2.49632, -0.0697302, 0.000946986, -0.112311, 0.0028182, -9.62602e-05, 0.168614, 0.224318, -0.0872853};
+//    unsigned int weightsArraySize = sizeof(weights) / sizeof(weights[0]);
+//    m_softCompWeights.insert(m_softCompWeights.insert.end(), &weights[0], &weights[weightsArraySize]);
 
-    static const float bins[] = {0, 2, 5, 7.5, 9.5, 13, 16, 20, 23.5, 28, 1e6};
-    unsigned int binArraySize = sizeof(bins) / sizeof(bins[0]);
-    m_softCompEnergyDensityBins.insert(m_softCompEnergyDensityBins.end(), &bins[0], &bins[binArraySize]);
+    m_softCompWeights.push_back(2.49632);
+    m_softCompWeights.push_back(-0.0697302);
+    m_softCompWeights.push_back(0.000946986);
+    m_softCompWeights.push_back(-0.112311);
+    m_softCompWeights.push_back(0.0028182);
+    m_softCompWeights.push_back(-9.62602e-05);
+    m_softCompWeights.push_back(0.168614);
+    m_softCompWeights.push_back(0.224318);
+    m_softCompWeights.push_back(-0.0872853);
+
+//    static const float bins[] = {0, 2, 5, 7.5, 9.5, 13, 16, 20, 23.5, 28, 1e6};
+//    unsigned int binArraySize = sizeof(bins) / sizeof(bins[0]);
+//    m_softCompEnergyDensityBins.insert(m_softCompEnergyDensityBins.end(), &bins[0], &bins[binArraySize]);
+    m_softCompEnergyDensityBins.push_back(0.f);
+    m_softCompEnergyDensityBins.push_back(2.f);
+    m_softCompEnergyDensityBins.push_back(5.f);
+    m_softCompEnergyDensityBins.push_back(7.5f);
+    m_softCompEnergyDensityBins.push_back(9.5f);
+    m_softCompEnergyDensityBins.push_back(13.f);
+    m_softCompEnergyDensityBins.push_back(16.f);
+    m_softCompEnergyDensityBins.push_back(20.f);
+    m_softCompEnergyDensityBins.push_back(23.5f);
+    m_softCompEnergyDensityBins.push_back(28.f);
+    m_softCompEnergyDensityBins.push_back(1e6);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -272,10 +293,10 @@ StatusCode LCSoftwareCompensation::SoftCompECalHCalCluster(float clusterEnergyEs
 
 StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "SoftwareCompensationWeights", m_softCompWeights));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "SoftwareCompensationEnergyDensityBins", m_softCompEnergyDensityBins));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
