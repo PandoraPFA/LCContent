@@ -1,7 +1,7 @@
 /**
- *  @file   MarlinPandora/include/TrainingSoftwareCompensation.h
- * 
- *  @brief  Header file for the register hits for SC algorithm class.
+ *  @file   LCContent/include/LCUtility/TrainingSoftwareCompensation.h
+ *
+ *  @brief  Header file for the training software compensation algorithm class. 
  * 
  *  $Log: $
  */
@@ -42,7 +42,8 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_myRootFileName;               ///< Output root file for training of software compensation
+    std::string             m_myRootFileName;               ///< Output root file for training of software compensation weights
+    std::string             m_trainingTreeName;             ///< Name of the TTree in root file produced for training of software compensation weights
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

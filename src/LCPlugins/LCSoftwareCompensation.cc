@@ -21,34 +21,13 @@ LCSoftwareCompensation::LCSoftwareCompensation() :
   m_minCleanHitEnergyFraction(0.1f),
   m_minCleanCorrectedHitEnergy(0.1f)
 {
-//    static const float weights[] = {2.49632, -0.0697302, 0.000946986, -0.112311, 0.0028182, -9.62602e-05, 0.168614, 0.224318, -0.0872853};
-//    unsigned int weightsArraySize = sizeof(weights) / sizeof(weights[0]);
-//    m_softCompWeights.insert(m_softCompWeights.insert.end(), &weights[0], &weights[weightsArraySize]);
+    const unsigned int nWeights(9);
+    const float weights[nWeights] = {2.49632, -0.0697302, 0.000946986, -0.112311, 0.0028182, -9.62602e-05, 0.168614, 0.224318, -0.0872853};
+    m_softCompWeights.insert(m_softCompWeights.begin(), weights, weights + nWeights);
 
-    m_softCompWeights.push_back(2.49632);
-    m_softCompWeights.push_back(-0.0697302);
-    m_softCompWeights.push_back(0.000946986);
-    m_softCompWeights.push_back(-0.112311);
-    m_softCompWeights.push_back(0.0028182);
-    m_softCompWeights.push_back(-9.62602e-05);
-    m_softCompWeights.push_back(0.168614);
-    m_softCompWeights.push_back(0.224318);
-    m_softCompWeights.push_back(-0.0872853);
-
-//    static const float bins[] = {0, 2, 5, 7.5, 9.5, 13, 16, 20, 23.5, 28, 1e6};
-//    unsigned int binArraySize = sizeof(bins) / sizeof(bins[0]);
-//    m_softCompEnergyDensityBins.insert(m_softCompEnergyDensityBins.end(), &bins[0], &bins[binArraySize]);
-    m_softCompEnergyDensityBins.push_back(0.f);
-    m_softCompEnergyDensityBins.push_back(2.f);
-    m_softCompEnergyDensityBins.push_back(5.f);
-    m_softCompEnergyDensityBins.push_back(7.5f);
-    m_softCompEnergyDensityBins.push_back(9.5f);
-    m_softCompEnergyDensityBins.push_back(13.f);
-    m_softCompEnergyDensityBins.push_back(16.f);
-    m_softCompEnergyDensityBins.push_back(20.f);
-    m_softCompEnergyDensityBins.push_back(23.5f);
-    m_softCompEnergyDensityBins.push_back(28.f);
-    m_softCompEnergyDensityBins.push_back(1e6);
+    const unsigned int nBins(11);
+    const float bins[nBins] = {0.f, 2.f, 5.f, 7.5f, 9.5f, 13.f, 16.f, 20.f, 23.5f, 28.f, 1e6};
+    m_softCompEnergyDensityBins.insert(m_softCompEnergyDensityBins.begin(), bins, bins + nBins);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,6 +50,7 @@ StatusCode LCSoftwareCompensation::MakeEnergyCorrections(const pandora::Cluster 
     pandora::CaloHitList nonIsolatedCaloHitList;
     orderedCaloHitList.GetCaloHitList(nonIsolatedCaloHitList);
     const pandora::CaloHitList &isolatedCaloHitList(pCluster->GetIsolatedCaloHitList());
+
     pandora::CaloHitList clusterCaloHitList;
     clusterCaloHitList.insert(nonIsolatedCaloHitList.begin(), nonIsolatedCaloHitList.end());
     clusterCaloHitList.insert(isolatedCaloHitList.begin(), isolatedCaloHitList.end());
@@ -101,22 +81,28 @@ StatusCode LCSoftwareCompensation::ClusterType(const pandora::CaloHitList &caloH
 {
     int nECalHits(0), nHCalHits(0);
 
-    for(pandora::CaloHitList::const_iterator iter = caloHitList.begin() , endIter = caloHitList.end() ; endIter != iter ; ++iter)
+    for (pandora::CaloHitList::const_iterator iter = caloHitList.begin() , endIter = caloHitList.end() ; endIter != iter ; ++iter)
     {
         const pandora::CaloHit *pCaloHit = *iter;
 
         if (HCAL == pCaloHit->GetHitType())
+        {
             nHCalHits++;
-
+        }
         else if (ECAL == pCaloHit->GetHitType())
+        {
             nECalHits++;
+        }
     }
 
     if (nECalHits != 0 && nHCalHits == 0)
+    {
         isECalCluster = true;
-
+    }
     else if (nHCalHits != 0 && nECalHits == 0)
+    {
         isHCalCluster = true;
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -212,12 +198,14 @@ StatusCode LCSoftwareCompensation::SoftCompHCalCluster(float clusterEnergyEstima
     const float p2 = m_softCompWeights.at(3) + m_softCompWeights.at(4)*clusterEnergyEstimation + m_softCompWeights.at(5)*clusterEnergyEstimation*clusterEnergyEstimation;
     const float p3 = m_softCompWeights.at(6)/(m_softCompWeights.at(7) + exp(m_softCompWeights.at(8)*clusterEnergyEstimation));
 
-    for(pandora::CaloHitList::const_iterator iter = caloHitList.begin() , endIter = caloHitList.end() ; endIter != iter ; ++iter)
+    for (pandora::CaloHitList::const_iterator iter = caloHitList.begin() , endIter = caloHitList.end() ; endIter != iter ; ++iter)
     {
         const pandora::CaloHit *pCaloHit = *iter;
         const float hitEnergy = pCaloHit->GetHadronicEnergy();
         float rho(0.f);
+
         this->FindDensity(pCaloHit,rho);
+
         const float weight(p1*exp(p2*rho) + p3);
         const float correctedHitEnergy(hitEnergy*weight);
         energySoftComp += correctedHitEnergy;
@@ -239,7 +227,6 @@ StatusCode LCSoftwareCompensation::FindDensity(const pandora::CaloHit *const pCa
     {
         energyDensity = m_energyDensityFinalBin;
     }
-
     else
     {
         for (unsigned int iBin = 0; iBin < m_softCompEnergyDensityBins.size() - 1; iBin++)
@@ -248,9 +235,7 @@ StatusCode LCSoftwareCompensation::FindDensity(const pandora::CaloHit *const pCa
             const float highBin = m_softCompEnergyDensityBins.at(iBin+1);
 
             if (hitEnergyDensity >= lowBin && hitEnergyDensity < highBin)
-            {
                 energyDensity = (lowBin + highBin)/2;
-            }
         }
     }
 
@@ -267,7 +252,7 @@ StatusCode LCSoftwareCompensation::SoftCompECalHCalCluster(float clusterEnergyEs
     const float p2 = m_softCompWeights.at(3) + m_softCompWeights.at(4)*clusterEnergyEstimation + m_softCompWeights.at(5)*clusterEnergyEstimation*clusterEnergyEstimation;
     const float p3 = m_softCompWeights.at(6)/(m_softCompWeights.at(7) + exp(m_softCompWeights.at(8)*clusterEnergyEstimation));
 
-    for(pandora::CaloHitList::const_iterator iter = caloHitList.begin() , endIter = caloHitList.end() ; endIter != iter ; ++iter)
+    for (pandora::CaloHitList::const_iterator iter = caloHitList.begin() , endIter = caloHitList.end() ; endIter != iter ; ++iter)
     {
         const pandora::CaloHit *pCaloHit = *iter;
 
