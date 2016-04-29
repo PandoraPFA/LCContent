@@ -58,7 +58,7 @@ StatusCode TrainingSoftwareCompensation::Run()
     clusterCaloHitList.insert(isolatedCaloHitList.begin(), isolatedCaloHitList.end());
 
     const float rawEnergyOfCluster(pCluster->GetHadronicEnergy());
-    const float pfoEnergy(pPfo->GetEnergy())
+    const float pfoEnergy(pPfo->GetEnergy());
     
     FloatVector cellSize0, cellSize1, cellThickness, hitEnergies;
     IntVector hitType;
