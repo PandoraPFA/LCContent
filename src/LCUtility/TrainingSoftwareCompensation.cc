@@ -90,14 +90,14 @@ StatusCode TrainingSoftwareCompensation::Run()
         }
     }
 
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HitEnergyTree", "EnergyOfPfo", pfoEnergy));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HitEnergyTree", "RawEnergyOfCluster", rawEnergyOfCluster));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HitEnergyTree", "HitEnergies", &hitEnergies));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HitEnergyTree", "CellSize0", &cellSize0));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HitEnergyTree", "CellSize1", &cellSize1));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HitEnergyTree", "CellThickness", &cellThickness));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HitEnergyTree", "HitType", &hitType));
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), "HitEnergyTree"));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "EnergyOfPfo", pfoEnergy));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "RawEnergyOfCluster", rawEnergyOfCluster));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "HitEnergies", &hitEnergies));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "CellSize0", &cellSize0));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "CellSize1", &cellSize1));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "CellThickness", &cellThickness));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "HitType", &hitType));
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName));
 
 #endif
    return STATUS_CODE_SUCCESS;
