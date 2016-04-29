@@ -90,9 +90,9 @@ pandora::StatusCode LCEnergyCorrectionPlugins::NonLinearityCorrection::ReadSetti
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LCEnergyCorrectionPlugins::CleanCluster::CleanCluster() :
-    m_minCleanHitEnergy(1.f),
-    m_minCleanHitEnergyFraction(0.2f),
-    m_minCleanCorrectedHitEnergy(0.2f)
+    m_minCleanHitEnergy(0.5f),
+    m_minCleanHitEnergyFraction(0.1f),
+    m_minCleanCorrectedHitEnergy(0.1f)
 {
 }
 
