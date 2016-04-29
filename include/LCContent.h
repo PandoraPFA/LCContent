@@ -157,7 +157,7 @@ public:
         d("EventPreparation",                       lc_content::EventPreparationAlgorithm::Factory)                             \
         d("PfoPreparation",                         lc_content::PfoPreparationAlgorithm::Factory)                               \
         d("TrackPreparation",                       lc_content::TrackPreparationAlgorithm::Factory)                             \
-        d("TrainingSoftwareCompensation",           lc_content::TrainingSoftwareCompensation.h::Factory)
+        d("TrainingSoftwareCompensation",           lc_content::TrainingSoftwareCompensation::Factory)
 
     #define LC_ENERGY_CORRECTION_LIST(d)                                                                                        \
         d("CleanClusters",          pandora::HADRONIC,      lc_content::LCEnergyCorrectionPlugins::CleanCluster)                \
