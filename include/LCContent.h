@@ -47,6 +47,7 @@
 #include "LCPlugins/LCParticleIdPlugins.h"
 #include "LCPlugins/LCPseudoLayerPlugin.h"
 #include "LCPlugins/LCShowerProfilePlugin.h"
+#include "LCPlugins/LCSoftwareCompensation.h"
 
 #include "LCReclustering/ExitingTrackAlg.h"
 #include "LCReclustering/ForceSplitTrackAssociationsAlg.h"
@@ -85,6 +86,7 @@
 #include "LCUtility/EventPreparationAlgorithm.h"
 #include "LCUtility/PfoPreparationAlgorithm.h"
 #include "LCUtility/TrackPreparationAlgorithm.h"
+#include "LCUtility/TrainingSoftwareCompensation.h"
 
 /**
  *  @brief  LCContent class
@@ -154,11 +156,13 @@ public:
         d("ClusterPreparation",                     lc_content::ClusterPreparationAlgorithm::Factory)                           \
         d("EventPreparation",                       lc_content::EventPreparationAlgorithm::Factory)                             \
         d("PfoPreparation",                         lc_content::PfoPreparationAlgorithm::Factory)                               \
-        d("TrackPreparation",                       lc_content::TrackPreparationAlgorithm::Factory)
+        d("TrackPreparation",                       lc_content::TrackPreparationAlgorithm::Factory)                             \
+        d("TrainingSoftwareCompensation",           lc_content::TrainingSoftwareCompensation::Factory)
 
     #define LC_ENERGY_CORRECTION_LIST(d)                                                                                        \
         d("CleanClusters",          pandora::HADRONIC,      lc_content::LCEnergyCorrectionPlugins::CleanCluster)                \
         d("ScaleHotHadrons",        pandora::HADRONIC,      lc_content::LCEnergyCorrectionPlugins::ScaleHotHadrons)             \
+        d("SoftwareCompensation",   pandora::HADRONIC,      lc_content::LCSoftwareCompensation)                                 \
         d("MuonCoilCorrection",     pandora::HADRONIC,      lc_content::LCEnergyCorrectionPlugins::MuonCoilCorrection)
 
     #define LC_PARTICLE_ID_LIST(d)                                                                                              \
