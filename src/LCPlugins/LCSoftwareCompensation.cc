@@ -18,7 +18,7 @@ namespace lc_content
 LCSoftwareCompensation::LCSoftwareCompensation() :
   m_energyDensityFinalBin(30),
   m_minCleanHitEnergy(0.5f),
-  m_minCleanHitEnergyFraction(0.1f),
+  m_minCleanHitEnergyFraction(0.01f),
   m_minCleanCorrectedHitEnergy(0.1f)
 {
     const unsigned int nWeights(9);
