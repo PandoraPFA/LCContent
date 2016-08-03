@@ -308,7 +308,7 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetShowerPeakList(const Cluster *
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParameters, pTempCluster));
 
     const ShowerProfilePlugin *const pShowerProfilePlugin(PandoraContentApi::GetPlugins(*this)->GetShowerProfilePlugin());
-    pShowerProfilePlugin->CalculateTransverseProfile(pTempCluster, m_transProfileMaxLayer, showerPeakList, true);
+    pShowerProfilePlugin->CalculateTransverseProfile(pTempCluster, m_transProfileMaxLayer, showerPeakList, false);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, originalClusterListName, peakClusterListName));
 
     return STATUS_CODE_SUCCESS;
