@@ -200,11 +200,19 @@ StatusCode LCSoftwareCompensation::FindDensity(const pandora::CaloHit *const pCa
 
 StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    FloatVector softCompWeightsFromXml;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "SoftwareCompensationWeights", m_softCompWeights));
+        "SoftwareCompensationWeights", softCompWeightsFromXml));
 
+    if (!softCompWeightsFromXml.empty())
+        m_softCompWeights = softCompWeightsFromXml;
+
+    FloatVector softCompEnergyDensityBinsFromXml;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "SoftwareCompensationEnergyDensityBins", m_softCompEnergyDensityBins));
+        "SoftwareCompensationEnergyDensityBins", softCompEnergyDensityBinsFromXml));
+
+    if (!softCompEnergyDensityBinsFromXml.empty())
+        m_softCompEnergyDensityBins = softCompEnergyDensityBinsFromXml;
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FinalEnergyDensityBin", m_energyDensityFinalBin));
