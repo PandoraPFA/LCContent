@@ -16,10 +16,10 @@ namespace lc_content
 {
 
 LCSoftwareCompensation::LCSoftwareCompensation() :
-  m_energyDensityFinalBin(30),
-  m_minCleanHitEnergy(0.5f),
-  m_minCleanHitEnergyFraction(0.01f),
-  m_minCleanCorrectedHitEnergy(0.1f)
+    m_energyDensityFinalBin(30),
+    m_minCleanHitEnergy(0.5f),
+    m_minCleanHitEnergyFraction(0.01f),
+    m_minCleanCorrectedHitEnergy(0.1f)
 {
     const unsigned int nWeights(9);
     const float weights[nWeights] = {2.49632f, -0.0697302f, 0.000946986f, -0.112311f, 0.0028182f, -9.62602e-05f, 0.168614f, 0.224318f, -0.0872853f};
@@ -48,8 +48,8 @@ StatusCode LCSoftwareCompensation::MakeEnergyCorrections(const pandora::Cluster 
     pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterCaloHitList);
     clusterCaloHitList.insert(pCluster->GetIsolatedCaloHitList().begin(),pCluster->GetIsolatedCaloHitList().end());
 
-    this->SoftComp(clusterHadEnergy,clusterCaloHitList, correctedHadronicEnergy);
-    this->CleanCluster(pCluster, correctedHadronicEnergy);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SoftComp(clusterHadEnergy,clusterCaloHitList, correctedHadronicEnergy));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CleanCluster(pCluster, correctedHadronicEnergy));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -59,11 +59,10 @@ StatusCode LCSoftwareCompensation::MakeEnergyCorrections(const pandora::Cluster 
 StatusCode LCSoftwareCompensation::CleanCluster(const pandora::Cluster *const pCluster, float &correctedHadronicEnergy) const
 {
     const unsigned int firstPseudoLayer(this->GetPandora().GetPlugins()->GetPseudoLayerPlugin()->GetPseudoLayerAtIp());
-
     const float clusterHadronicEnergy(pCluster->GetHadronicEnergy());
 
     if (std::fabs(clusterHadronicEnergy) < std::numeric_limits<float>::epsilon())
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+        return STATUS_CODE_FAILURE;
 
     bool isFineGranularity(true);
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
@@ -153,17 +152,19 @@ StatusCode LCSoftwareCompensation::SoftComp(float clusterEnergyEstimation, const
         {
             const float hitEnergy = pCaloHit->GetHadronicEnergy();
             float rho(0.f);
-            this->FindDensity(pCaloHit,rho);
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindDensity(pCaloHit,rho));
             const float weight(p1*exp(p2*rho) + p3);
             const float correctedHitEnergy(hitEnergy*weight);
             energySoftComp += correctedHitEnergy;
         }	
         else
         {           
-	    energySoftComp += pCaloHit->GetHadronicEnergy();
+            energySoftComp += pCaloHit->GetHadronicEnergy();
         }
     }
+
     energyCorrection = energySoftComp;
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -180,6 +181,7 @@ StatusCode LCSoftwareCompensation::FindDensity(const pandora::CaloHit *const pCa
     if (hitEnergyDensity >= m_softCompEnergyDensityBins.back())
     {
         energyDensity = m_energyDensityFinalBin;
+        return STATUS_CODE_SUCCESS;
     }
     else
     {
@@ -189,11 +191,16 @@ StatusCode LCSoftwareCompensation::FindDensity(const pandora::CaloHit *const pCa
             const float highBinContent = m_softCompEnergyDensityBins.at(iBin+1);
 
             if (hitEnergyDensity >= lowBinContent && hitEnergyDensity < highBinContent)
+            {
                 energyDensity = (lowBinContent + highBinContent) * 0.5f;
+                return STATUS_CODE_SUCCESS;
+            }
         }
     }
 
-    return STATUS_CODE_SUCCESS;
+    std::cout << "LCSoftwareCompensation::FindDensity - EnergyDensity binning inconsistency" << std::endl;
+
+    return STATUS_CODE_FAILURE;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -214,8 +221,22 @@ StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle xmlHandle)
     if (!softCompEnergyDensityBinsFromXml.empty())
         m_softCompEnergyDensityBins = softCompEnergyDensityBinsFromXml;
 
+    std::sort(m_softCompEnergyDensityBins.begin(), m_softCompEnergyDensityBins.end());
+
+    if (m_softCompEnergyDensityBins.front() < 0.f)
+    {
+        std::cout << "LCSoftwareCompensation::ReadSettings - SoftCompEnergyDensityBins contains an unphysical value" << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FinalEnergyDensityBin", m_energyDensityFinalBin));
+
+    if (m_energyDensityFinalBin < m_softCompEnergyDensityBins.back())
+    {
+        std::cout << "LCSoftwareCompensation::ReadSettings - EnergyDensityFinalBin inconsistent with SoftCompEnergyDensityBins" << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCleanHitEnergy", m_minCleanHitEnergy));
