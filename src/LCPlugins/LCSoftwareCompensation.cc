@@ -25,8 +25,8 @@ LCSoftwareCompensation::LCSoftwareCompensation() :
     const float weights[nWeights] = {2.49632f, -0.0697302f, 0.000946986f, -0.112311f, 0.0028182f, -9.62602e-05f, 0.168614f, 0.224318f, -0.0872853f};
     m_softCompWeights.insert(m_softCompWeights.begin(), weights, weights + nWeights);
 
-    const unsigned int nBins(11);
-    const float bins[nBins] = {0.f, 2.f, 5.f, 7.5f, 9.5f, 13.f, 16.f, 20.f, 23.5f, 28.f, 1e6f};
+    const unsigned int nBins(10);
+    const float bins[nBins] = {0.f, 2.f, 5.f, 7.5f, 9.5f, 13.f, 16.f, 20.f, 23.5f, 28.f};
     m_softCompEnergyDensityBins.insert(m_softCompEnergyDensityBins.begin(), bins, bins + nBins);
 }
 
