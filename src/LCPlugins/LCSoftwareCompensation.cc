@@ -16,7 +16,8 @@ namespace lc_content
 {
 
 LCSoftwareCompensation::LCSoftwareCompensation() :
-    m_energyDensityFinalBin(30),
+    m_energyDensityFinalBin(30.f),
+    m_maxClusterEnergyToApplySoftComp(100.f),
     m_minCleanHitEnergy(0.5f),
     m_minCleanHitEnergyFraction(0.01f),
     m_minCleanCorrectedHitEnergy(0.1f)
@@ -43,12 +44,15 @@ StatusCode LCSoftwareCompensation::MakeEnergyCorrections(const pandora::Cluster 
         return STATUS_CODE_SUCCESS;
     }
 
-    const float clusterHadEnergy = pCluster->GetHadronicEnergy();
-    pandora::CaloHitList clusterCaloHitList;
-    pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterCaloHitList);
-    clusterCaloHitList.insert(pCluster->GetIsolatedCaloHitList().begin(),pCluster->GetIsolatedCaloHitList().end());
+    if (correctedHadronicEnergy < m_maxClusterEnergyToApplySoftComp)
+    {
+        const float clusterHadEnergy = pCluster->GetHadronicEnergy();
+        pandora::CaloHitList clusterCaloHitList;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterCaloHitList);
+        clusterCaloHitList.insert(pCluster->GetIsolatedCaloHitList().begin(),pCluster->GetIsolatedCaloHitList().end());
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SoftComp(clusterHadEnergy, clusterCaloHitList, correctedHadronicEnergy));
+    }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SoftComp(clusterHadEnergy,clusterCaloHitList, correctedHadronicEnergy));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CleanCluster(pCluster, correctedHadronicEnergy));
 
     return STATUS_CODE_SUCCESS;
@@ -237,6 +241,9 @@ StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle xmlHandle)
         std::cout << "LCSoftwareCompensation::ReadSettings - EnergyDensityFinalBin inconsistent with SoftCompEnergyDensityBins" << std::endl;
         return STATUS_CODE_FAILURE;
     }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxClusterEnergyToApplySoftComp", m_maxClusterEnergyToApplySoftComp));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCleanHitEnergy", m_minCleanHitEnergy));

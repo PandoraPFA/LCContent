@@ -66,6 +66,7 @@ private:
     pandora::FloatVector     m_softCompWeights;                 ///< Weights used in software compensation
     pandora::FloatVector     m_softCompEnergyDensityBins;       ///< Energy density bins used for software compensation
     float                    m_energyDensityFinalBin;           ///< Energy density used for final bin entries in software compensation 
+    float                    m_maxClusterEnergyToApplySoftComp; ///< Maxmium energy of a cluster for which software compensation is applied
     float                    m_minCleanHitEnergy;               ///< Min calo hit hadronic energy to consider cleaning hit/cluster
     float                    m_minCleanHitEnergyFraction;       ///< Min fraction of cluster energy represented by hit to consider cleaning
     float                    m_minCleanCorrectedHitEnergy;      ///< Min value of new hit hadronic energy estimate after cleaning
