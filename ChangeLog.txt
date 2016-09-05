@@ -1,8 +1,17 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-04-01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Applied a configurable cluster energy limit above which software compensation is not used.
+Modified reading of software compensation weights and bin positions so that they are replaced instead of appended to default values.
+Correction regarding last bin value of energy densities used in software compensation.
+Refinement of the software compensation algorithm.
+Update header file installation command.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-04-00
 --------------------------------------------------------------------------------------------------------------------------------------------
-Added software compensation energy correction plugin class.  
-Added algoirthm for training software compensation.  
+Added software compensation energy correction plugin class.
+Added algorithm for training software compensation.
 Optimised default parameters in clean clusters energy correction plugin.
 Changed Shower Profile Calculation in PhotonFragmentMergingBaseAlgorithm from Inclusive mode to Exclusive mode.
 
