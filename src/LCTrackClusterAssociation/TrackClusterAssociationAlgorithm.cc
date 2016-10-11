@@ -15,8 +15,6 @@
 
 #include "LCUtility/KDTreeLinkerAlgoT.h"
 
-#include <unordered_map>
-
 using namespace pandora;
 
 // setup templates for tracking track:pseudolayer pair
@@ -90,7 +88,7 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
     hit_nodes.clear();
 
     // move result caches out of the loop
-    ClusterList nearby_clusters;
+    ClusterSet nearby_clusters;
     std::vector<HitKDNode> found_hits;
 
     // Look to make new associations
@@ -128,7 +126,7 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
                 for (auto iter = cached_result.first; iter != cached_result.second; ++iter )
                 {
                     // build a list of nearby clusters
-                    nearby_clusters.push_back(hits_to_clusters.find(iter->second)->second);
+                    nearby_clusters.insert(hits_to_clusters.find(iter->second)->second);
                 }
             }
             else
@@ -145,15 +143,19 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
                         // cache all hits that are nearby the track
                         tracks_to_hits.emplace(hash_key,hit.data);
                         // add to the list of nearby clusters
-                        nearby_clusters.push_back(assc_cluster->second);
+                        nearby_clusters.insert(assc_cluster->second);
                     }
                 }
                 found_hits.clear();
             }
         }
 
+        ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
+        nearbyClusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+        nearby_clusters.clear();
+
         // Identify the closest cluster and also the closest cluster below a specified hadronic energy threshold
-        for (const Cluster *const pCluster : nearby_clusters)
+        for (const Cluster *const pCluster : nearbyClusterList)
         {
             if (0 == pCluster->GetNCaloHits())
                 continue;
@@ -186,7 +188,6 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
                 }
             }
         }
-        nearby_clusters.clear();
 
         // Apply a final track-cluster association distance cut
         const Cluster *pMatchedCluster = nullptr;

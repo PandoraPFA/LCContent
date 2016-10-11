@@ -11,6 +11,7 @@
 #include "LCHelpers/ClusterHelper.h"
 #include "LCHelpers/FragmentRemovalHelper.h"
 #include "LCHelpers/ReclusterHelper.h"
+#include "LCHelpers/SortingHelper.h"
 
 #include "LCTrackClusterAssociation/TrackRecoveryHelixAlgorithm.h"
 
@@ -205,6 +206,15 @@ StatusCode TrackRecoveryHelixAlgorithm::MakeTrackClusterAssociations(TrackAssoci
     return STATUS_CODE_SUCCESS;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackRecoveryHelixAlgorithm::AssociationInfo::operator< (const TrackRecoveryHelixAlgorithm::AssociationInfo &rhs) const
+{
+    return (SortingHelper::SortClustersByHadronicEnergy(this->m_pCluster, rhs.m_pCluster));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TrackRecoveryHelixAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)

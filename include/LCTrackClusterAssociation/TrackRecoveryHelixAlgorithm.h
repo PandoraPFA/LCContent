@@ -140,13 +140,6 @@ inline float TrackRecoveryHelixAlgorithm::AssociationInfo::GetClosestApproach() 
     return m_closestApproach;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool TrackRecoveryHelixAlgorithm::AssociationInfo::operator< (const TrackRecoveryHelixAlgorithm::AssociationInfo &rhs) const
-{
-    return (this->m_pCluster > rhs.m_pCluster);
-}
-
 } // namespace lc_content
 
 #endif // #ifndef LC_TRACK_RECOVERY_HELIX_ALGORITHM_H

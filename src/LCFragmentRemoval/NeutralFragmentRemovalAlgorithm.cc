@@ -10,6 +10,8 @@
 
 #include "LCFragmentRemoval/NeutralFragmentRemovalAlgorithm.h"
 
+#include "LCHelpers/SortingHelper.h"
+
 using namespace pandora;
 
 namespace lc_content
@@ -195,14 +197,16 @@ StatusCode NeutralFragmentRemovalAlgorithm::GetClusterMergingCandidates(const Ne
     float highestEvidence(m_minEvidence);
     float highestEvidenceParentEnergy(0.);
 
-    for (NeutralClusterContactMap::const_iterator iterI = neutralClusterContactMap.begin(), iterIEnd = neutralClusterContactMap.end(); iterI != iterIEnd; ++iterI)
+    ClusterList clusterList;
+    for (const auto &mapEntry : neutralClusterContactMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+
+    for (const Cluster *const pDaughterCluster : clusterList)
     {
-        const Cluster *const pDaughterCluster = iterI->first;
+        const NeutralClusterContactVector &contactVector(neutralClusterContactMap.at(pDaughterCluster));
 
-        for (NeutralClusterContactVector::const_iterator iterJ = iterI->second.begin(), iterJEnd = iterI->second.end(); iterJ != iterJEnd; ++iterJ)
+        for (const NeutralClusterContact &neutralClusterContact : contactVector)
         {
-            NeutralClusterContact neutralClusterContact = *iterJ;
-
             if (pDaughterCluster != neutralClusterContact.GetDaughterCluster())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 

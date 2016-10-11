@@ -8,7 +8,9 @@
 #ifndef KD_TREE_LINKER_ALGO_TEMPLATED_H
 #define KD_TREE_LINKER_ALGO_TEMPLATED_H
 
-#include "KDTreeLinkerToolsT.h"
+#include "LCUtility/KDTreeLinkerToolsT.h"
+
+#include "Pandora/PandoraInternal.h"
 
 #include <vector>
 

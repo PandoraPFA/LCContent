@@ -10,6 +10,8 @@
 
 #include "LCPfoConstruction/PfoCreationAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lc_content
@@ -80,6 +82,9 @@ StatusCode PfoCreationAlgorithm::CreateTrackBasedPfos() const
 StatusCode PfoCreationAlgorithm::PopulateTrackBasedPfo(const Track *const pTrack, PfoParameters &pfoParameters, const bool readSiblingInfo) const
 {
     // Add track to the pfo
+    if (pfoParameters.m_trackList.end() != std::find(pfoParameters.m_trackList.begin(), pfoParameters.m_trackList.end(), pTrack))
+        return STATUS_CODE_SUCCESS;
+
     pfoParameters.m_trackList.push_back(pTrack);
 
     // Add any cluster associated with this track to the pfo

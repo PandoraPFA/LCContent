@@ -240,6 +240,8 @@ int SoftClusterMergingAlgorithm::FindBestParentCluster(const ClusterVector &clus
             }
         }
 
+        nearby_hits.sort(PointerLessThan<CaloHit>());
+
         for (const CaloHit *const pCaloHitJ : nearby_hits)
         {
             if (daughterHits.end() != std::find(daughterHits.begin(), daughterHits.end(), pCaloHitJ))

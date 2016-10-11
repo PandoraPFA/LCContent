@@ -106,18 +106,21 @@ void PerfectClusteringAlgorithm::FullMCParticleCollection(const CaloHit *const p
 
     float mcParticleWeightSum(0.f);
 
-    for (MCParticleWeightMap::const_iterator iter = mcParticleWeightMap.begin(), iterEnd = mcParticleWeightMap.end(); iter != iterEnd; ++iter)
-        mcParticleWeightSum += iter->second;
+    MCParticleList mcParticleList;
+    for (const auto &mapEntry : mcParticleWeightMap) mcParticleList.push_back(mapEntry.first);
+    mcParticleList.sort(PointerLessThan<MCParticle>());
+
+    for (const MCParticle *const pMCParticle : mcParticleList)
+        mcParticleWeightSum += mcParticleWeightMap.at(pMCParticle);
 
     if (mcParticleWeightSum < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const CaloHit *pLocalCaloHit = pCaloHit;
 
-    for (MCParticleWeightMap::const_iterator iter = mcParticleWeightMap.begin(), iterEnd = mcParticleWeightMap.end(); iter != iterEnd; ++iter)
+    for (const MCParticle *const pMCParticle : mcParticleList)
     {
-        const MCParticle *const pMCParticle(iter->first);
-        const float weight(iter->second);
+        const float weight(mcParticleWeightMap.at(pMCParticle));
 
         if (!this->SelectMCParticlesForClustering(pMCParticle))
             continue;
@@ -164,11 +167,13 @@ void PerfectClusteringAlgorithm::AddToHitListMap(const CaloHit *const pCaloHitTo
 
 void PerfectClusteringAlgorithm::CreateClusters(const MCParticleToHitListMap &mcParticleToHitListMap) const
 {
-    for (MCParticleToHitListMap::const_iterator iter = mcParticleToHitListMap.begin(), iterEnd = mcParticleToHitListMap.end(); 
-         iter != iterEnd; ++iter)
+    MCParticleList mcParticleList;
+    for (const auto &mapEntry : mcParticleToHitListMap) mcParticleList.push_back(mapEntry.first);
+    mcParticleList.sort(PointerLessThan<MCParticle>());
+
+    for (const MCParticle *const pMCParticle : mcParticleList)
     {
-        const MCParticle *const pMCParticle = iter->first;
-        CaloHitList *const pCaloHitList = iter->second;
+        CaloHitList *const pCaloHitList(mcParticleToHitListMap.at(pMCParticle));
 
         if (!pCaloHitList->empty())
         {

@@ -150,19 +150,22 @@ void PerfectParticleFlowAlgorithm::FullCaloHitCollection(const MCParticle *const
 
     float mcParticleWeightSum(0.f);
 
-    for (MCParticleWeightMap::const_iterator wtIter = mcParticleWeightMap.begin(), wtIterEnd = mcParticleWeightMap.end(); wtIter != wtIterEnd; ++wtIter)
-        mcParticleWeightSum += wtIter->second;
+    MCParticleList mcParticleList;
+    for (const auto &mapEntry : mcParticleWeightMap) mcParticleList.push_back(mapEntry.first);
+    mcParticleList.sort(PointerLessThan<MCParticle>());
+
+    for (const MCParticle *const pMCParticle : mcParticleList)
+        mcParticleWeightSum += mcParticleWeightMap.at(pMCParticle);
 
     if (mcParticleWeightSum < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const CaloHit *pLocalCaloHit = pCaloHit;
 
-    for (MCParticleWeightMap::const_iterator wtIter = mcParticleWeightMap.begin(), wtIterEnd = mcParticleWeightMap.end(); wtIter != wtIterEnd; ++wtIter)
+    for (const MCParticle *const pHitMCParticle : mcParticleList)
     {
-        const MCParticle *const pHitMCParticle(wtIter->first);
         const MCParticle *const pHitPfoTarget(pHitMCParticle->GetPfoTarget());
-        const float weight(wtIter->second);
+        const float weight(mcParticleWeightMap.at(pHitMCParticle));
 
         if (pHitPfoTarget != pPfoTarget)
             continue;

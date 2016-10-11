@@ -12,6 +12,7 @@
 
 #include "LCHelpers/ClusterHelper.h"
 #include "LCHelpers/ReclusterHelper.h"
+#include "LCHelpers/SortingHelper.h"
 
 #include <cstdlib>
 
@@ -249,21 +250,23 @@ StatusCode MainFragmentRemovalAlgorithm::GetClusterMergingCandidates(const Charg
     float highestExcessEvidence(0.f);
     float highestEvidenceParentEnergy(0.);
 
-    for (ChargedClusterContactMap::const_iterator iterI = chargedClusterContactMap.begin(), iterIEnd = chargedClusterContactMap.end(); iterI != iterIEnd; ++iterI)
+    ClusterList clusterList;
+    for (const auto &mapEntry : chargedClusterContactMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+
+    for (const Cluster *const pDaughterCluster : clusterList)
     {
-        const Cluster *const pDaughterCluster = iterI->first;
+        const ChargedClusterContactVector &contactVector(chargedClusterContactMap.at(pDaughterCluster));
         float globalDeltaChi2(0.f);
 
         // Check to see if merging parent and daughter clusters would improve track-cluster compatibility
-        if (!this->PassesPreselection(pDaughterCluster, iterI->second, globalDeltaChi2))
+        if (!this->PassesPreselection(pDaughterCluster, contactVector, globalDeltaChi2))
             continue;
 
         const unsigned int daughterCorrectionLayer(this->GetClusterCorrectionLayer(pDaughterCluster));
 
-        for (ChargedClusterContactVector::const_iterator iterJ = iterI->second.begin(), iterJEnd = iterI->second.end(); iterJ != iterJEnd; ++iterJ)
+        for (const ChargedClusterContact &chargedClusterContact : contactVector)
         {
-            ChargedClusterContact chargedClusterContact = *iterJ;
-
             if (pDaughterCluster != chargedClusterContact.GetDaughterCluster())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 

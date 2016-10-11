@@ -10,6 +10,8 @@
 
 #include "LCFragmentRemoval/PhotonFragmentRemovalAlgorithm.h"
 
+#include "LCHelpers/SortingHelper.h"
+
 using namespace pandora;
 
 namespace lc_content
@@ -208,14 +210,16 @@ StatusCode PhotonFragmentRemovalAlgorithm::GetClusterMergingCandidates(const Clu
     float highestEvidence(m_minEvidence);
     float highestEvidenceParentEnergy(0.);
 
-    for (ClusterContactMap::const_iterator iterI = clusterContactMap.begin(), iterIEnd = clusterContactMap.end(); iterI != iterIEnd; ++iterI)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterContactMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+
+    for (const Cluster *const pDaughterCluster : clusterList)
     {
-        const Cluster *const pDaughterCluster = iterI->first;
+        const ClusterContactVector &contactVector(clusterContactMap.at(pDaughterCluster));
 
-        for (ClusterContactVector::const_iterator iterJ = iterI->second.begin(), iterJEnd = iterI->second.end(); iterJ != iterJEnd; ++iterJ)
+        for (const ClusterContact &clusterContact : contactVector)
         {
-            ClusterContact clusterContact = *iterJ;
-
             if (pDaughterCluster != clusterContact.GetDaughterCluster())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 

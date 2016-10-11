@@ -10,6 +10,8 @@
 
 #include "LCClustering/ConeClusteringAlgorithm.h"
 
+#include "LCHelpers/SortingHelper.h"
+
 #include <list>
 
 using namespace pandora;
@@ -253,7 +255,7 @@ StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudo
 
     std::vector<HitKDNode> found_hits;
     std::vector<TrackKDNode> found_tracks;
-    ClusterList nearby_clusters;
+    ClusterSet nearby_clusters;
 
     for (CustomSortedCaloHitList::iterator iter = pCustomSortedCaloHitList->begin(); iter != pCustomSortedCaloHitList->end();)
     {
@@ -287,7 +289,7 @@ StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudo
                 auto assc_cluster = m_tracksToClusters.find(track.data);
                 if (assc_cluster != m_tracksToClusters.end())
                 {
-                    nearby_clusters.push_back(assc_cluster->second);
+                    nearby_clusters.insert(assc_cluster->second);
                 }
             }
             found_tracks.clear();
@@ -300,15 +302,19 @@ StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudo
                 auto assc_cluster = m_hitsToClusters.find(hit.data);
                 if (assc_cluster != m_hitsToClusters.end())
                 {
-                    nearby_clusters.push_back(assc_cluster->second);
+                    nearby_clusters.insert(assc_cluster->second);
                 }
             }
             found_hits.clear();
 
+            ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
+            nearbyClusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+            nearby_clusters.clear();
+
             // Instead of using the full cluster list we use only those clusters that are found to be nearby according to the KD-tree
             // ---- This can be optimized further for sure. (for instance having a match by KD-tree qualifies a ton of the loops later
             // See if hit should be associated with any existing clusters
-            for (ClusterList::iterator clusterIter = nearby_clusters.begin(), clusterIterEnd = nearby_clusters.end();
+            for (ClusterList::iterator clusterIter = nearbyClusterList.begin(), clusterIterEnd = nearbyClusterList.end();
                 clusterIter != clusterIterEnd; ++clusterIter)
             {
                 const Cluster *const pCluster = *clusterIter;
@@ -326,7 +332,6 @@ StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudo
                     smallestGenericDistance = genericDistance;
                 }
             }
-            nearby_clusters.clear();
 
             // Add best hit found after completing examination of a stepback layer
             if ((0 == m_clusterFormationStrategy) && (nullptr != pBestCluster))
@@ -377,7 +382,8 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
     //pull out result caches to help keep memory locality
     std::vector<TrackKDNode> found_tracks;
     std::vector<HitKDNode> found_hits;
-    ClusterList nearby_clusters;
+
+    ClusterSet nearby_clusters;
 
     while (!available_hits_in_layer.empty())
     {
@@ -413,7 +419,7 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
                         auto assc_cluster = m_tracksToClusters.find(itr->second);
                         if(assc_cluster != m_tracksToClusters.end())
                         {
-                            nearby_clusters.push_back(assc_cluster->second);
+                            nearby_clusters.insert(assc_cluster->second);
                         }
                     }
                 }
@@ -427,7 +433,7 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
                         auto assc_cluster = m_tracksToClusters.find(track.data);
                         if (assc_cluster != m_tracksToClusters.end())
                         {
-                            nearby_clusters.push_back(assc_cluster->second);
+                            nearby_clusters.insert(assc_cluster->second);
                         }
                     }
                     found_tracks.clear();
@@ -442,7 +448,7 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
                         auto assc_cluster = m_hitsToClusters.find(itr->second);
                         if( assc_cluster != m_hitsToClusters.end() )
                         {
-                            nearby_clusters.push_back(assc_cluster->second);
+                            nearby_clusters.insert(assc_cluster->second);
                         }
                     }
                 }
@@ -456,14 +462,18 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
                         auto assc_cluster = m_hitsToClusters.find(hit.data);
                         if (assc_cluster != m_hitsToClusters.end())
                         {
-                            nearby_clusters.push_back(assc_cluster->second);
+                            nearby_clusters.insert(assc_cluster->second);
                         }
                     }
                     found_hits.clear();
                 }
 
+                ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
+                nearbyClusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+                nearby_clusters.clear();
+
                 // See if hit should be associated with any existing clusters
-                for (ClusterList::iterator clusterIter = nearby_clusters.begin(), clusterIterEnd = nearby_clusters.end();
+                for (ClusterList::iterator clusterIter = nearbyClusterList.begin(), clusterIterEnd = nearbyClusterList.end();
                     clusterIter != clusterIterEnd; ++clusterIter)
                 {
                     const Cluster *const pCluster = *clusterIter;
@@ -480,7 +490,6 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
                         smallestGenericDistance = genericDistance;
                     }
                 }
-                nearby_clusters.clear();
 
                 if (nullptr != pBestCluster)
                 {
