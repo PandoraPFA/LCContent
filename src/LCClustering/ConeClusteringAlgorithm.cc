@@ -366,7 +366,7 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
 
     //keep a list of available hits with the most energetic available hit at the back
     std::list<unsigned> available_hits_in_layer;
-    for(unsigned i = 0; i < pCustomSortedCaloHitList->size(); ++i )
+    for (unsigned i = 0; i < pCustomSortedCaloHitList->size(); ++i )
     {
         if (!PandoraContentApi::IsAvailable(*this, (*pCustomSortedCaloHitList)[i]))
             continue;

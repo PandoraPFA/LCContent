@@ -50,6 +50,10 @@ StatusCode ConeBasedMergingAlgorithm::Run()
     ClusterFitResultMap parentFitResultMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->PrepareClusters(daughterVector, parentFitResultMap));
 
+    ClusterVector parentVector;
+    for (const auto &mapEntry : parentFitResultMap) parentVector.push_back(mapEntry.first);
+    std::sort(parentVector.begin(), parentVector.end(), SortingHelper::SortClustersByHadronicEnergy);
+
     // Loop over daughter candidates and, for each, examine all possible parents
     for (ClusterVector::reverse_iterator iterI = daughterVector.rbegin(), iterIEnd = daughterVector.rend(); iterI != iterIEnd; ++iterI)
     {
@@ -67,10 +71,8 @@ StatusCode ConeBasedMergingAlgorithm::Run()
 
         const unsigned int daughterInnerLayer(pDaughterCluster->GetInnerPseudoLayer());
 
-        for (ClusterFitResultMap::const_iterator iterJ = parentFitResultMap.begin(), iterJEnd = parentFitResultMap.end(); iterJ != iterJEnd; ++iterJ)
+        for (const Cluster *const pParentCluster : parentVector)
         {
-            const Cluster *const pParentCluster = iterJ->first;
-
             if (pDaughterCluster == pParentCluster)
                 continue;
 
@@ -94,7 +96,7 @@ StatusCode ConeBasedMergingAlgorithm::Run()
                 continue;
 
             // The best parent cluster is that for which a cone (around its mip fit) encloses the most daughter cluster hits
-            const ClusterFitResult &mipFitResult = iterJ->second;
+            const ClusterFitResult &mipFitResult = parentFitResultMap.at(pParentCluster);
             const float fractionInCone(this->GetFractionInCone(pParentCluster, pDaughterCluster, mipFitResult));
 
             const float parentClusterEnergy(pParentCluster->GetHadronicEnergy());
@@ -140,6 +142,12 @@ StatusCode ConeBasedMergingAlgorithm::Run()
         // Tidy containers and merge the clusters
         (*iterI) = NULL;
         parentFitResultMap.erase(pDaughterCluster);
+
+        ClusterVector::iterator parentVectorIter(std::find(parentVector.begin(), parentVector.end(), pDaughterCluster));
+
+        if (parentVector.end() != parentVectorIter)
+            parentVector.erase(parentVectorIter);
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestParentCluster, pDaughterCluster));
     }
 

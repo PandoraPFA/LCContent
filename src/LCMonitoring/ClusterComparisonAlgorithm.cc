@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LCHelpers/SortingHelper.h"
+
 #include "LCMonitoring/ClusterComparisonAlgorithm.h"
 
 using namespace pandora;
@@ -111,10 +113,13 @@ void ClusterComparisonAlgorithm::CompareClusters(const ClusterList &clusterList1
     this->PopulateMaps(clusterList1, clusterToHitListMap1, hitToClusterMap1);
     this->PopulateMaps(clusterList2, clusterToHitListMap2, hitToClusterMap2);
 
-    for (ClusterToHitListMap::const_iterator iter = clusterToHitListMap1.begin(), iterEnd = clusterToHitListMap1.end(); iter != iterEnd; ++iter)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterToHitListMap1) clusterList.push_back(mapEntry.first);
+    clusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+
+    for (const Cluster *const pCluster1 : clusterList)
     {
-        const Cluster *const pCluster1 = iter->first;
-        const CaloHitList &caloHitList1 = iter->second;
+        const CaloHitList &caloHitList1(clusterToHitListMap1.at(pCluster1));
 
         // Collect all clusters in list 2 associated (via hits) with the current cluster in list 1
         ClusterList linkedClusterList2;

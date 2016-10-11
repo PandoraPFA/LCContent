@@ -716,9 +716,9 @@ void DumpPfosMonitoringAlgorithm::DumpNeutralOrPhotonPfo(const ParticleFlowObjec
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DumpPfosMonitoringAlgorithm::ClusterEnergyFractions(const Cluster *const pCluster, float &fCharged, float &fPhoton, float &fNeutral,
-    const MCParticle *&pBestMatchedMcPfo) const
+    const MCParticle *&pBestMatchedMCPfo) const
 {
-    pBestMatchedMcPfo = NULL;
+    pBestMatchedMCPfo = NULL;
     float totEnergy(0.f);
     float neutralEnergy(0.f);
     float photonEnergy(0.f);
@@ -785,12 +785,18 @@ void DumpPfosMonitoringAlgorithm::ClusterEnergyFractions(const Cluster *const pC
     // Find mc particle with largest associated energy
     float maximumEnergy(0.f);
 
-    for (MCParticleToFloatMap::const_iterator iter = mcParticleContributions.begin(), iterEnd = mcParticleContributions.end(); iter != iterEnd; ++iter)
+    MCParticleList mcParticleList;
+    for (const auto &mapEntry : mcParticleContributions) mcParticleList.push_back(mapEntry.first);
+    mcParticleList.sort(PointerLessThan<MCParticle>());
+
+    for (const MCParticle *const pMCParticle : mcParticleList)
     {
-        if (iter->second > maximumEnergy)
+        const float energy(mcParticleContributions.at(pMCParticle));
+
+        if (energy > maximumEnergy)
         {
-            maximumEnergy = iter->second;
-            pBestMatchedMcPfo = iter->first;
+            maximumEnergy = energy;
+            pBestMatchedMCPfo = pMCParticle;
         }
     }
 }

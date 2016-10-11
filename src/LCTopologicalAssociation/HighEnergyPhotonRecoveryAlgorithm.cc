@@ -10,6 +10,7 @@
 
 #include "LCHelpers/ClusterHelper.h"
 #include "LCHelpers/SortingHelper.h"
+
 #include "LCTopologicalAssociation/HighEnergyPhotonRecoveryAlgorithm.h"
 
 #include <algorithm>
@@ -75,12 +76,14 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::Run()
         float maxFractionInCone(0.f);
         const Cluster *pBestParentCluster(NULL);
 
-        std::pair <ClusterClusterMultiMap::const_iterator, ClusterClusterMultiMap::const_iterator> parentCandidateRange;
-        parentCandidateRange = parentCandidateMultiMap.equal_range(pDaughterCluster);
-        for (ClusterClusterMultiMap::const_iterator iterJ = parentCandidateRange.first, iterJEnd = parentCandidateRange.second; iterJ != iterJEnd; ++iterJ)
-        {
-            const Cluster *const pParentCluster = iterJ->second;
+        const auto parentCandidateRange(parentCandidateMultiMap.equal_range(pDaughterCluster));
 
+        ClusterList parentCandidates;
+        for (auto iterJ = parentCandidateRange.first; iterJ != parentCandidateRange.second; ++iterJ) parentCandidates.push_back(iterJ->second);
+        parentCandidates.sort(SortingHelper::SortClustersByHadronicEnergy);
+
+        for (const Cluster *const pParentCluster : parentCandidates)
+        {
             const ClusterFitResult &parentClusterFitResult(pParentCluster->GetFitToAllHitsResult());
             ClusterFitResult parentLastLayerFitResult;
             if (STATUS_CODE_SUCCESS != ClusterFitHelper::FitEnd(pParentCluster, m_numberContactLayers, parentLastLayerFitResult))
@@ -195,6 +198,7 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::PrepareClusters(const ClusterList 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode HighEnergyPhotonRecoveryAlgorithm::PreSelectClusters(const ClusterVector &daughterVector, const ClusterVector &parentVector, ClusterClusterMultiMap &parentCandidateMultiMap) const
 {
     for (ClusterVector::const_iterator iterI = daughterVector.begin(), iterIEnd = daughterVector.end(); iterI != iterIEnd; ++iterI)
@@ -202,21 +206,31 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::PreSelectClusters(const ClusterVec
         const Cluster *const pDaughterCluster = *iterI;
         const unsigned int daughterInnerLayer(pDaughterCluster->GetInnerPseudoLayer());
         const CartesianVector &centroidDaughterFirstLayer(pDaughterCluster->GetCentroid(daughterInnerLayer));
+
         for (ClusterVector::const_iterator iterJ = parentVector.begin(), iterJEnd = parentVector.end(); iterJ != iterJEnd; ++iterJ)
         {
             const Cluster *const pParentCluster = *iterJ;
+
+            if (pDaughterCluster == pParentCluster)
+                continue;
+
             const unsigned int parentOuterLayer(pParentCluster->GetOuterPseudoLayer());
-            if (daughterInnerLayer!=parentOuterLayer+1) continue;
+
+            if (daughterInnerLayer != parentOuterLayer + 1)
+                continue;
+
             if (pDaughterCluster->GetHadronicEnergy() / pParentCluster->GetElectromagneticEnergy() > m_energyRatioCut) continue;
 
             const CartesianVector &centroidParentLastLayer(pParentCluster->GetCentroid(parentOuterLayer));
-            const float centroidDistance2( (centroidParentLastLayer - centroidDaughterFirstLayer).GetMagnitudeSquared());
-            if (centroidDistance2 > m_centroidDistance2Cut) continue;
-            // past pre selection cuts
-            if (parentCandidateMultiMap.insert(ClusterClusterMultiMap::value_type(pDaughterCluster, pParentCluster )) == parentCandidateMultiMap.end())
-                return STATUS_CODE_FAILURE;
+            const float centroidDistance2((centroidParentLastLayer - centroidDaughterFirstLayer).GetMagnitudeSquared());
+
+            if (centroidDistance2 > m_centroidDistance2Cut)
+                continue;
+
+            parentCandidateMultiMap.insert(ClusterClusterMultiMap::value_type(pDaughterCluster, pParentCluster));
         }
     }
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -224,10 +238,14 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::PreSelectClusters(const ClusterVec
 
 StatusCode HighEnergyPhotonRecoveryAlgorithm::MergeClusters(const ClusterClusterMap &daughterBestParentMap, const ClusterListToNameMap &clusterListToNameMap) const
 {
-    for (ClusterClusterMap::const_iterator iter = daughterBestParentMap.begin(), iterEnd = daughterBestParentMap.end(); iter != iterEnd; ++iter)
+    ClusterList clusterList;
+    for (const auto &mapEntry : daughterBestParentMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+
+    for (const Cluster *const pDaughterCluster : clusterList)
     {
-        const Cluster *const pDaughterCluster = iter->first;
-        const Cluster *const pBestParentCluster = iter->second;
+        const Cluster *const pBestParentCluster(daughterBestParentMap.at(pDaughterCluster));
+
         if (clusterListToNameMap.size() > 1)
         {
             std::string parentListName, daughterListName;

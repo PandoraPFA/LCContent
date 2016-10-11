@@ -267,13 +267,13 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetEvidenceForMerging(const Clust
     parameters.m_energyOfMainPeak = 0.f;
     if (showerPeakList.size() > 0)
     {
-        for(CaloHitList::const_iterator iter = showerPeakList.at(0).GetPeakCaloHitList().begin(); iter !=  showerPeakList.at(0).GetPeakCaloHitList().end(); ++iter)
+        for (CaloHitList::const_iterator iter = showerPeakList.at(0).GetPeakCaloHitList().begin(); iter !=  showerPeakList.at(0).GetPeakCaloHitList().end(); ++iter)
             parameters.m_energyOfMainPeak += (*iter)->GetElectromagneticEnergy();
     }
     parameters.m_energyOfCandidatePeak = 0.f;
     if (showerPeakList.size() > 1)
     {
-        for(CaloHitList::const_iterator iter = showerPeakList.at(1).GetPeakCaloHitList().begin(); iter !=  showerPeakList.at(1).GetPeakCaloHitList().end(); ++iter)
+        for (CaloHitList::const_iterator iter = showerPeakList.at(1).GetPeakCaloHitList().begin(); iter !=  showerPeakList.at(1).GetPeakCaloHitList().end(); ++iter)
             parameters.m_energyOfCandidatePeak += (*iter)->GetElectromagneticEnergy();
     }
     parameters.m_hitSeparation = ClusterHelper::GetDistanceToClosestHit(pDaughterCluster, pParentCluster);
