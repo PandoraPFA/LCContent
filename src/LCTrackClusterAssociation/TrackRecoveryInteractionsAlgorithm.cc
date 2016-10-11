@@ -53,7 +53,7 @@ StatusCode TrackRecoveryInteractionsAlgorithm::Run()
         if (pTrack->HasAssociatedCluster() || !pTrack->CanFormPfo())
             continue;
 
-        if (!pTrack->GetDaughterTrackList().empty())
+        if (!pTrack->GetDaughterList().empty())
             continue;
 
         // Identify best cluster to be associated with this track, based on energy consistency and proximity

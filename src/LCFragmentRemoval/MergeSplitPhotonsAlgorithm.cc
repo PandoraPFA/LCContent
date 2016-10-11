@@ -95,18 +95,18 @@ StatusCode MergeSplitPhotonsAlgorithm::Run()
             if ((STATUS_CODE_SUCCESS == contactStatusCode) && (nContactLayers >= m_minContactLayers) && (contactFraction > m_minContactFraction))
             {
                 // Initialize fragmentation to compare merged cluster with original
-                ClusterList clusterList;
-                clusterList.insert(pParentCluster); clusterList.insert(pDaughterCluster);
+                ClusterList clusterList(1, pParentCluster);
+                clusterList.push_back(pDaughterCluster);
 
                 std::string originalClusterListName, mergedClusterListName;
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList,
                     originalClusterListName, mergedClusterListName));
 
                 PandoraContentApi::Cluster::Parameters parameters;
-                pParentCluster->GetOrderedCaloHitList().GetCaloHitList(parameters.m_caloHitList);
-                pDaughterCluster->GetOrderedCaloHitList().GetCaloHitList(parameters.m_caloHitList);
-                parameters.m_caloHitList.insert(pParentCluster->GetIsolatedCaloHitList().begin(), pParentCluster->GetIsolatedCaloHitList().end());
-                parameters.m_caloHitList.insert(pDaughterCluster->GetIsolatedCaloHitList().begin(), pDaughterCluster->GetIsolatedCaloHitList().end());
+                pParentCluster->GetOrderedCaloHitList().FillCaloHitList(parameters.m_caloHitList);
+                pDaughterCluster->GetOrderedCaloHitList().FillCaloHitList(parameters.m_caloHitList);
+                parameters.m_caloHitList.insert(parameters.m_caloHitList.end(), pParentCluster->GetIsolatedCaloHitList().begin(), pParentCluster->GetIsolatedCaloHitList().end());
+                parameters.m_caloHitList.insert(parameters.m_caloHitList.end(), pDaughterCluster->GetIsolatedCaloHitList().begin(), pDaughterCluster->GetIsolatedCaloHitList().end());
 
                 const Cluster *pMergedCluster = NULL;
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pMergedCluster));

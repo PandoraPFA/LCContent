@@ -55,10 +55,10 @@ StatusCode TrackRecoveryAlgorithm::Run()
         // To avoid tracks split along main track z-axis, examine number of parent/daughter tracks and start z coordinate
         const float zStart(std::fabs(pTrack->GetTrackStateAtStart().GetPosition().GetZ()));
 
-        if (!pTrack->GetDaughterTrackList().empty())
+        if (!pTrack->GetDaughterList().empty())
             continue;
 
-        if ((zStart > m_maxTrackZStart) && pTrack->GetParentTrackList().empty())
+        if ((zStart > m_maxTrackZStart) && pTrack->GetParentList().empty())
             continue;
 
         // Extract track energy resolution information

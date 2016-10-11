@@ -36,21 +36,18 @@ StatusCode CheatingTrackToClusterMatching::Run()
         try
         {
             const Track *const pTrack = *iter;
-            const MCParticle *const pMCParticle(pTrack->GetMainMCParticle());
+            const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pTrack));
 
             TracksPerMCParticle::iterator itTracksPerMCParticle(tracksPerMCParticle.find(pMCParticle));
 
             if (tracksPerMCParticle.end() == itTracksPerMCParticle)
             {
-                TrackList trackList;
-                trackList.insert(pTrack);
-
-                if (!tracksPerMCParticle.insert(TracksPerMCParticle::value_type(pMCParticle, trackList)).second)
+                if (!tracksPerMCParticle.insert(TracksPerMCParticle::value_type(pMCParticle, TrackList(1, pTrack))).second)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
             }
             else
             {
-                itTracksPerMCParticle->second.insert(pTrack);
+                itTracksPerMCParticle->second.push_back(pTrack);
             }
         }
         catch (StatusCodeException &)
@@ -73,15 +70,12 @@ StatusCode CheatingTrackToClusterMatching::Run()
 
             if (clustersPerMCParticle.end() == itClustersPerMCParticle)
             {
-                ClusterList clusterList;
-                clusterList.insert(pCluster);
-
-                if (!clustersPerMCParticle.insert(ClustersPerMCParticle::value_type(pMCParticle, clusterList)).second)
+                if (!clustersPerMCParticle.insert(ClustersPerMCParticle::value_type(pMCParticle, ClusterList(1, pCluster))).second)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
             }
             else
             {
-                itClustersPerMCParticle->second.insert(pCluster);
+                itClustersPerMCParticle->second.push_back(pCluster);
             }
         }
         catch (StatusCodeException &)
@@ -90,10 +84,13 @@ StatusCode CheatingTrackToClusterMatching::Run()
     }
 
     // Make the track to cluster associations
-    for (TracksPerMCParticle::const_iterator iter = tracksPerMCParticle.begin(), iterEnd = tracksPerMCParticle.end(); iter != iterEnd; ++iter)
+    MCParticleList mcParticleList;
+    for (const auto &mapEntry : tracksPerMCParticle) mcParticleList.push_back(mapEntry.first);
+    mcParticleList.sort(PointerLessThan<MCParticle>());
+
+    for (const MCParticle *const pMCParticle : mcParticleList)
     {
-        const MCParticle *const pMCParticle = iter->first;
-        const TrackList &trackList = iter->second;
+        const TrackList &trackList(tracksPerMCParticle.at(pMCParticle));
 
         ClustersPerMCParticle::const_iterator itClustersPerMCParticle(clustersPerMCParticle.find(pMCParticle));
 

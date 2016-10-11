@@ -184,7 +184,7 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
         }
         else
         {
-            standaloneMuonClusters.insert(pMuonCluster);
+            standaloneMuonClusters.push_back(pMuonCluster);
         }
 
         // Merge the clusters

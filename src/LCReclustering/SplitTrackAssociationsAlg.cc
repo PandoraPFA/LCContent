@@ -67,10 +67,8 @@ StatusCode SplitTrackAssociationsAlg::Run()
             continue;
 
         // Specify clusters and tracks to be used in reclustering
-        ClusterList reclusterClusterList;
-        reclusterClusterList.insert(pCluster);
-
-        TrackList reclusterTrackList(trackList.begin(), trackList.end());
+        const ClusterList reclusterClusterList(1, pCluster);
+        const TrackList reclusterTrackList(trackList.begin(), trackList.end());
 
         // Initialize reclustering with these local lists
         std::string originalClustersListName;

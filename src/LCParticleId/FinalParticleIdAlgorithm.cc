@@ -60,7 +60,7 @@ StatusCode FinalParticleIdAlgorithm::Run()
         {
             metadata.m_mass = PdgTable::GetParticleMass(metadata.m_particleId.Get());
             metadata.m_energy = std::sqrt(metadata.m_mass.Get() * metadata.m_mass.Get() + pPfo->GetMomentum().GetMagnitudeSquared());
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
         }
     }
 
@@ -73,7 +73,7 @@ bool FinalParticleIdAlgorithm::ContainsSiblingTrack(const TrackList &trackList) 
 {
     for (TrackList::const_iterator iter = trackList.begin(), iterEnd = trackList.end(); iter != iterEnd; ++iter)
     {
-        if (!(*iter)->GetSiblingTrackList().empty())
+        if (!(*iter)->GetSiblingList().empty())
         {
             return true;
         }

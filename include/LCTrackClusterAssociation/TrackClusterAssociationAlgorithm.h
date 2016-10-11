@@ -10,8 +10,15 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lc_content
 {
+
+template<typename, unsigned int> class KDTreeLinkerAlgo;
+template<typename, unsigned int> class KDTreeNodeInfoT;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  TrackClusterAssociationAlgorithm class
@@ -35,6 +42,12 @@ public:
 
 private:
     pandora::StatusCode Run();
+
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 4> HitKDTree;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 4> HitKDNode;
+    typedef std::unordered_multimap<std::pair<const pandora::Track*, unsigned int>, const pandora::CaloHit*> TracksToHitsInPseudoLayerMap;
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitsToClustersMap;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float           m_lowEnergyCut;                     ///< Energy cut (GeV). Algorithm prefers to associate tracks to high-energy clusters

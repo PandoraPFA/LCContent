@@ -47,8 +47,8 @@ StatusCode TrainingSoftwareCompensation::Run()
 
     const Cluster *const pCluster = *pClusterList->begin();
     pandora::CaloHitList clusterCaloHitList;
-    pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterCaloHitList);
-    clusterCaloHitList.insert(pCluster->GetIsolatedCaloHitList().begin(),pCluster->GetIsolatedCaloHitList().end());
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHitList);
+    clusterCaloHitList.insert(clusterCaloHitList.end(), pCluster->GetIsolatedCaloHitList().begin(),pCluster->GetIsolatedCaloHitList().end());
 
     const float rawEnergyOfCluster(pCluster->GetHadronicEnergy());
     const float pfoEnergy(pPfo->GetEnergy());

@@ -64,7 +64,7 @@ StatusCode LoopingTrackAssociationAlgorithm::Run()
         if (pTrack->HasAssociatedCluster() || !pTrack->CanFormPfo())
             continue;
 
-        if (!pTrack->GetDaughterTrackList().empty())
+        if (!pTrack->GetDaughterList().empty())
             continue;
 
         // Use only tracks that reach endcap, not barrel

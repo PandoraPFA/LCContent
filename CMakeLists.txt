@@ -40,9 +40,8 @@ endif()
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Low level settings - compiler etc
-if(NOT CMAKE_CXX_FLAGS)
+if (NOT CMAKE_CXX_FLAGS)
     set(CMAKE_CXX_FLAGS "-std=c++11")
-    set(PROCEED_WITHOUT_CXX_FLAGS ON)
 endif()
 
 include(CheckCXXCompilerFlag)
@@ -50,12 +49,7 @@ unset(COMPILER_SUPPORTS_CXX_FLAGS CACHE)
 CHECK_CXX_COMPILER_FLAG(${CMAKE_CXX_FLAGS} COMPILER_SUPPORTS_CXX_FLAGS)
 
 if(NOT COMPILER_SUPPORTS_CXX_FLAGS)
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}")
-    if(NOT PROCEED_WITHOUT_CXX_FLAGS)
-        message(FATAL_ERROR "CMake abort.")
-    endif()
-    message(STATUS "Proceed without cxx flags ${CMAKE_CXX_FLAGS}")
-    unset(CMAKE_CXX_FLAGS)
+    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}")
 endif()
 
 if(APPLE)
@@ -69,14 +63,6 @@ endif()
 
 # - Collect sources - not ideal because you have to keep running CMake to pick up changes
 file(GLOB_RECURSE LC_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cc")
-
-unset(COMPILER_SUPPORTS_CXX11 CACHE)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-if(NOT COMPILER_SUPPORTS_CXX11)
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} does not support c++11 - will build with reduced functionality")
-    file(GLOB_RECURSE LC_CONTENT_CXX11_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/LCContentFast/*.cc")
-    list(REMOVE_ITEM LC_CONTENT_SRCS ${LC_CONTENT_CXX11_SRCS})
-endif()
 
 # - Add library and properties
 add_library(${PROJECT_NAME} SHARED ${LC_CONTENT_SRCS})

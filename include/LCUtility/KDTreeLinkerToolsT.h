@@ -1,5 +1,5 @@
 /**
- *  @file   LCContent/include/LCContentFast/KDTreeLinkerToolsT.h
+ *  @file   LCContent/include/LCUtility/KDTreeLinkerToolsT.h
  * 
  *  @brief  Header file for the kd tree linker tools template class
  * 
@@ -14,13 +14,15 @@
 #include "Objects/Track.h"
 #include "Objects/CartesianVector.h"
 
+#include "Pandora/PandoraInternal.h"
+
 #include <array>
 
 namespace pandora { class Algorithm; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-namespace lc_content_fast
+namespace lc_content
 {
 
 /**
@@ -155,7 +157,7 @@ std::pair<float,float> minmax(const float a, const float b);
  *  @return KDTreeCube
  */
 template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const std::unordered_set<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes);
+KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes);
 
 /**
  *  @brief  fill_and_bound_3d_kd_tree_by_index
@@ -166,7 +168,7 @@ KDTreeCube fill_and_bound_3d_kd_tree(const std::unordered_set<const T*> &points,
  *  @return KDTreeCube
  */
 template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree_by_index(const std::vector<T*> &points, std::vector<KDTreeNodeInfoT<unsigned, 3> > &nodes);
+KDTreeCube fill_and_bound_3d_kd_tree_by_index(const std::vector<const T*> &points, std::vector<KDTreeNodeInfoT<unsigned, 3> > &nodes);
 
 /**
  *  @brief  fill_and_bound_3d_kd_tree
@@ -179,7 +181,7 @@ KDTreeCube fill_and_bound_3d_kd_tree_by_index(const std::vector<T*> &points, std
  *  @return KDTreeCube
  */
 template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, const std::unordered_set<const T*> &points,
+KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, const MANAGED_CONTAINER<const T*> &points,
     std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes, bool passthru = false);
 
 /**
@@ -192,7 +194,7 @@ KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, con
  * 
  *  @return KDTreeTesseract
  */
-KDTreeTesseract fill_and_bound_4d_kd_tree(const pandora::Algorithm *const caller, const pandora::CaloHitList &points,
+KDTreeTesseract fill_and_bound_4d_kd_tree(const pandora::Algorithm *const caller, const MANAGED_CONTAINER<const pandora::CaloHit*> &points,
     std::vector<KDTreeNodeInfoT<const pandora::CaloHit*, 4> > &nodes, bool passthru = false);
 
 /**
@@ -305,12 +307,6 @@ inline void KDTreeNodeT<DATA, DIM>::setAttributs(const KDTreeBoxT<DIM> &regionBo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
-inline const pandora::CartesianVector &kdtree_type_adaptor<T>::position(const T *const t)
-{
-    return t->GetPosition();
-}
-
 template<>
 inline const pandora::CartesianVector &kdtree_type_adaptor<const pandora::Track>::position(const pandora::Track *const t)
 {
@@ -332,7 +328,7 @@ inline const pandora::CartesianVector &kdtree_type_adaptor<const pandora::Cartes
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const std::unordered_set<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes)
+KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes)
 {
     std::array<float, 3> minpos{ {0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f} };
 
@@ -367,7 +363,7 @@ KDTreeCube fill_and_bound_3d_kd_tree(const std::unordered_set<const T*> &points,
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree_by_index(const std::vector<T*> &points, std::vector<KDTreeNodeInfoT<unsigned, 3> > &nodes)
+KDTreeCube fill_and_bound_3d_kd_tree_by_index(const std::vector<const T*> &points, std::vector<KDTreeNodeInfoT<unsigned, 3> > &nodes)
 {
     std::array<float, 3> minpos{ {0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f} };
 
@@ -375,7 +371,7 @@ KDTreeCube fill_and_bound_3d_kd_tree_by_index(const std::vector<T*> &points, std
 
     for (const T *const point : points)
     {
-        const pandora::CartesianVector &pos = kdtree_type_adaptor<T>::position(point);
+        const pandora::CartesianVector &pos = kdtree_type_adaptor<const T>::position(point);
         nodes.emplace_back(i, pos.GetX(), pos.GetY(), pos.GetZ());
 
         if (0 == i)
@@ -402,7 +398,7 @@ KDTreeCube fill_and_bound_3d_kd_tree_by_index(const std::vector<T*> &points, std
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, const std::unordered_set<const T*> &points,
+KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, const MANAGED_CONTAINER<const T*> &points,
     std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes, bool passthru)
 {
     std::array<float, 3> minpos{ {0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f} };
@@ -438,6 +434,6 @@ KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, con
     return KDTreeCube(minpos[0], maxpos[0], minpos[1], maxpos[1], minpos[2], maxpos[2]);
 }
 
-} // namespace lc_content_fast
+} // namespace lc_content
 
 #endif // KD_TREE_LINKER_TOOLS_TEMPLATED_H

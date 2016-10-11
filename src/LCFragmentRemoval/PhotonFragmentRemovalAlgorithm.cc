@@ -57,7 +57,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::Run()
     unsigned int nPasses(0);
     bool isFirstPass(true), shouldRecalculate(true);
 
-    ClusterList affectedClusters;
+    ClusterSet affectedClusters;
     ClusterContactMap clusterContactMap;
 
     while ((nPasses++ < m_nMaxPasses) && shouldRecalculate)
@@ -83,7 +83,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::Run()
 
             PandoraContentApi::Cluster::Metadata metadata;
             metadata.m_particleId = PHOTON;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pBestParentCluster, metadata));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pBestParentCluster, metadata));
         }
     }
 
@@ -92,7 +92,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PhotonFragmentRemovalAlgorithm::GetClusterContactMap(bool &isFirstPass, const ClusterList &affectedClusters,
+StatusCode PhotonFragmentRemovalAlgorithm::GetClusterContactMap(bool &isFirstPass, const ClusterSet &affectedClusters,
     ClusterContactMap &clusterContactMap) const
 {
     const ClusterList *pClusterList = NULL;
@@ -270,7 +270,7 @@ float PhotonFragmentRemovalAlgorithm::GetEvidenceForMerge(const ClusterContact &
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode PhotonFragmentRemovalAlgorithm::GetAffectedClusters(const ClusterContactMap &clusterContactMap, const Cluster *const pBestParentCluster,
-    const Cluster *const pBestDaughterCluster, ClusterList &affectedClusters) const
+    const Cluster *const pBestDaughterCluster, ClusterSet &affectedClusters) const
 {
     if (clusterContactMap.end() == clusterContactMap.find(pBestDaughterCluster))
         return STATUS_CODE_FAILURE;

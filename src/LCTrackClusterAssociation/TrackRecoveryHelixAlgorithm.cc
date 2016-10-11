@@ -66,7 +66,7 @@ StatusCode TrackRecoveryHelixAlgorithm::GetTrackAssociationInfoMap(TrackAssociat
         if (pTrack->HasAssociatedCluster() || !pTrack->CanFormPfo())
             continue;
 
-        if (!pTrack->GetDaughterTrackList().empty())
+        if (!pTrack->GetDaughterList().empty())
             continue;
 
         // Extract track information

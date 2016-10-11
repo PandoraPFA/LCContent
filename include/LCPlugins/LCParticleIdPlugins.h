@@ -31,6 +31,7 @@ public:
         LCEmShowerId();
 
         bool IsMatch(const pandora::Cluster *const pCluster) const;
+        bool IsMatch(const pandora::ParticleFlowObject *const pPfo) const;
 
     private:
         typedef std::pair<float, float> HitEnergyDistance;
@@ -84,6 +85,7 @@ public:
         LCPhotonId();
 
         bool IsMatch(const pandora::Cluster *const pCluster) const;
+        bool IsMatch(const pandora::ParticleFlowObject *const pPfo) const;
 
     private:
         pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -101,6 +103,7 @@ public:
         LCElectronId();
 
         bool IsMatch(const pandora::Cluster *const pCluster) const;
+        bool IsMatch(const pandora::ParticleFlowObject *const pPfo) const;
 
     private:
         pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -125,6 +128,7 @@ public:
         LCMuonId();
 
         bool IsMatch(const pandora::Cluster *const pCluster) const;
+        bool IsMatch(const pandora::ParticleFlowObject *const pPfo) const;
 
     private:
         pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

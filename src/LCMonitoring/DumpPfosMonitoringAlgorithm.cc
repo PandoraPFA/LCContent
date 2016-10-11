@@ -14,6 +14,7 @@
 
 #include "LCMonitoring/DumpPfosMonitoringAlgorithm.h"
 
+#include <algorithm>
 #include <iomanip>
 
 using namespace pandora;
@@ -231,10 +232,10 @@ StatusCode DumpPfosMonitoringAlgorithm::Run()
         const TrackList &trackList(pPfo->GetTrackList());
 
         if (trackList.size() > 0)
-            chargedPfos.insert(pPfo);
+            chargedPfos.push_back(pPfo);
 
         if (trackList.size() == 0)
-            (pfoPid == PHOTON) ? photonPfos.insert(pPfo) : neutralHadronPfos.insert(pPfo);
+            (pfoPid == PHOTON) ? photonPfos.push_back(pPfo) : neutralHadronPfos.push_back(pPfo);
 
         for (TrackList::const_iterator trackIter = trackList.begin(); trackIter != trackList.end(); ++trackIter)
         {
@@ -242,10 +243,10 @@ StatusCode DumpPfosMonitoringAlgorithm::Run()
             {
                 const Track *const pTrack = *trackIter;
 
-                const MCParticle *const pMCParticle(pTrack->GetMainMCParticle());
-                m_trackMcPfoTargets.insert(pMCParticle);
+                const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pTrack));
+                m_trackMcPfoTargets.push_back(pMCParticle);
 
-                const TrackList &daughterTracks(pTrack->GetDaughterTrackList());
+                const TrackList &daughterTracks(pTrack->GetDaughterList());
 
                 if (!daughterTracks.empty())
                     continue;
@@ -258,7 +259,7 @@ StatusCode DumpPfosMonitoringAlgorithm::Run()
                 }
                 else
                 {
-                    const TrackList siblingTracks = pTrack->GetSiblingTrackList();
+                    const TrackList siblingTracks = pTrack->GetSiblingList();
 
                     if (!siblingTracks.empty())
                         continue;
@@ -430,7 +431,7 @@ void DumpPfosMonitoringAlgorithm::DumpChargedPfo(const ParticleFlowObject *const
 
         try
         {
-            const MCParticle *const pMCParticle(pTrack->GetMainMCParticle());
+            const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pTrack));
             mcId = pMCParticle->GetParticleId();
             mcEnergy = pMCParticle->GetEnergy();
         }
@@ -446,7 +447,7 @@ void DumpPfosMonitoringAlgorithm::DumpChargedPfo(const ParticleFlowObject *const
 
         const float chi(ReclusterHelper::GetTrackClusterCompatibility(this->GetPandora(), clusterEnergy, trackEnergy));
 
-        const TrackList &daughterTrackList(pTrack->GetDaughterTrackList());
+        const TrackList &daughterTrackList(pTrack->GetDaughterList());
         const bool isParent(!daughterTrackList.empty());
         const bool badChi((chi > m_minAbsChiToDisplay) || (chi < -m_minAbsChiToDisplay && !isLeaving && !isParent));
 
@@ -754,7 +755,7 @@ void DumpPfosMonitoringAlgorithm::ClusterEnergyFractions(const Cluster *const pC
 
                 if ((charge != 0) || (std::abs(pdgCode) == LAMBDA) || (std::abs(pdgCode) == K_SHORT))
                 {
-                    if (m_trackMcPfoTargets.count(pMCParticle) == 0)
+                    if (m_trackMcPfoTargets.end() == std::find(m_trackMcPfoTargets.begin(), m_trackMcPfoTargets.end(), pMCParticle))
                     {
                         neutralEnergy += pCaloHit->GetHadronicEnergy();
                     }

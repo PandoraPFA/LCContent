@@ -47,7 +47,7 @@ private:
      *  @param  affectedClusters list of those clusters affected by previous cluster merging, for which contact details must be updated
      *  @param  clusterContactMap to receive the populated cluster contact map
      */
-    pandora::StatusCode GetClusterContactMap(bool &isFirstPass, const pandora::ClusterList &affectedClusters, ClusterContactMap &clusterContactMap) const;
+    pandora::StatusCode GetClusterContactMap(bool &isFirstPass, const pandora::ClusterSet &affectedClusters, ClusterContactMap &clusterContactMap) const;
 
     /**
      *  @brief  Whether candidate daughter cluster can be considered as photon-like
@@ -95,7 +95,7 @@ private:
      *  @param  affectedClusters to receive the list of affected clusters
      */
     pandora::StatusCode GetAffectedClusters(const ClusterContactMap &clusterContactMap, const pandora::Cluster *const pBestParentCluster,
-        const pandora::Cluster *const pBestDaughterCluster, pandora::ClusterList &affectedClusters) const;
+        const pandora::Cluster *const pBestDaughterCluster, pandora::ClusterSet &affectedClusters) const;
 
     typedef ClusterContact::Parameters ContactParameters;
     ContactParameters   m_contactParameters;                        ///< The cluster contact parameters

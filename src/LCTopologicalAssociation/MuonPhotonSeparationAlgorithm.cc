@@ -28,8 +28,7 @@ MuonPhotonSeparationAlgorithm::MuonPhotonSeparationAlgorithm() :
 StatusCode MuonPhotonSeparationAlgorithm::PerformFragmentation(const Cluster *const pOriginalCluster, const Track *const pTrack, unsigned int showerStartLayer,
     unsigned int showerEndLayer) const
 {
-    ClusterList clusterList;
-    clusterList.insert(pOriginalCluster);
+    const ClusterList clusterList(1, pOriginalCluster);
     std::string originalClustersListName, fragmentClustersListName;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, originalClustersListName,
@@ -125,7 +124,7 @@ StatusCode MuonPhotonSeparationAlgorithm::MakeClusterFragments(const unsigned in
                 if (NULL == pPhotonCluster)
                 {
                     PandoraContentApi::Cluster::Parameters parameters;
-                    parameters.m_caloHitList.insert(pCaloHit);
+                    parameters.m_caloHitList.push_back(pCaloHit);
                     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pPhotonCluster));
                 }
                 else

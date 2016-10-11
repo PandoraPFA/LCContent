@@ -12,6 +12,8 @@
 #include "LCHelpers/SortingHelper.h"
 #include "LCTopologicalAssociation/HighEnergyPhotonRecoveryAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lc_content
@@ -130,7 +132,7 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::GetClusterListAndNameMap(ClusterLi
         const ClusterList *pClusterList = NULL;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList, clusterListName));
 
-        clusterList.insert(pClusterList->begin(), pClusterList->end());
+        clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
         clusterListToNameMap.insert(ClusterListToNameMap::value_type(pClusterList, clusterListName));
 
         if (m_updateCurrentTrackClusterAssociations)
@@ -144,7 +146,7 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::GetClusterListAndNameMap(ClusterLi
         const ClusterList *pClusterList = NULL;
         if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, *iter, pClusterList))
         {
-            clusterList.insert(pClusterList->begin(), pClusterList->end());
+            clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
             clusterListToNameMap.insert(ClusterListToNameMap::value_type(pClusterList, *iter));
         }
         else
@@ -162,7 +164,7 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::PrepareClusters(const ClusterList 
     for (ClusterList::const_iterator clusterIter = clusterList.begin(), clusterIterEnd = clusterList.end(); clusterIter != clusterIterEnd; ++clusterIter)
     {
         const Cluster *pCluster = *clusterIter;
-        if (PHOTON == pCluster->GetParticleIdFlag())
+        if (PHOTON == pCluster->GetParticleId())
         {
             if (ECAL == pCluster->GetInnerLayerHitType()  && ECAL == pCluster->GetOuterLayerHitType() && pCluster->GetElectromagneticEnergy()>0.f)
             {
@@ -307,7 +309,7 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::GetClusterListName(const Cluster *
     {
         const ClusterList *const pClusterList = iter->first;
 
-        if (pClusterList->end() != pClusterList->find(pCluster))
+        if (pClusterList->end() != std::find(pClusterList->begin(), pClusterList->end(), pCluster))
         {
             listName = iter->second;
             return STATUS_CODE_SUCCESS;

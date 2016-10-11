@@ -12,6 +12,8 @@
 
 #include "LCTopologicalAssociation/IsolatedHitMergingAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lc_content
@@ -41,7 +43,7 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
         const ClusterList *pClusterList = NULL;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
-        clusterList.insert(pClusterList->begin(), pClusterList->end());
+        clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
     }
 
     for (StringVector::const_iterator iter = m_additionalClusterListNames.begin(), iterEnd = m_additionalClusterListNames.end(); iter != iterEnd; ++iter)
@@ -50,7 +52,7 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
 
         if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, *iter, pClusterList))
         {
-            clusterList.insert(pClusterList->begin(), pClusterList->end());
+            clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
         }
         else
         {
@@ -76,11 +78,11 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
         if (nCaloHits > m_minHitsInCluster)
             continue;
 
-        if (pInputClusterList->end() == pInputClusterList->find(pClusterToDelete))
+        if (pInputClusterList->end() == std::find(pInputClusterList->begin(), pInputClusterList->end(), pClusterToDelete))
             continue;
 
         CaloHitList caloHitList;
-        pClusterToDelete->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        pClusterToDelete->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pClusterToDelete));
         *iterI = NULL;

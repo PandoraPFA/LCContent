@@ -418,18 +418,19 @@ void LCShowerProfilePlugin::InitialiseTwoDShowerProfile(const Cluster *const pCl
             {
                 if (iter->first > maxPseudoLayer)
                 {
-                    showerProfile[uBin][vBin].m_unusedCaloHitList.insert(pCaloHit);
-                }else
+                    showerProfile[uBin][vBin].m_unusedCaloHitList.push_back(pCaloHit);
+                }
+                else
                 {
                     showerProfile[uBin][vBin].m_energy += pCaloHit->GetElectromagneticEnergy();
-                    showerProfile[uBin][vBin].m_caloHitList.insert(pCaloHit);
+                    showerProfile[uBin][vBin].m_caloHitList.push_back(pCaloHit);
                 }
-
-            }else
+            }
+            else
             {
                 int uEdgeBin(0), vEdgeBin(0);
                 this->FindBoundaryBins(uBin, vBin, 0, m_transProfileNBins - 1, 0, m_transProfileNBins - 1, uEdgeBin, vEdgeBin);
-                showerProfile[uEdgeBin][vEdgeBin].m_unusedCaloHitList.insert(pCaloHit);
+                showerProfile[uEdgeBin][vEdgeBin].m_unusedCaloHitList.push_back(pCaloHit);
             }
         }
     }
@@ -446,7 +447,7 @@ void LCShowerProfilePlugin::FindTracksProjection(const Cluster *const pCluster, 
     {
         const Track * pTrack = *iter;
         if (!pTrack->CanFormClusterlessPfo() && !pTrack->CanFormPfo()) continue;
-        if (!(pTrack->GetDaughterTrackList()).empty()) continue;
+        if (!(pTrack->GetDaughterList()).empty()) continue;
 
         int uBin(0), vBin(0);
         this->FindHitPositionProjection((pTrack->GetTrackStateAtCalorimeter()).GetPosition(), innerLayerCentroid, uAxis, vAxis, nOffsetBins, cellLengthScale, uBin, vBin);
@@ -732,9 +733,10 @@ void LCShowerProfilePlugin::ConvertBinsToShowerLists(const TwoDShowerProfile &sh
             vBar += vBinDifference * energy;
             uuBar += uBinDifference * uBinDifference * energy;
             vvBar += vBinDifference * vBinDifference * energy;
-            caloHitList.insert(showerProfileEntry.m_caloHitList.begin(), showerProfileEntry.m_caloHitList.end());
+            caloHitList.insert(caloHitList.end(), showerProfileEntry.m_caloHitList.begin(), showerProfileEntry.m_caloHitList.end());
+
             if (inclusiveMode)
-                caloHitList.insert(showerProfileEntry.m_unusedCaloHitList.begin(), showerProfileEntry.m_unusedCaloHitList.end());
+                caloHitList.insert(caloHitList.end(), showerProfileEntry.m_unusedCaloHitList.begin(), showerProfileEntry.m_unusedCaloHitList.end());
         }
         if (peakTotalEnergy < std::numeric_limits<float>::epsilon())
             throw StatusCodeException(STATUS_CODE_FAILURE);

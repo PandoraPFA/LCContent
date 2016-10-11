@@ -25,8 +25,8 @@ StatusCode EventPreparationAlgorithm::Run()
 
     for (TrackList::const_iterator iter = pCurrentTrackList->begin(), iterEnd = pCurrentTrackList->end(); iter != iterEnd; ++iter)
     {
-        if ((*iter)->GetDaughterTrackList().empty())
-            clusteringTrackList.insert(*iter);
+        if ((*iter)->GetDaughterList().empty())
+            clusteringTrackList.push_back(*iter);
     }
 
     // Save the filtered list and set it to be the current list for subsequent algorithms
@@ -43,13 +43,11 @@ StatusCode EventPreparationAlgorithm::Run()
     {
         if (MUON == (*hitIter)->GetHitType())
         {
-            if (!muonCaloHitList.insert(*hitIter).second)
-                return STATUS_CODE_ALREADY_PRESENT;
+            muonCaloHitList.push_back(*hitIter);
         }
         else
         {
-            if (!caloHitList.insert(*hitIter).second)
-                return STATUS_CODE_ALREADY_PRESENT;
+            caloHitList.push_back(*hitIter);
         }
     }
 

@@ -103,7 +103,7 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetAffectedClusterVec(const Clust
     {
         const Cluster *const pCluster = *iter;
 
-        if (pCluster->GetParticleIdFlag() == PHOTON)
+        if (pCluster->GetParticleId() == PHOTON)
         {
             photonClusterVec.push_back(pCluster);
         }
@@ -294,17 +294,16 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetEvidenceForMerging(const Clust
 StatusCode PhotonFragmentMergingBaseAlgorithm::GetShowerPeakList(const Cluster *const pParentCluster, const Cluster *const pDaughterCluster,
     ShowerProfilePlugin::ShowerPeakList &showerPeakList) const
 {
-    ClusterList temporaryList;
-    temporaryList.insert(pParentCluster);
-    temporaryList.insert(pDaughterCluster);
+    ClusterList temporaryList(1, pParentCluster);
+    temporaryList.push_back(pDaughterCluster);
     std::string originalClusterListName, peakClusterListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, temporaryList, originalClusterListName,
         peakClusterListName));
 
     const Cluster *pTempCluster = NULL;
     PandoraContentApi::Cluster::Parameters clusterParameters;
-    pDaughterCluster->GetOrderedCaloHitList().GetCaloHitList(clusterParameters.m_caloHitList);
-    pParentCluster->GetOrderedCaloHitList().GetCaloHitList(clusterParameters.m_caloHitList);
+    pDaughterCluster->GetOrderedCaloHitList().FillCaloHitList(clusterParameters.m_caloHitList);
+    pParentCluster->GetOrderedCaloHitList().FillCaloHitList(clusterParameters.m_caloHitList);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParameters, pTempCluster));
 
     const ShowerProfilePlugin *const pShowerProfilePlugin(PandoraContentApi::GetPlugins(*this)->GetShowerProfilePlugin());

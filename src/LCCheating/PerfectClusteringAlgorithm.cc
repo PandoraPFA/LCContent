@@ -151,13 +151,12 @@ void PerfectClusteringAlgorithm::AddToHitListMap(const CaloHit *const pCaloHitTo
 
     if (mcParticleToHitListMap.end() == iter)
     {
-        CaloHitList *const pCaloHitList = new CaloHitList();
-        pCaloHitList->insert(pCaloHitToAdd);
+        CaloHitList *const pCaloHitList = new CaloHitList(1, pCaloHitToAdd);
         (void) mcParticleToHitListMap.insert(MCParticleToHitListMap::value_type(pMCParticle, pCaloHitList));
     }
     else
     {
-        iter->second->insert(pCaloHitToAdd);
+        iter->second->push_back(pCaloHitToAdd);
     }
 }
 
@@ -194,7 +193,7 @@ void PerfectClusteringAlgorithm::CreateClusters(const MCParticleToHitListMap &mc
             }
 
             if (metadata.m_particleId.IsInitialized())
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pCluster, metadata));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
         }
         delete pCaloHitList;
     }

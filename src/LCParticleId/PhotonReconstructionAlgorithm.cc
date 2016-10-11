@@ -221,8 +221,7 @@ StatusCode PhotonReconstructionAlgorithm::CreatePhotons(const Cluster *const pCl
 
 StatusCode PhotonReconstructionAlgorithm::InitialiseFragmentation(const Cluster *const pCluster, std::string &originalClusterListName, std::string &peakClusterListName) const
 {
-    ClusterList clusterList;
-    clusterList.insert(pCluster);
+    const ClusterList clusterList(1, pCluster);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, originalClusterListName, peakClusterListName));
     return STATUS_CODE_SUCCESS;
 }
@@ -330,7 +329,7 @@ StatusCode PhotonReconstructionAlgorithm::SetPhotonID(const Cluster *const pPeak
 {
     PandoraContentApi::Cluster::Metadata metadata;
     metadata.m_particleId = PHOTON;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPeakCluster, metadata));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pPeakCluster, metadata));
     return STATUS_CODE_SUCCESS;
 }
 

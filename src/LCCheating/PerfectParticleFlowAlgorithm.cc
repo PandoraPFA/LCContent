@@ -112,7 +112,7 @@ void PerfectParticleFlowAlgorithm::CaloHitCollection(const MCParticle *const pPf
             if (NULL == pCluster)
             {
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
-                pfoParameters.m_clusterList.insert(pCluster);
+                pfoParameters.m_clusterList.push_back(pCluster);
             }
             else
             {
@@ -136,7 +136,7 @@ void PerfectParticleFlowAlgorithm::SimpleCaloHitCollection(const MCParticle *con
     if (pHitPfoTarget != pPfoTarget)
         return;
 
-    caloHitList.insert(pCaloHit);
+    caloHitList.push_back(pCaloHit);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -183,7 +183,7 @@ void PerfectParticleFlowAlgorithm::FullCaloHitCollection(const MCParticle *const
         if (shouldFragment)
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Fragment(*this, pLocalCaloHit, weightFraction, pCaloHitToAdd, pLocalCaloHit));
 
-        caloHitList.insert(pCaloHitToAdd);
+        caloHitList.push_back(pCaloHitToAdd);
     }
 }
 
@@ -199,13 +199,13 @@ void PerfectParticleFlowAlgorithm::TrackCollection(const MCParticle *const pPfoT
         try
         {
             const Track *const pTrack = *iter;
-            const MCParticle *const pTrkMCParticle(pTrack->GetMainMCParticle());
+            const MCParticle *const pTrkMCParticle(MCParticleHelper::GetMainMCParticle(pTrack));
             const MCParticle *const pTrkPfoTarget(pTrkMCParticle->GetPfoTarget());
 
             if (pTrkPfoTarget != pPfoTarget)
                 continue;
 
-            pfoParameters.m_trackList.insert(pTrack);
+            pfoParameters.m_trackList.push_back(pTrack);
         }
         catch (StatusCodeException &)
         {
@@ -233,9 +233,9 @@ void PerfectParticleFlowAlgorithm::SetPfoParametersFromTracks(const MCParticle *
                 continue;
             }
 
-            if (!pTrack->GetParentTrackList().empty())
+            if (!pTrack->GetParentList().empty())
             {
-                std::cout << pPfoTarget << " Drop track, E: " << pTrack->GetEnergyAtDca() << " nParents: " << pTrack->GetParentTrackList().size() << std::endl;
+                std::cout << pPfoTarget << " Drop track, E: " << pTrack->GetEnergyAtDca() << " nParents: " << pTrack->GetParentList().size() << std::endl;
                 continue;
             }
 

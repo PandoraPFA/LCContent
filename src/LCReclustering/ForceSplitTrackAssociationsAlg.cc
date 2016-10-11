@@ -44,8 +44,7 @@ StatusCode ForceSplitTrackAssociationsAlg::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(pOriginalCluster->GetIsolatedCaloHitList()));
 
         // Initialize cluster fragmentation operations
-        ClusterList clusterList;
-        clusterList.insert(pOriginalCluster);
+        const ClusterList clusterList(1, pOriginalCluster);
         std::string originalClustersListName, fragmentClustersListName;
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList,

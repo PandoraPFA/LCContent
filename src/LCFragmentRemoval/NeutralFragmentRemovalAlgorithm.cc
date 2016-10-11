@@ -63,7 +63,7 @@ StatusCode NeutralFragmentRemovalAlgorithm::Run()
     unsigned int nPasses(0);
     bool isFirstPass(true), shouldRecalculate(true);
 
-    ClusterList affectedClusters;
+    ClusterSet affectedClusters;
     NeutralClusterContactMap neutralClusterContactMap;
 
     while ((nPasses++ < m_nMaxPasses) && shouldRecalculate)
@@ -94,7 +94,7 @@ StatusCode NeutralFragmentRemovalAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode NeutralFragmentRemovalAlgorithm::GetNeutralClusterContactMap(bool &isFirstPass, const ClusterList &affectedClusters,
+StatusCode NeutralFragmentRemovalAlgorithm::GetNeutralClusterContactMap(bool &isFirstPass, const ClusterSet &affectedClusters,
     NeutralClusterContactMap &neutralClusterContactMap) const
 {
     const ClusterList *pClusterList = NULL;
@@ -270,7 +270,7 @@ float NeutralFragmentRemovalAlgorithm::GetEvidenceForMerge(const NeutralClusterC
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode NeutralFragmentRemovalAlgorithm::GetAffectedClusters(const NeutralClusterContactMap &neutralClusterContactMap, const Cluster *const pBestParentCluster,
-    const Cluster *const pBestDaughterCluster, ClusterList &affectedClusters) const
+    const Cluster *const pBestDaughterCluster, ClusterSet &affectedClusters) const
 {
     if (neutralClusterContactMap.end() == neutralClusterContactMap.find(pBestDaughterCluster))
         return STATUS_CODE_FAILURE;

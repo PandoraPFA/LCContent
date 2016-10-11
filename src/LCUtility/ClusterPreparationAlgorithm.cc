@@ -30,7 +30,7 @@ StatusCode ClusterPreparationAlgorithm::Run()
         for (ClusterList::const_iterator clusterIter = pClusterList->begin(), clusterIterEnd = pClusterList->end(); clusterIter != clusterIterEnd; ++clusterIter)
         {
             if ((*clusterIter)->IsAvailable())
-                clustersToSave.insert(*clusterIter);
+                clustersToSave.push_back(*clusterIter);
         }
 
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::SaveList(*this,

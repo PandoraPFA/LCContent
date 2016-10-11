@@ -71,10 +71,8 @@ StatusCode ExitingTrackAlg::Run()
             continue;
 
         // Initialize the reclustering
-        ClusterList reclusterClusterList;
-        reclusterClusterList.insert(pCluster);
-
-        TrackList reclusterTrackList(trackList.begin(), trackList.end());
+        const ClusterList reclusterClusterList(1, pCluster);
+        const TrackList reclusterTrackList(trackList.begin(), trackList.end());
 
         std::string originalClustersListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeReclustering(*this, reclusterTrackList,

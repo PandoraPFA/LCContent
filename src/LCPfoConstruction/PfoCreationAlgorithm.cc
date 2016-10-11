@@ -80,13 +80,13 @@ StatusCode PfoCreationAlgorithm::CreateTrackBasedPfos() const
 StatusCode PfoCreationAlgorithm::PopulateTrackBasedPfo(const Track *const pTrack, PfoParameters &pfoParameters, const bool readSiblingInfo) const
 {
     // Add track to the pfo
-    pfoParameters.m_trackList.insert(pTrack);
+    pfoParameters.m_trackList.push_back(pTrack);
 
     // Add any cluster associated with this track to the pfo
     try
     {
         const Cluster *const pAssociatedCluster(pTrack->GetAssociatedCluster());
-        pfoParameters.m_clusterList.insert(pAssociatedCluster);
+        pfoParameters.m_clusterList.push_back(pAssociatedCluster);
     }
     catch (StatusCodeException &)
     {
@@ -95,7 +95,7 @@ StatusCode PfoCreationAlgorithm::PopulateTrackBasedPfo(const Track *const pTrack
     // Consider any sibling tracks
     if (readSiblingInfo)
     {
-        const TrackList &siblingTrackList(pTrack->GetSiblingTrackList());
+        const TrackList &siblingTrackList(pTrack->GetSiblingList());
 
         for (TrackList::const_iterator iter = siblingTrackList.begin(), iterEnd = siblingTrackList.end(); iter != iterEnd; ++iter)
         {
@@ -104,7 +104,7 @@ StatusCode PfoCreationAlgorithm::PopulateTrackBasedPfo(const Track *const pTrack
     }
 
     // Consider any daughter tracks
-    const TrackList &daughterTrackList(pTrack->GetDaughterTrackList());
+    const TrackList &daughterTrackList(pTrack->GetDaughterList());
 
     for (TrackList::const_iterator iter = daughterTrackList.begin(), iterEnd = daughterTrackList.end(); iter != iterEnd; ++iter)
     {
@@ -118,13 +118,13 @@ StatusCode PfoCreationAlgorithm::PopulateTrackBasedPfo(const Track *const pTrack
 
 StatusCode PfoCreationAlgorithm::SetTrackBasedPfoParameters(const Track *const pTrack, PfoParameters &pfoParameters) const
 {
-    const bool hasParent(!pTrack->GetParentTrackList().empty());
+    const bool hasParent(!pTrack->GetParentList().empty());
 
     if (hasParent)
         return STATUS_CODE_NOT_ALLOWED;
 
-    const bool hasSibling(!pTrack->GetSiblingTrackList().empty());
-    const bool hasDaughter(!pTrack->GetDaughterTrackList().empty());
+    const bool hasSibling(!pTrack->GetSiblingList().empty());
+    const bool hasDaughter(!pTrack->GetDaughterList().empty());
 
     if (hasSibling && hasDaughter)
         return STATUS_CODE_NOT_ALLOWED;
@@ -146,8 +146,8 @@ StatusCode PfoCreationAlgorithm::SetSiblingTrackBasedPfoParameters(const Track *
     float energy(0.f);
     CartesianVector momentum(0.f, 0.f, 0.f);
 
-    TrackList fullSiblingTrackList(pTrack->GetSiblingTrackList());
-    fullSiblingTrackList.insert(pTrack);
+    TrackList fullSiblingTrackList(pTrack->GetSiblingList());
+    fullSiblingTrackList.push_back(pTrack);
 
     for (TrackList::const_iterator iter = fullSiblingTrackList.begin(), iterEnd = fullSiblingTrackList.end(); iter != iterEnd; ++iter)
     {
@@ -183,7 +183,7 @@ StatusCode PfoCreationAlgorithm::SetDaughterTrackBasedPfoParameters(const Track 
     float energy(0.f);
     CartesianVector momentum(0.f, 0.f, 0.f);
 
-    const TrackList &daughterTrackList(pTrack->GetDaughterTrackList());
+    const TrackList &daughterTrackList(pTrack->GetDaughterList());
     const unsigned int nDaughters(daughterTrackList.size());
 
     for (TrackList::const_iterator iter = daughterTrackList.begin(), iterEnd = daughterTrackList.end(); iter != iterEnd; ++iter)
@@ -262,7 +262,7 @@ StatusCode PfoCreationAlgorithm::CreateNeutralPfos() const
         pfoParameters.m_charge = 0;
         pfoParameters.m_mass = (isPhoton ? PdgTable::GetParticleMass(PHOTON) : PdgTable::GetParticleMass(NEUTRON));
         pfoParameters.m_energy = clusterEnergy;
-        pfoParameters.m_clusterList.insert(pCluster);
+        pfoParameters.m_clusterList.push_back(pCluster);
 
         // Photon position: 0) unweighted inner centroid, 1) energy-weighted inner centroid, 2+) energy-weighted centroid for all layers
         CartesianVector positionVector(0.f, 0.f, 0.f);

@@ -10,6 +10,8 @@
 
 #include "LCParticleId/MuonReconstructionAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lc_content
@@ -112,7 +114,7 @@ StatusCode MuonReconstructionAlgorithm::AssociateMuonTracks(const ClusterList *c
             if (pTrack->HasAssociatedCluster() || !pTrack->CanFormPfo())
                 continue;
 
-            if (!pTrack->GetDaughterTrackList().empty())
+            if (!pTrack->GetDaughterList().empty())
                 continue;
 
             if (pTrack->GetEnergyAtDca() < m_minTrackCandidateEnergy)
@@ -345,7 +347,7 @@ StatusCode MuonReconstructionAlgorithm::CreateMuonPfos(const ClusterList *const 
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
 
         const Cluster *const pCluster = *iter;
-        pfoParameters.m_clusterList.insert(pCluster);
+        pfoParameters.m_clusterList.push_back(pCluster);
 
         // Consider associated tracks
         const TrackList &trackList(pCluster->GetAssociatedTrackList());
@@ -354,12 +356,12 @@ StatusCode MuonReconstructionAlgorithm::CreateMuonPfos(const ClusterList *const 
             continue;
 
         const Track *const pTrack = *(trackList.begin());
-        pfoParameters.m_trackList.insert(pTrack);
+        pfoParameters.m_trackList.push_back(pTrack);
 
         // Examine track relationships
-        const TrackList &parentTrackList(pTrack->GetParentTrackList());
+        const TrackList &parentTrackList(pTrack->GetParentList());
 
-        if ((parentTrackList.size() > m_nExpectedParentTracks) || !pTrack->GetDaughterTrackList().empty() || !pTrack->GetSiblingTrackList().empty())
+        if ((parentTrackList.size() > m_nExpectedParentTracks) || !pTrack->GetDaughterList().empty() || !pTrack->GetSiblingList().empty())
         {
             std::cout << "MuonReconstructionAlgorithm: invalid/unexpected track relationships for muon." << std::endl;
             continue;
@@ -367,7 +369,7 @@ StatusCode MuonReconstructionAlgorithm::CreateMuonPfos(const ClusterList *const 
 
         if (!parentTrackList.empty())
         {
-            pfoParameters.m_trackList.insert(parentTrackList.begin(), parentTrackList.end());
+            pfoParameters.m_trackList.insert(pfoParameters.m_trackList.end(), parentTrackList.begin(), parentTrackList.end());
         }
 
         pfoParameters.m_charge = pTrack->GetCharge();
@@ -412,7 +414,10 @@ StatusCode MuonReconstructionAlgorithm::TidyLists() const
 
     for (TrackList::const_iterator iter = pfoTrackList.begin(), iterEnd = pfoTrackList.end(); iter != iterEnd; ++iter)
     {
-        outputTrackList.erase(*iter);
+        TrackList::iterator outputIter = std::find(outputTrackList.begin(), outputTrackList.end(), *iter);
+
+        if (outputTrackList.end() != outputIter)
+            outputTrackList.erase(outputIter);
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, outputTrackList, m_outputTrackListName));
@@ -429,8 +434,14 @@ StatusCode MuonReconstructionAlgorithm::TidyLists() const
 
     for (CaloHitList::const_iterator iter = pfoCaloHitList.begin(), iterEnd = pfoCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        outputCaloHitList.erase(*iter);
-        outputMuonCaloHitList.erase(*iter);
+        CaloHitList::iterator outputIter = std::find(outputCaloHitList.begin(), outputCaloHitList.end(), *iter);
+        CaloHitList::iterator outputMuonIter = std::find(outputMuonCaloHitList.begin(), outputMuonCaloHitList.end(), *iter);
+
+        if (outputCaloHitList.end() != outputIter)
+            outputCaloHitList.erase(outputIter);
+
+        if (outputMuonCaloHitList.end() != outputMuonIter)
+            outputMuonCaloHitList.erase(outputMuonIter);
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, outputCaloHitList, m_outputCaloHitListName));
@@ -461,15 +472,15 @@ StatusCode MuonReconstructionAlgorithm::GetPfoComponents(TrackList &pfoTrackList
         if ((particleId != MU_MINUS) && (particleId != MU_PLUS))
             return STATUS_CODE_FAILURE;
 
-        pfoTrackList.insert(pPfo->GetTrackList().begin(), pPfo->GetTrackList().end());
-        pfoClusterList.insert(pPfo->GetClusterList().begin(), pPfo->GetClusterList().end());
+        pfoTrackList.insert(pfoTrackList.end(), pPfo->GetTrackList().begin(), pPfo->GetTrackList().end());
+        pfoClusterList.insert(pfoClusterList.end(), pPfo->GetClusterList().begin(), pPfo->GetClusterList().end());
     }
 
     for (ClusterList::const_iterator iter = pfoClusterList.begin(), iterEnd = pfoClusterList.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(pfoCaloHitList);
-        pfoCaloHitList.insert(pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(pfoCaloHitList);
+        pfoCaloHitList.insert(pfoCaloHitList.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
     }
 
     return STATUS_CODE_SUCCESS;
