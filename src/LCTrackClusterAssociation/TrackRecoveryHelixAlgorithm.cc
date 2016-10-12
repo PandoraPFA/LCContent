@@ -215,7 +215,7 @@ StatusCode TrackRecoveryHelixAlgorithm::MakeTrackClusterAssociations(TrackAssoci
 
 bool TrackRecoveryHelixAlgorithm::AssociationInfo::operator< (const TrackRecoveryHelixAlgorithm::AssociationInfo &rhs) const
 {
-    return (SortingHelper::SortClustersByHadronicEnergy(this->m_pCluster, rhs.m_pCluster));
+    return (SortingHelper::SortClustersByNHits(this->m_pCluster, rhs.m_pCluster));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

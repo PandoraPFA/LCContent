@@ -55,7 +55,7 @@ StatusCode PhotonSplittingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTrackList));
 
     TrackVector trackVector(pTrackList->begin(), pTrackList->end());
-    std::sort(trackVector.begin(), trackVector.end(), lc_content::SortingHelper::SortTracksByEnergy);
+    std::sort(trackVector.begin(), trackVector.end(), PointerLessThan<Track>());
 
     const ClusterList *pPhotonClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pPhotonClusterList));

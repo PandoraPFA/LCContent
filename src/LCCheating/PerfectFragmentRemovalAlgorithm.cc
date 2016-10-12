@@ -46,8 +46,8 @@ StatusCode PerfectFragmentRemovalAlgorithm::Run()
         }
     }
 
-    std::sort(chargedClusters.begin(), chargedClusters.end(), SortingHelper::SortClustersByHadronicEnergy);
-    std::sort(neutralClusters.begin(), neutralClusters.end(), SortingHelper::SortClustersByHadronicEnergy);
+    std::sort(chargedClusters.begin(), chargedClusters.end(), SortingHelper::SortClustersByNHits);
+    std::sort(neutralClusters.begin(), neutralClusters.end(), SortingHelper::SortClustersByNHits);
 
     // Merge charged clusters sharing same mc particle
     MCParticleToClusterMap mcParticleToClusterMap;

@@ -55,7 +55,7 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTrackList));
 
     TrackVector trackVector(pTrackList->begin(), pTrackList->end());
-    std::sort(trackVector.begin(), trackVector.end(), lc_content::SortingHelper::SortTracksByEnergy);
+    std::sort(trackVector.begin(), trackVector.end(), PointerLessThan<Track>());
 
     const ClusterList *pClusterList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
@@ -151,7 +151,7 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
         }
 
         ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
-        nearbyClusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+        nearbyClusterList.sort(SortingHelper::SortClustersByNHits);
         nearby_clusters.clear();
 
         // Identify the closest cluster and also the closest cluster below a specified hadronic energy threshold

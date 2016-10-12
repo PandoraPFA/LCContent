@@ -80,7 +80,7 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::Run()
 
         ClusterList parentCandidates;
         for (auto iterJ = parentCandidateRange.first; iterJ != parentCandidateRange.second; ++iterJ) parentCandidates.push_back(iterJ->second);
-        parentCandidates.sort(SortingHelper::SortClustersByHadronicEnergy);
+        parentCandidates.sort(SortingHelper::SortClustersByNHits);
 
         for (const Cluster *const pParentCluster : parentCandidates)
         {
@@ -240,7 +240,7 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::MergeClusters(const ClusterCluster
 {
     ClusterList clusterList;
     for (const auto &mapEntry : daughterBestParentMap) clusterList.push_back(mapEntry.first);
-    clusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+    clusterList.sort(SortingHelper::SortClustersByNHits);
 
     for (const Cluster *const pDaughterCluster : clusterList)
     {

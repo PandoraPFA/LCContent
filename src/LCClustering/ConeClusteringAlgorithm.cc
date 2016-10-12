@@ -308,7 +308,7 @@ StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudo
             found_hits.clear();
 
             ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
-            nearbyClusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+            nearbyClusterList.sort(SortingHelper::SortClustersByNHits);
             nearby_clusters.clear();
 
             // Instead of using the full cluster list we use only those clusters that are found to be nearby according to the KD-tree
@@ -469,7 +469,7 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
                 }
 
                 ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
-                nearbyClusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+                nearbyClusterList.sort(SortingHelper::SortClustersByNHits);
                 nearby_clusters.clear();
 
                 // See if hit should be associated with any existing clusters

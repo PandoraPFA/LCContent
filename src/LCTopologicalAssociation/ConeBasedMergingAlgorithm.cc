@@ -52,7 +52,7 @@ StatusCode ConeBasedMergingAlgorithm::Run()
 
     ClusterVector parentVector;
     for (const auto &mapEntry : parentFitResultMap) parentVector.push_back(mapEntry.first);
-    std::sort(parentVector.begin(), parentVector.end(), SortingHelper::SortClustersByHadronicEnergy);
+    std::sort(parentVector.begin(), parentVector.end(), SortingHelper::SortClustersByNHits);
 
     // Loop over daughter candidates and, for each, examine all possible parents
     for (ClusterVector::reverse_iterator iterI = daughterVector.rbegin(), iterIEnd = daughterVector.rend(); iterI != iterIEnd; ++iterI)

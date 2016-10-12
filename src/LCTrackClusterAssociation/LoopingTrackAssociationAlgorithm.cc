@@ -48,7 +48,7 @@ StatusCode LoopingTrackAssociationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTrackList));
 
     TrackVector trackVector(pTrackList->begin(), pTrackList->end());
-    std::sort(trackVector.begin(), trackVector.end(), SortingHelper::SortTracksByEnergy);
+    std::sort(trackVector.begin(), trackVector.end(), PointerLessThan<Track>());
 
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));

@@ -252,7 +252,7 @@ StatusCode MainFragmentRemovalAlgorithm::GetClusterMergingCandidates(const Charg
 
     ClusterList clusterList;
     for (const auto &mapEntry : chargedClusterContactMap) clusterList.push_back(mapEntry.first);
-    clusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+    clusterList.sort(SortingHelper::SortClustersByNHits);
 
     for (const Cluster *const pDaughterCluster : clusterList)
     {

@@ -125,9 +125,9 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetAffectedClusterVec(const Clust
         }
     }
 
-    std::sort(photonClusterVec.begin(), photonClusterVec.end(), SortingHelper::SortClustersByElectromagneticEnergy);
-    std::sort(neutralClusterVec.begin(), neutralClusterVec.end(), SortingHelper::SortClustersByElectromagneticEnergy);
-    std::sort(unusedClusterVec.begin(), unusedClusterVec.end(), SortingHelper::SortClustersByElectromagneticEnergy);
+    std::sort(photonClusterVec.begin(), photonClusterVec.end(), SortingHelper::SortClustersByNHits);
+    std::sort(neutralClusterVec.begin(), neutralClusterVec.end(), SortingHelper::SortClustersByNHits);
+    std::sort(unusedClusterVec.begin(), unusedClusterVec.end(), SortingHelper::SortClustersByNHits);
 
     return STATUS_CODE_SUCCESS;
 }

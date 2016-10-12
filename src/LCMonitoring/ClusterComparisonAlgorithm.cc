@@ -115,7 +115,7 @@ void ClusterComparisonAlgorithm::CompareClusters(const ClusterList &clusterList1
 
     ClusterList clusterList;
     for (const auto &mapEntry : clusterToHitListMap1) clusterList.push_back(mapEntry.first);
-    clusterList.sort(SortingHelper::SortClustersByHadronicEnergy);
+    clusterList.sort(SortingHelper::SortClustersByNHits);
 
     for (const Cluster *const pCluster1 : clusterList)
     {
