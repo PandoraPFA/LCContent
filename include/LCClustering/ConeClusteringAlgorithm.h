@@ -76,28 +76,26 @@ private:
      */
     pandora::StatusCode GetCurrentClusterFitResults(const pandora::ClusterVector &clusterVector, ClusterFitResultMap &clusterFitResultMap) const;
 
-    typedef std::vector<const pandora::CaloHit *> CustomSortedCaloHitList;
-
     /**
      *  @brief  Match clusters to calo hits in previous pseudo layers
      * 
      *  @param  pseudoLayer the current pseudo layer
-     *  @param  pCustomSortedCaloHitList address of the custom sorted list of calo hits in the current pseudo layer
+     *  @param  relevantCaloHits the calo hits in the current pseudo layer
      *  @param  clusterFitResultMap containing the current cluster fit results
      *  @param  clusterVector vector containing addresses of current clusters
      */
-    pandora::StatusCode FindHitsInPreviousLayers(unsigned int pseudoLayer, CustomSortedCaloHitList *const pCustomSortedCaloHitList,
+    pandora::StatusCode FindHitsInPreviousLayers(unsigned int pseudoLayer, const pandora::CaloHitVector &relevantCaloHits,
         const ClusterFitResultMap &clusterFitResultMap, pandora::ClusterVector &clusterVector);
 
     /**
      *  @brief  Match clusters to calo hits in current pseudo layer
      * 
      *  @param  pseudoLayer the current pseudo layer
-     *  @param  pCustomSortedCaloHitList address of the custom sorted list of calo hits in the current pseudo layer
+     *  @param  relevantCaloHits the calo hits in the current pseudo layer
      *  @param  clusterFitResultMap containing the current cluster fit results
      *  @param  clusterVector vector containing addresses of current clusters
      */
-    pandora::StatusCode FindHitsInSameLayer(unsigned int pseudoLayer, CustomSortedCaloHitList *const pCustomSortedCaloHitList,
+    pandora::StatusCode FindHitsInSameLayer(unsigned int pseudoLayer, const pandora::CaloHitVector &relevantCaloHits,
         const ClusterFitResultMap &clusterFitResultMap, pandora::ClusterVector &clusterVector);
 
     /**
