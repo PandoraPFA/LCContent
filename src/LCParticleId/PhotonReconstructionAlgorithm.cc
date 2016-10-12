@@ -56,6 +56,20 @@ PhotonReconstructionAlgorithm::~PhotonReconstructionAlgorithm()
 
     if (m_shouldDrawPdfHistograms)
         this->DrawHistograms();
+
+    for (PDFVarLikelihoodPDFMap::iterator iter = m_pdfVarLikelihoodPDFMap.begin(), iterEnd = m_pdfVarLikelihoodPDFMap.end(); iter != iterEnd; ++iter)
+    {
+        LikelihoodPDFObject &likelihoodPDFObject(iter->second);
+
+        for (unsigned int energyBin = 0; energyBin < m_nEnergyBins; ++energyBin)
+        {
+            delete likelihoodPDFObject.m_pSignalPDF[energyBin];
+            delete likelihoodPDFObject.m_pBackgroundPDF[energyBin];
+        }
+
+        delete [] likelihoodPDFObject.m_pSignalPDF;
+        delete [] likelihoodPDFObject.m_pBackgroundPDF;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -355,7 +369,7 @@ float PhotonReconstructionAlgorithm::GetPIDForPhotonID(const float clusterEnergy
 
     for (PDFVarLikelihoodPDFMap::const_iterator iter = m_pdfVarLikelihoodPDFMap.begin(), iterEnd = m_pdfVarLikelihoodPDFMap.end(); iter != iterEnd; ++iter)
     {
-        const LikelihoodPDFObject &likelihoodPDFObject((*iter).second);
+        const LikelihoodPDFObject &likelihoodPDFObject(iter->second);
         const PDFVar &pdfVar((*iter).first);
 
         yes *= this->GetHistogramContent(likelihoodPDFObject.m_pSignalPDF[energyBin], pdfVarFloatMap.find(pdfVar)->second);
@@ -575,7 +589,7 @@ StatusCode PhotonReconstructionAlgorithm::InitialiseHistogramWriting(const pando
 
     for (PDFVarLikelihoodPDFMap::iterator iter = m_pdfVarLikelihoodPDFMap.begin(), iterEnd = m_pdfVarLikelihoodPDFMap.end(); iter != iterEnd; ++iter)
     {
-        LikelihoodPDFObject &likelihoodPDFObject((*iter).second);
+        LikelihoodPDFObject &likelihoodPDFObject(iter->second);
         likelihoodPDFObject.m_pSignalPDF = new Histogram*[m_nEnergyBins];
         likelihoodPDFObject.m_pBackgroundPDF = new Histogram*[m_nEnergyBins];
 
@@ -613,7 +627,7 @@ StatusCode PhotonReconstructionAlgorithm::InitialiseHistogramReading()
 
     for (PDFVarLikelihoodPDFMap::iterator iter = m_pdfVarLikelihoodPDFMap.begin(), iterEnd = m_pdfVarLikelihoodPDFMap.end(); iter != iterEnd; ++iter)
     {
-        LikelihoodPDFObject &likelihoodPDFObject((*iter).second);
+        LikelihoodPDFObject &likelihoodPDFObject(iter->second);
 
         likelihoodPDFObject.m_pSignalPDF = new Histogram*[m_nEnergyBins];
         likelihoodPDFObject.m_pBackgroundPDF = new Histogram*[m_nEnergyBins];
