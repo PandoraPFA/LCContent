@@ -195,7 +195,7 @@ bool SoftClusterMergingAlgorithm::IsSoftCluster(const Cluster *const pDaughterCl
     if (pDaughterCluster->GetHadronicEnergy() < m_minClusterHadEnergy)
         isSoftCluster = true;
 
-    if (pDaughterCluster->IsPhotonFast(this->GetPandora()) && (pDaughterCluster->GetElectromagneticEnergy() > m_minClusterEMEnergy))
+    if (pDaughterCluster->PassPhotonId(this->GetPandora()) && (pDaughterCluster->GetElectromagneticEnergy() > m_minClusterEMEnergy))
         isSoftCluster = false;
 
     return isSoftCluster;

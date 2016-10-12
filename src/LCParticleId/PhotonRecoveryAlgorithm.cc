@@ -70,7 +70,7 @@ void PhotonRecoveryAlgorithm::FindPhotonsIdentifiedAsHadrons(const ClusterList *
         if (!pCluster->GetAssociatedTrackList().empty())
             continue;
 
-        if (pCluster->IsPhotonFast(this->GetPandora()))
+        if (pCluster->PassPhotonId(this->GetPandora()))
             continue;
 
         // Apply simple initial cuts

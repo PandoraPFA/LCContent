@@ -133,7 +133,7 @@ StatusCode NeutralFragmentRemovalAlgorithm::GetNeutralClusterContactMap(bool &is
             if (pDaughterCluster == pParentCluster)
                 continue;
 
-            if (!pParentCluster->GetAssociatedTrackList().empty() || pParentCluster->IsPhotonFast(this->GetPandora()))
+            if (!pParentCluster->GetAssociatedTrackList().empty() || pParentCluster->PassPhotonId(this->GetPandora()))
                 continue;
 
             const NeutralClusterContact neutralClusterContact(this->GetPandora(), pDaughterCluster, pParentCluster, m_contactParameters);
@@ -153,7 +153,7 @@ StatusCode NeutralFragmentRemovalAlgorithm::GetNeutralClusterContactMap(bool &is
 
 bool NeutralFragmentRemovalAlgorithm::IsPhotonLike(const Cluster *const pDaughterCluster) const
 {
-    if (pDaughterCluster->IsPhotonFast(this->GetPandora()))
+    if (pDaughterCluster->PassPhotonId(this->GetPandora()))
         return true;
 
     const ClusterFitResult &clusterFitResult(pDaughterCluster->GetFitToAllHitsResult());

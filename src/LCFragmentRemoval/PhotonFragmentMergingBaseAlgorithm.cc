@@ -115,7 +115,7 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetAffectedClusterVec(const Clust
         {
             unusedClusterVec.push_back(pCluster);
         }
-        else if (pCluster->IsPhotonFast(this->GetPandora()))
+        else if (pCluster->PassPhotonId(this->GetPandora()))
         {
             photonClusterVec.push_back(pCluster);
         }

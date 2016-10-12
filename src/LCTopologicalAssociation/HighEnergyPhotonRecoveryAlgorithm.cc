@@ -183,7 +183,7 @@ StatusCode HighEnergyPhotonRecoveryAlgorithm::PrepareClusters(const ClusterList 
         {
             continue;
         }
-        if (pCluster->IsPhotonFast(this->GetPandora()))
+        if (pCluster->PassPhotonId(this->GetPandora()))
         {
             continue;
         }

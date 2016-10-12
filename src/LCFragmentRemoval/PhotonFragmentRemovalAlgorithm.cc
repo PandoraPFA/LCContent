@@ -146,7 +146,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::GetClusterContactMap(bool &isFirstPas
             if (pDaughterCluster->GetInitialDirection().GetCosOpeningAngle(pParentCluster->GetInitialDirection()) < m_minCosOpeningAngle)
                 continue;
 
-            if (!pParentCluster->IsPhotonFast(this->GetPandora()))
+            if (!pParentCluster->PassPhotonId(this->GetPandora()))
                 continue;
 
             // Evaluate cluster contact properties
@@ -167,7 +167,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::GetClusterContactMap(bool &isFirstPas
 
 bool PhotonFragmentRemovalAlgorithm::IsPhotonLike(const Cluster *const pDaughterCluster) const
 {
-    if (pDaughterCluster->IsPhotonFast(this->GetPandora()))
+    if (pDaughterCluster->PassPhotonId(this->GetPandora()))
         return true;
 
     const ClusterFitResult &clusterFitResult(pDaughterCluster->GetFitToAllHitsResult());

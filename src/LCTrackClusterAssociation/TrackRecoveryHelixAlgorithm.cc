@@ -79,7 +79,7 @@ StatusCode TrackRecoveryHelixAlgorithm::GetTrackAssociationInfoMap(TrackAssociat
         {
             const Cluster *const pCluster = *iterC;
 
-            if (!pCluster->GetAssociatedTrackList().empty() || (0 == pCluster->GetNCaloHits()) || pCluster->IsPhotonFast(this->GetPandora()))
+            if (!pCluster->GetAssociatedTrackList().empty() || (0 == pCluster->GetNCaloHits()) || pCluster->PassPhotonId(this->GetPandora()))
                 continue;
 
             // Cut on z-coordinate separation between track calorimeter projection and the cluster

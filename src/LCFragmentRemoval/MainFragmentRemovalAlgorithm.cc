@@ -483,7 +483,7 @@ float MainFragmentRemovalAlgorithm::GetRequiredEvidenceForMerge(const Cluster *c
     // 6. Photon cluster corrections
     float photonCorrection(0.f);
 
-    if (pDaughterCluster->IsPhotonFast(this->GetPandora()))
+    if (pDaughterCluster->PassPhotonId(this->GetPandora()))
     {
         const float showerStart(pDaughterCluster->GetShowerProfileStart(this->GetPandora()));
         const float showerDiscrepancy(pDaughterCluster->GetShowerProfileDiscrepancy(this->GetPandora()));

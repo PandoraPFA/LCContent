@@ -60,7 +60,7 @@ StatusCode MergeSplitPhotonsAlgorithm::Run()
             continue;
 
         const CartesianVector parentShowerMaxCentroid(pParentCluster->GetCentroid(this->GetShowerMaxLayer(pParentCluster)));
-        const bool isParentPhoton(pParentCluster->IsPhotonFast(this->GetPandora()));
+        const bool isParentPhoton(pParentCluster->PassPhotonId(this->GetPandora()));
 
         // Find daughter photon candidate clusters
         for (ClusterVector::iterator iterJ = iterI + 1, iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
@@ -77,7 +77,7 @@ StatusCode MergeSplitPhotonsAlgorithm::Run()
                 continue;
 
             const CartesianVector daughterShowerMaxCentroid(pDaughterCluster->GetCentroid(this->GetShowerMaxLayer(pDaughterCluster)));
-            const bool isDaughterPhoton(pDaughterCluster->IsPhotonFast(this->GetPandora()));
+            const bool isDaughterPhoton(pDaughterCluster->PassPhotonId(this->GetPandora()));
 
             // Look for compatible parent/daughter pairings
             if (!isParentPhoton && !isDaughterPhoton)
