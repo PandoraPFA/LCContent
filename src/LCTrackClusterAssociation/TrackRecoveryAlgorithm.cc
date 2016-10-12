@@ -38,7 +38,7 @@ StatusCode TrackRecoveryAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTrackList));
 
     TrackVector trackVector(pTrackList->begin(), pTrackList->end());
-    std::sort(trackVector.begin(), trackVector.end(), SortingHelper::SortTracksByEnergy);
+    std::sort(trackVector.begin(), trackVector.end(), PointerLessThan<Track>());
 
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
@@ -55,10 +55,10 @@ StatusCode TrackRecoveryAlgorithm::Run()
         // To avoid tracks split along main track z-axis, examine number of parent/daughter tracks and start z coordinate
         const float zStart(std::fabs(pTrack->GetTrackStateAtStart().GetPosition().GetZ()));
 
-        if (!pTrack->GetDaughterTrackList().empty())
+        if (!pTrack->GetDaughterList().empty())
             continue;
 
-        if ((zStart > m_maxTrackZStart) && pTrack->GetParentTrackList().empty())
+        if ((zStart > m_maxTrackZStart) && pTrack->GetParentList().empty())
             continue;
 
         // Extract track energy resolution information

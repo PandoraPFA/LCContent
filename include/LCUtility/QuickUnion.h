@@ -1,5 +1,5 @@
 /**
- *  @file   LCContent/include/LCContentFast/QuickUnion.h
+ *  @file   LCContent/include/LCUtility/QuickUnion.h
  * 
  *  @brief  Header file for the quick union class
  * 
@@ -10,7 +10,7 @@
 
 #include <vector>
 
-namespace lc_content_fast
+namespace lc_content
 {
 
 /**
@@ -131,6 +131,6 @@ inline void QuickUnion::Unite(const unsigned int p, const unsigned int q)
     --m_count;
 }
 
-} // namespace lc_content_fast
+} // namespace lc_content
 
 #endif // LC_QUICK_UNION_H

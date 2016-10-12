@@ -297,7 +297,7 @@ bool BeamHaloMuonRemovalAlgorithm::IsBeamHaloMuon(const pandora::Cluster *const 
         if ((isBeamHaloMuon && m_displayRejectedClusters) || (!isBeamHaloMuon && m_displayRetainedClusters))
         {
             ClusterList clusterList;
-            clusterList.insert(pCluster);
+            clusterList.push_back(pCluster);
             PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, "HaloClusters", AUTO));
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
             PANDORA_MONITORING_API(DrawPandoraHistogram(this->GetPandora(), twoDHistogram_XY, "colz"));

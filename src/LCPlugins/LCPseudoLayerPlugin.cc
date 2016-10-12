@@ -189,9 +189,9 @@ void LCPseudoLayerPlugin::StoreLayerPositions(const SubDetector &subDetector, La
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
-    const SubDetector::SubDetectorLayerList &subDetectorLayerList(subDetector.GetSubDetectorLayerList());
+    const SubDetector::SubDetectorLayerVector &subDetectorLayerVector(subDetector.GetSubDetectorLayerVector());
 
-    for (SubDetector::SubDetectorLayerList::const_iterator iter = subDetectorLayerList.begin(), iterEnd = subDetectorLayerList.end(); iter != iterEnd; ++iter)
+    for (SubDetector::SubDetectorLayerVector::const_iterator iter = subDetectorLayerVector.begin(), iterEnd = subDetectorLayerVector.end(); iter != iterEnd; ++iter)
     {
         layerPositionList.push_back(iter->GetClosestDistanceToIp());
     }

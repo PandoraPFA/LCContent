@@ -189,7 +189,7 @@ StatusCode ProximityBasedMergingAlgorithm::GetGenericDistanceBetweenClusters(con
     const OrderedCaloHitList &orderedCaloHitListP(pParentCluster->GetOrderedCaloHitList());
     const OrderedCaloHitList &orderedCaloHitListD(pDaughterCluster->GetOrderedCaloHitList());
 
-    for(unsigned int iLayer = startLayer; iLayer <= endLayer; ++iLayer)
+    for (unsigned int iLayer = startLayer; iLayer <= endLayer; ++iLayer)
     {
         OrderedCaloHitList::const_iterator iterP = orderedCaloHitListP.find(iLayer);
 

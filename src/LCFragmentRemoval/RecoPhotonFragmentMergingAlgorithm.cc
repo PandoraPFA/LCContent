@@ -36,8 +36,8 @@ StatusCode RecoPhotonFragmentMergingAlgorithm::GetAffectedClusterList(const Clus
     {
         const Cluster *const pCluster(*iter);
 
-        if (pCluster->GetParticleIdFlag() != PHOTON)
-            nonPhotonClusterList.insert(pCluster);
+        if (pCluster->GetParticleId() != PHOTON)
+            nonPhotonClusterList.push_back(pCluster);
     }
 
     if (!nonPhotonClusterList.empty())
@@ -123,7 +123,7 @@ StatusCode RecoPhotonFragmentMergingAlgorithm::DeleteClusters(const ClusterVecto
         if (pCluster == NULL)
             continue;
 
-        if (!nonFixedPhotonsOnly || (PHOTON != pCluster->GetParticleIdFlag()))
+        if (!nonFixedPhotonsOnly || (PHOTON != pCluster->GetParticleId()))
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pCluster));
     }
 

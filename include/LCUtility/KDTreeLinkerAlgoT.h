@@ -1,5 +1,5 @@
 /**
- *  @file   LCContent/include/LCContentFast/KDTreeLinkerAlgoT.h
+ *  @file   LCContent/include/LCUtility/KDTreeLinkerAlgoT.h
  * 
  *  @brief  Header file for the kd tree linker algo template class
  * 
@@ -8,11 +8,13 @@
 #ifndef KD_TREE_LINKER_ALGO_TEMPLATED_H
 #define KD_TREE_LINKER_ALGO_TEMPLATED_H
 
-#include "KDTreeLinkerToolsT.h"
+#include "LCUtility/KDTreeLinkerToolsT.h"
+
+#include "Pandora/PandoraInternal.h"
 
 #include <vector>
 
-namespace lc_content_fast
+namespace lc_content
 {
 
 /**
@@ -546,6 +548,6 @@ inline KDTreeNodeT<DATA, DIM> *KDTreeLinkerAlgo<DATA, DIM>::recBuild(int low, in
     }
 }
 
-} // namespace lc_content_fast
+} // namespace lc_content
 
 #endif // KD_TREE_LINKER_ALGO_TEMPLATED_H

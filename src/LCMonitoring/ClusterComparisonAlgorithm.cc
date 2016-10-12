@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LCHelpers/SortingHelper.h"
+
 #include "LCMonitoring/ClusterComparisonAlgorithm.h"
 
 using namespace pandora;
@@ -111,17 +113,20 @@ void ClusterComparisonAlgorithm::CompareClusters(const ClusterList &clusterList1
     this->PopulateMaps(clusterList1, clusterToHitListMap1, hitToClusterMap1);
     this->PopulateMaps(clusterList2, clusterToHitListMap2, hitToClusterMap2);
 
-    for (ClusterToHitListMap::const_iterator iter = clusterToHitListMap1.begin(), iterEnd = clusterToHitListMap1.end(); iter != iterEnd; ++iter)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterToHitListMap1) clusterList.push_back(mapEntry.first);
+    clusterList.sort(SortingHelper::SortClustersByNHits);
+
+    for (const Cluster *const pCluster1 : clusterList)
     {
-        const Cluster *const pCluster1 = iter->first;
-        const CaloHitList &caloHitList1 = iter->second;
+        const CaloHitList &caloHitList1(clusterToHitListMap1.at(pCluster1));
 
         // Collect all clusters in list 2 associated (via hits) with the current cluster in list 1
         ClusterList linkedClusterList2;
         for (CaloHitList::const_iterator hIter = caloHitList1.begin(), hIterEnd = caloHitList1.end(); hIter != hIterEnd; ++hIter)
         {
             HitToClusterMap::const_iterator htcIter2 = hitToClusterMap2.find(*hIter);
-            (hitToClusterMap2.end() != htcIter2) ? linkedClusterList2.insert(htcIter2->second) : outputList1.insert(pCluster1);
+            (hitToClusterMap2.end() != htcIter2) ? linkedClusterList2.push_back(htcIter2->second) : outputList1.push_back(pCluster1);
         }
 
         // Check how many clusters in list 2 share hits with the single cluster in list 1; if just one, compare total numbers of hits
@@ -140,8 +145,8 @@ void ClusterComparisonAlgorithm::CompareClusters(const ClusterList &clusterList1
 
         if (isDifference)
         {
-            outputList1.insert(pCluster1);
-            outputList2.insert(linkedClusterList2.begin(), linkedClusterList2.end());
+            outputList1.push_back(pCluster1);
+            outputList2.insert(outputList2.end(), linkedClusterList2.begin(), linkedClusterList2.end());
         }
     }
 }
@@ -155,8 +160,8 @@ void ClusterComparisonAlgorithm::PopulateMaps(const pandora::ClusterList &cluste
         const Cluster *const pCluster = *iter;
 
         CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-        caloHitList.insert(pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+        caloHitList.insert(caloHitList.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
 
         if (!clusterToHitListMap.insert(ClusterToHitListMap::value_type(pCluster, caloHitList)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);

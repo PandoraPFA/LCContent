@@ -103,7 +103,7 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetAffectedClusterVec(const Clust
     {
         const Cluster *const pCluster = *iter;
 
-        if (pCluster->GetParticleIdFlag() == PHOTON)
+        if (pCluster->GetParticleId() == PHOTON)
         {
             photonClusterVec.push_back(pCluster);
         }
@@ -115,7 +115,7 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetAffectedClusterVec(const Clust
         {
             unusedClusterVec.push_back(pCluster);
         }
-        else if (pCluster->IsPhotonFast(this->GetPandora()))
+        else if (pCluster->PassPhotonId(this->GetPandora()))
         {
             photonClusterVec.push_back(pCluster);
         }
@@ -125,9 +125,9 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetAffectedClusterVec(const Clust
         }
     }
 
-    std::sort(photonClusterVec.begin(), photonClusterVec.end(), SortingHelper::SortClustersByElectromagneticEnergy);
-    std::sort(neutralClusterVec.begin(), neutralClusterVec.end(), SortingHelper::SortClustersByElectromagneticEnergy);
-    std::sort(unusedClusterVec.begin(), unusedClusterVec.end(), SortingHelper::SortClustersByElectromagneticEnergy);
+    std::sort(photonClusterVec.begin(), photonClusterVec.end(), SortingHelper::SortClustersByNHits);
+    std::sort(neutralClusterVec.begin(), neutralClusterVec.end(), SortingHelper::SortClustersByNHits);
+    std::sort(unusedClusterVec.begin(), unusedClusterVec.end(), SortingHelper::SortClustersByNHits);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -267,13 +267,13 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetEvidenceForMerging(const Clust
     parameters.m_energyOfMainPeak = 0.f;
     if (showerPeakList.size() > 0)
     {
-        for(CaloHitList::const_iterator iter = showerPeakList.at(0).GetPeakCaloHitList().begin(); iter !=  showerPeakList.at(0).GetPeakCaloHitList().end(); ++iter)
+        for (CaloHitList::const_iterator iter = showerPeakList.at(0).GetPeakCaloHitList().begin(); iter !=  showerPeakList.at(0).GetPeakCaloHitList().end(); ++iter)
             parameters.m_energyOfMainPeak += (*iter)->GetElectromagneticEnergy();
     }
     parameters.m_energyOfCandidatePeak = 0.f;
     if (showerPeakList.size() > 1)
     {
-        for(CaloHitList::const_iterator iter = showerPeakList.at(1).GetPeakCaloHitList().begin(); iter !=  showerPeakList.at(1).GetPeakCaloHitList().end(); ++iter)
+        for (CaloHitList::const_iterator iter = showerPeakList.at(1).GetPeakCaloHitList().begin(); iter !=  showerPeakList.at(1).GetPeakCaloHitList().end(); ++iter)
             parameters.m_energyOfCandidatePeak += (*iter)->GetElectromagneticEnergy();
     }
     parameters.m_hitSeparation = ClusterHelper::GetDistanceToClosestHit(pDaughterCluster, pParentCluster);
@@ -294,17 +294,16 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetEvidenceForMerging(const Clust
 StatusCode PhotonFragmentMergingBaseAlgorithm::GetShowerPeakList(const Cluster *const pParentCluster, const Cluster *const pDaughterCluster,
     ShowerProfilePlugin::ShowerPeakList &showerPeakList) const
 {
-    ClusterList temporaryList;
-    temporaryList.insert(pParentCluster);
-    temporaryList.insert(pDaughterCluster);
+    ClusterList temporaryList(1, pParentCluster);
+    temporaryList.push_back(pDaughterCluster);
     std::string originalClusterListName, peakClusterListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, temporaryList, originalClusterListName,
         peakClusterListName));
 
     const Cluster *pTempCluster = NULL;
     PandoraContentApi::Cluster::Parameters clusterParameters;
-    pDaughterCluster->GetOrderedCaloHitList().GetCaloHitList(clusterParameters.m_caloHitList);
-    pParentCluster->GetOrderedCaloHitList().GetCaloHitList(clusterParameters.m_caloHitList);
+    pDaughterCluster->GetOrderedCaloHitList().FillCaloHitList(clusterParameters.m_caloHitList);
+    pParentCluster->GetOrderedCaloHitList().FillCaloHitList(clusterParameters.m_caloHitList);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParameters, pTempCluster));
 
     const ShowerProfilePlugin *const pShowerProfilePlugin(PandoraContentApi::GetPlugins(*this)->GetShowerProfilePlugin());

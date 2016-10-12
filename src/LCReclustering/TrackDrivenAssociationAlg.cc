@@ -78,10 +78,8 @@ StatusCode TrackDrivenAssociationAlg::Run()
             continue;
 
         // Specify tracks and clusters to be used in reclustering
-        TrackList reclusterTrackList(parentTrackList.begin(), parentTrackList.end());
-
-        ClusterList reclusterClusterList;
-        reclusterClusterList.insert(pParentCluster);
+        const TrackList reclusterTrackList(parentTrackList.begin(), parentTrackList.end());
+        ClusterList reclusterClusterList(1, pParentCluster);
 
         UIntVector originalClusterIndices(1, i);
 
@@ -117,7 +115,7 @@ StatusCode TrackDrivenAssociationAlg::Run()
             {
                 if (daughterTrackList.empty())
                 {
-                    reclusterClusterList.insert(pDaughterCluster);
+                    reclusterClusterList.push_back(pDaughterCluster);
                     originalClusterIndices.push_back(j);
                 }
                 else
@@ -141,7 +139,7 @@ StatusCode TrackDrivenAssociationAlg::Run()
 
                 if (daughterTrackList.empty())
                 {
-                    reclusterClusterList.insert(pDaughterCluster);
+                    reclusterClusterList.push_back(pDaughterCluster);
                     originalClusterIndices.push_back(j);
                 }
                 else

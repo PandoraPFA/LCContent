@@ -13,9 +13,9 @@ endif()
 project(${LC_CONTENT_LIBRARY_NAME})
 
 # project version
-set(${PROJECT_NAME}_VERSION_MAJOR 02)
-set(${PROJECT_NAME}_VERSION_MINOR 04)
-set(${PROJECT_NAME}_VERSION_PATCH 01)
+set(${PROJECT_NAME}_VERSION_MAJOR 03)
+set(${PROJECT_NAME}_VERSION_MINOR 00)
+set(${PROJECT_NAME}_VERSION_PATCH 00)
 set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
@@ -25,13 +25,13 @@ include(PandoraCMakeSettings)
 # Prefer local include directory to any paths to installed header files
 include_directories(include)
 
-find_package(PandoraSDK 02.03.00 REQUIRED)
+find_package(PandoraSDK 03.00.00 REQUIRED)
 include_directories(${PandoraSDK_INCLUDE_DIRS})
 link_libraries(${PandoraSDK_LIBRARIES})
 add_definitions(${PandoraSDK_DEFINITIONS})
 
 if(PANDORA_MONITORING)
-    find_package(PandoraMonitoring 02.03.00 REQUIRED)
+    find_package(PandoraMonitoring 03.00.00 REQUIRED)
     include_directories(${PandoraMonitoring_INCLUDE_DIRS})
     link_libraries(${PandoraMonitoring_LIBRARIES})
     add_definitions(${PandoraMonitoring_DEFINITIONS})
@@ -40,9 +40,8 @@ endif()
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Low level settings - compiler etc
-if(NOT CMAKE_CXX_FLAGS)
+if (NOT CMAKE_CXX_FLAGS)
     set(CMAKE_CXX_FLAGS "-std=c++11")
-    set(PROCEED_WITHOUT_CXX_FLAGS ON)
 endif()
 
 include(CheckCXXCompilerFlag)
@@ -50,12 +49,7 @@ unset(COMPILER_SUPPORTS_CXX_FLAGS CACHE)
 CHECK_CXX_COMPILER_FLAG(${CMAKE_CXX_FLAGS} COMPILER_SUPPORTS_CXX_FLAGS)
 
 if(NOT COMPILER_SUPPORTS_CXX_FLAGS)
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}")
-    if(NOT PROCEED_WITHOUT_CXX_FLAGS)
-        message(FATAL_ERROR "CMake abort.")
-    endif()
-    message(STATUS "Proceed without cxx flags ${CMAKE_CXX_FLAGS}")
-    unset(CMAKE_CXX_FLAGS)
+    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}")
 endif()
 
 if(APPLE)
@@ -69,14 +63,6 @@ endif()
 
 # - Collect sources - not ideal because you have to keep running CMake to pick up changes
 file(GLOB_RECURSE LC_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cc")
-
-unset(COMPILER_SUPPORTS_CXX11 CACHE)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-if(NOT COMPILER_SUPPORTS_CXX11)
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} does not support c++11 - will build with reduced functionality")
-    file(GLOB_RECURSE LC_CONTENT_CXX11_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/LCContentFast/*.cc")
-    list(REMOVE_ITEM LC_CONTENT_SRCS ${LC_CONTENT_CXX11_SRCS})
-endif()
 
 # - Add library and properties
 add_library(${PROJECT_NAME} SHARED ${LC_CONTENT_SRCS})

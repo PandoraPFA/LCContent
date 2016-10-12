@@ -25,9 +25,7 @@ StatusCode PfoPreparationAlgorithm::Run()
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *iter, pPfoList))
             continue;
 
-        PfoList pfosToSave;
-        pfosToSave.insert(pPfoList->begin(), pPfoList->end());
-
+        const PfoList pfosToSave(pPfoList->begin(), pPfoList->end());
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::SaveList(*this,
             *iter, m_mergedCandidateListName, pfosToSave));
     }

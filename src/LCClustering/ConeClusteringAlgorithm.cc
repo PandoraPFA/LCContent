@@ -10,6 +10,10 @@
 
 #include "LCClustering/ConeClusteringAlgorithm.h"
 
+#include "LCHelpers/SortingHelper.h"
+
+#include <list>
+
 using namespace pandora;
 
 namespace lc_content
@@ -50,7 +54,8 @@ ConeClusteringAlgorithm::ConeClusteringAlgorithm() :
     m_fitSuccessChi2Cut1(5.0f),
     m_fitSuccessDotProductCut2(0.50f),
     m_fitSuccessChi2Cut2(2.5f),
-    m_mipTrackChi2Cut(2.5f)
+    m_mipTrackChi2Cut(2.5f),
+    m_firstLayer(1)
 {
 }
 
@@ -58,22 +63,33 @@ ConeClusteringAlgorithm::ConeClusteringAlgorithm() :
 
 StatusCode ConeClusteringAlgorithm::Run()
 {
-    const CaloHitList *pCaloHitList = NULL;
+    m_firstLayer = (PandoraContentApi::GetPlugins(*this)->GetPseudoLayerPlugin()->GetPseudoLayerAtIp());
+
+    const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
     if (pCaloHitList->empty())
         return STATUS_CODE_SUCCESS;
 
+    const TrackList *pTrackList = nullptr;
+    if (0 != m_clusterSeedStrategy)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTrackList));
+
+    this->InitializeKDTrees(pTrackList,pCaloHitList);
+
     OrderedCaloHitList orderedCaloHitList;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(*pCaloHitList));
 
     ClusterVector clusterVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SeedClustersWithTracks(clusterVector));
+    m_tracksToClusters.clear();
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SeedClustersWithTracks(pTrackList,clusterVector));
 
+    // do the clustering
+    m_hitsToClusters.clear();
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         const unsigned int pseudoLayer(iter->first);
-        CustomSortedCaloHitList customSortedCaloHitList;
+        CaloHitVector relevantCaloHits;
 
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
@@ -83,30 +99,62 @@ StatusCode ConeClusteringAlgorithm::Run()
                 (!m_shouldUseOnlyECalHits || (ECAL == pCaloHit->GetHitType())) &&
                 (PandoraContentApi::IsAvailable(*this, pCaloHit)))
             {
-                customSortedCaloHitList.insert(pCaloHit);
+                relevantCaloHits.push_back(pCaloHit);
             }
         }
 
         ClusterFitResultMap clusterFitResultMap;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetCurrentClusterFitResults(clusterVector, clusterFitResultMap));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindHitsInPreviousLayers(pseudoLayer, &customSortedCaloHitList, clusterFitResultMap, clusterVector));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindHitsInSameLayer(pseudoLayer, &customSortedCaloHitList, clusterFitResultMap, clusterVector));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindHitsInPreviousLayers(pseudoLayer, relevantCaloHits, clusterFitResultMap, clusterVector));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindHitsInSameLayer(pseudoLayer, relevantCaloHits, clusterFitResultMap, clusterVector));
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveEmptyClusters(clusterVector));
+
+    //reset our kd trees and maps if everything turned out well
+    m_tracksKdTree.clear();
+    m_hitsKdTree.clear();
+    m_hitsToClusters.clear();
+    m_tracksToClusters.clear();
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ConeClusteringAlgorithm::SeedClustersWithTracks(ClusterVector &clusterVector) const
+StatusCode ConeClusteringAlgorithm::InitializeKDTrees(const TrackList *const pTrackList, const CaloHitList *const pCaloHitList)
+{
+    // load the kd-tree of tracks that we will use
+    m_tracksKdTree.clear();
+    m_trackNodes.clear();
+
+    if (nullptr != pTrackList)
+    {
+        KDTreeCube tracksBoundingRegion = fill_and_bound_3d_kd_tree(this, *pTrackList, m_trackNodes);
+        m_tracksKdTree.build(m_trackNodes,tracksBoundingRegion);
+        m_trackNodes.clear();
+    }
+
+    // make sure the hit kd tree is ready
+    m_hitsKdTree.clear();
+    m_hitNodes.clear();
+    KDTreeTesseract hitsBoundingRegion = fill_and_bound_4d_kd_tree(this,*pCaloHitList,m_hitNodes);
+    m_hitsKdTree.build(m_hitNodes,hitsBoundingRegion);
+    m_hitNodes.clear();
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ConeClusteringAlgorithm::SeedClustersWithTracks(const TrackList *const pTrackList, ClusterVector &clusterVector)
 {
     if (0 == m_clusterSeedStrategy)
         return STATUS_CODE_SUCCESS;
 
-    const TrackList *pTrackList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTrackList));
+    // if we are known to be seeding with tracks we must have a track list
+    if (nullptr == pTrackList)
+        return STATUS_CODE_FAILURE;
 
     for (TrackList::const_iterator iter = pTrackList->begin(), iterEnd = pTrackList->end(); iter != iterEnd; ++iter)
     {
@@ -128,11 +176,12 @@ StatusCode ConeClusteringAlgorithm::SeedClustersWithTracks(ClusterVector &cluste
 
         if (useTrack)
         {
-            const Cluster *pCluster = NULL;
+            const Cluster *pCluster = nullptr;
             PandoraContentApi::Cluster::Parameters parameters;
             parameters.m_pTrack = pTrack;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
             clusterVector.push_back(pCluster);
+            m_tracksToClusters.emplace(pTrack,pCluster);
         }
     }
 
@@ -197,15 +246,26 @@ StatusCode ConeClusteringAlgorithm::GetCurrentClusterFitResults(const ClusterVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudoLayer, CustomSortedCaloHitList *const pCustomSortedCaloHitList,
-    const ClusterFitResultMap &clusterFitResultMap, ClusterVector &clusterVector) const
+// inprogress
+StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudoLayer, const CaloHitVector &relevantCaloHits,
+    const ClusterFitResultMap &clusterFitResultMap, ClusterVector & /*clusterVector*/)
 {
-    for (CustomSortedCaloHitList::iterator iter = pCustomSortedCaloHitList->begin(), iterEnd = pCustomSortedCaloHitList->end();
-        iter != iterEnd;)
-    {
-        const CaloHit *const pCaloHit = *iter;
+    const float maxTrackSeedSeparation = std::sqrt(m_maxTrackSeedSeparation2);
 
-        const Cluster *pBestCluster = NULL;
+    std::vector<HitKDNode> found_hits;
+    std::vector<TrackKDNode> found_tracks;
+    ClusterSet nearby_clusters;
+
+    for (const CaloHit *const pCaloHit : relevantCaloHits)
+    {
+        if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
+            continue;
+
+        const float additionalPadWidths = ((PandoraContentApi::GetGeometry(*this)->GetHitTypeGranularity(pCaloHit->GetHitType()) <= FINE) ?
+            m_additionalPadWidthsFine * pCaloHit->GetCellLengthScale() : m_additionalPadWidthsCoarse * pCaloHit->GetCellLengthScale());
+        const float largestAllowedDistanceForSearch = std::max(maxTrackSeedSeparation, m_maxClusterDirProjection + additionalPadWidths);
+
+        const Cluster *pBestCluster = nullptr;
         float bestClusterEnergy(0.f);
         float smallestGenericDistance(m_genericDistanceCut);
         const unsigned int layersToStepBack((PandoraContentApi::GetGeometry(*this)->GetHitTypeGranularity(pCaloHit->GetHitType()) <= FINE) ?
@@ -216,18 +276,51 @@ StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudo
         {
             const unsigned int searchLayer(pseudoLayer - stepBackLayer);
 
-            // See if hit should be associated with any existing clusters
-            for (ClusterVector::iterator clusterIter = clusterVector.begin(), clusterIterEnd = clusterVector.end();
-                clusterIter != clusterIterEnd; ++clusterIter)
+            // need to reorganize this to use a kd-tree. On rechits comprising clusters we are mutating
+            // goal -> determine search distances for KD-tree from cut values and associated scalings
+            // search for tracks that would satisfy the search criteria in GetGenericDistanceToHit()
+            KDTreeCube searchRegionTks = build_3d_kd_search_region(pCaloHit, largestAllowedDistanceForSearch, largestAllowedDistanceForSearch, largestAllowedDistanceForSearch);
+            m_tracksKdTree.search(searchRegionTks,found_tracks);
+            for (auto &track : found_tracks )
             {
-                const Cluster *const pCluster = *clusterIter;
+                auto assc_cluster = m_tracksToClusters.find(track.data);
+                if (assc_cluster != m_tracksToClusters.end())
+                {
+                    nearby_clusters.insert(assc_cluster->second);
+                }
+            }
+            found_tracks.clear();
+
+            // now search for hits-in-clusters that would also satisfy the criteria
+            KDTreeTesseract searchRegionHits = build_4d_kd_search_region(pCaloHit, largestAllowedDistanceForSearch, largestAllowedDistanceForSearch, largestAllowedDistanceForSearch, searchLayer);
+            m_hitsKdTree.search(searchRegionHits,found_hits);
+            for (auto &hit : found_hits)
+            {
+                auto assc_cluster = m_hitsToClusters.find(hit.data);
+                if (assc_cluster != m_hitsToClusters.end())
+                {
+                    nearby_clusters.insert(assc_cluster->second);
+                }
+            }
+            found_hits.clear();
+
+            ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
+            nearbyClusterList.sort(SortingHelper::SortClustersByNHits);
+            nearby_clusters.clear();
+
+            // Instead of using the full cluster list we use only those clusters that are found to be nearby according to the KD-tree
+            // ---- This can be optimized further for sure. (for instance having a match by KD-tree qualifies a ton of the loops later
+            // See if hit should be associated with any existing clusters
+            for (const Cluster *const pCluster : nearbyClusterList)
+            {
                 float genericDistance(std::numeric_limits<float>::max());
                 const float clusterEnergy(pCluster->GetHadronicEnergy());
 
                 PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_UNCHANGED, !=, this->GetGenericDistanceToHit(pCluster,
                     pCaloHit, searchLayer, clusterFitResultMap, genericDistance));
 
-                if ((genericDistance < smallestGenericDistance) || ((genericDistance == smallestGenericDistance) && (clusterEnergy > bestClusterEnergy)))
+                if ((genericDistance < smallestGenericDistance) ||
+                    ((genericDistance == smallestGenericDistance) && (clusterEnergy > bestClusterEnergy)))
                 {
                     pBestCluster = pCluster;
                     bestClusterEnergy = clusterEnergy;
@@ -236,27 +329,19 @@ StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudo
             }
 
             // Add best hit found after completing examination of a stepback layer
-            if ((0 == m_clusterFormationStrategy) && (NULL != pBestCluster))
+            if ((0 == m_clusterFormationStrategy) && (nullptr != pBestCluster))
             {
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pBestCluster, pCaloHit));
+                m_hitsToClusters.emplace(pCaloHit, pBestCluster);
                 break;
             }
         }
 
         // Add best hit found after examining all stepback layers
-        if ((1 == m_clusterFormationStrategy) && (NULL != pBestCluster))
+        if ((1 == m_clusterFormationStrategy) && (nullptr != pBestCluster))
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pBestCluster, pCaloHit));
-        }
-
-        // Tidy the energy sorted calo hit list
-        if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
-        {
-            pCustomSortedCaloHitList->erase(iter++);
-        }
-        else
-        {
-            iter++;
+            m_hitsToClusters.emplace(pCaloHit, pBestCluster);
         }
     }
 
@@ -265,10 +350,33 @@ StatusCode ConeClusteringAlgorithm::FindHitsInPreviousLayers(unsigned int pseudo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer, CustomSortedCaloHitList *const pCustomSortedCaloHitList,
-    const ClusterFitResultMap &clusterFitResultMap, ClusterVector &clusterVector) const
+StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer, const CaloHitVector &relevantCaloHits,
+    const ClusterFitResultMap &clusterFitResultMap, ClusterVector &clusterVector)
 {
-    while (!pCustomSortedCaloHitList->empty())
+    const float maxTrackSeedSeparation = std::sqrt(m_maxTrackSeedSeparation2);
+
+    //keep a list of available hits with the most energetic available hit at the back
+    std::list<unsigned> available_hits_in_layer;
+    for (unsigned i = 0; i < relevantCaloHits.size(); ++i )
+    {
+        if (!PandoraContentApi::IsAvailable(*this, relevantCaloHits[i]))
+            continue;
+        available_hits_in_layer.push_back(i);
+    }
+
+    //tactical cache hits -> tracks
+    std::unordered_multimap<const CaloHit*, const Track*> hitsToTracksLocal;
+
+    //tactical cache hits -> hits
+    std::unordered_multimap<const CaloHit*, const CaloHit*> hitsToHitsLocal;
+
+    //pull out result caches to help keep memory locality
+    std::vector<TrackKDNode> found_tracks;
+    std::vector<HitKDNode> found_hits;
+
+    ClusterSet nearby_clusters;
+
+    while (!available_hits_in_layer.empty())
     {
         bool clustersModified = true;
 
@@ -276,17 +384,87 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
         {
             clustersModified = false;
 
-            for (CustomSortedCaloHitList::iterator iter = pCustomSortedCaloHitList->begin(), iterEnd = pCustomSortedCaloHitList->end();
-                iter != iterEnd;)
+            for (auto iter = available_hits_in_layer.begin(); iter != available_hits_in_layer.end();)
             {
-                const CaloHit *const pCaloHit = *iter;
+                // this his is assured to be usable by the lines above and algorithm course
+                const CaloHit *const pCaloHit = relevantCaloHits[*iter];
 
-                const Cluster *pBestCluster = NULL;
+                const float pad_search_width = ((PandoraContentApi::GetGeometry(*this)->GetHitTypeGranularity(pCaloHit->GetHitType()) <= FINE) ?
+                    (m_sameLayerPadWidthsFine * pCaloHit->GetCellLengthScale()) :
+                    (m_sameLayerPadWidthsCoarse * pCaloHit->GetCellLengthScale()) );
+
+                const float track_search_width = maxTrackSeedSeparation;
+                const float hit_search_width = pad_search_width;
+
+                const Cluster *pBestCluster = nullptr;
                 float bestClusterEnergy(0.f);
                 float smallestGenericDistance(m_genericDistanceCut);
 
+                // search for tracks that would satisfy the search criteria in GetGenericDistanceToHit()
+                auto track_assc_cache = hitsToTracksLocal.find(pCaloHit);
+                if (track_assc_cache != hitsToTracksLocal.end())
+                {
+                    auto range = hitsToTracksLocal.equal_range(pCaloHit);
+                    for (auto itr = range.first; itr != range.second; ++itr)
+                    {
+                        auto assc_cluster = m_tracksToClusters.find(itr->second);
+                        if(assc_cluster != m_tracksToClusters.end())
+                        {
+                            nearby_clusters.insert(assc_cluster->second);
+                        }
+                    }
+                }
+                else
+                {
+                    KDTreeCube searchRegionTks = build_3d_kd_search_region(pCaloHit, track_search_width, track_search_width, track_search_width);
+                    m_tracksKdTree.search(searchRegionTks,found_tracks);
+                    for (auto &track : found_tracks)
+                    {
+                        hitsToTracksLocal.emplace(pCaloHit, track.data);
+                        auto assc_cluster = m_tracksToClusters.find(track.data);
+                        if (assc_cluster != m_tracksToClusters.end())
+                        {
+                            nearby_clusters.insert(assc_cluster->second);
+                        }
+                    }
+                    found_tracks.clear();
+                }
+                // now search for hits-in-clusters that would also satisfy the criteria
+                auto hits_assc_cache = hitsToHitsLocal.find(pCaloHit);
+                if (hits_assc_cache != hitsToHitsLocal.end())
+                {
+                    auto range = hitsToHitsLocal.equal_range(pCaloHit);
+                    for (auto itr = range.first; itr != range.second; ++itr)
+                    {
+                        auto assc_cluster = m_hitsToClusters.find(itr->second);
+                        if( assc_cluster != m_hitsToClusters.end() )
+                        {
+                            nearby_clusters.insert(assc_cluster->second);
+                        }
+                    }
+                }
+                else
+                {
+                    KDTreeTesseract searchRegionHits = build_4d_kd_search_region(pCaloHit, hit_search_width, hit_search_width, hit_search_width, pseudoLayer);
+                    m_hitsKdTree.search(searchRegionHits,found_hits);
+                    for (auto &hit : found_hits)
+                    {
+                        hitsToHitsLocal.emplace(pCaloHit, hit.data);
+                        auto assc_cluster = m_hitsToClusters.find(hit.data);
+                        if (assc_cluster != m_hitsToClusters.end())
+                        {
+                            nearby_clusters.insert(assc_cluster->second);
+                        }
+                    }
+                    found_hits.clear();
+                }
+
+                ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
+                nearbyClusterList.sort(SortingHelper::SortClustersByNHits);
+                nearby_clusters.clear();
+
                 // See if hit should be associated with any existing clusters
-                for (ClusterVector::const_iterator clusterIter = clusterVector.begin(), clusterIterEnd = clusterVector.end();
+                for (ClusterList::iterator clusterIter = nearbyClusterList.begin(), clusterIterEnd = nearbyClusterList.end();
                     clusterIter != clusterIterEnd; ++clusterIter)
                 {
                     const Cluster *const pCluster = *clusterIter;
@@ -304,30 +482,34 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
                     }
                 }
 
-                if (NULL != pBestCluster)
+                if (nullptr != pBestCluster)
                 {
                     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pBestCluster, pCaloHit));
-                    pCustomSortedCaloHitList->erase(iter++);
+                    m_hitsToClusters.emplace(pCaloHit, pBestCluster);
+                    // remove this hit and advance to the next
+                    iter = available_hits_in_layer.erase(iter);
                     clustersModified = true;
                 }
                 else
-                {
-                    iter++;
+                { // otherwise advance the iterator
+                    ++iter;
                 }
             }
         }
 
-        // Seed a new cluster
-        if (!pCustomSortedCaloHitList->empty())
+        // If there is no cluster within the search radius, seed a new cluster with this hit
+        if (!available_hits_in_layer.empty())
         {
-            const CaloHit *const pCaloHit = *(pCustomSortedCaloHitList->begin());
-            pCustomSortedCaloHitList->erase(pCaloHit);
-
-            const Cluster *pCluster = NULL;
+            unsigned index = *(available_hits_in_layer.begin());
+            available_hits_in_layer.pop_front();
+            const CaloHit *const  pCaloHit = relevantCaloHits[index];
+            // hit is assured to be valid
+            const Cluster *pCluster = nullptr;
             PandoraContentApi::Cluster::Parameters parameters;
-            parameters.m_caloHitList.insert(pCaloHit);
+            parameters.m_caloHitList.push_back(pCaloHit);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
             clusterVector.push_back(pCluster);
+            m_hitsToClusters.emplace(pCaloHit,pCluster);
         }
     }
 
@@ -339,7 +521,7 @@ StatusCode ConeClusteringAlgorithm::FindHitsInSameLayer(unsigned int pseudoLayer
 StatusCode ConeClusteringAlgorithm::GetGenericDistanceToHit(const Cluster *const pCluster, const CaloHit *const pCaloHit, const unsigned int searchLayer,
     const ClusterFitResultMap &clusterFitResultMap, float &genericDistance) const
 {
-    const unsigned int firstLayer(PandoraContentApi::GetPlugins(*this)->GetPseudoLayerPlugin()->GetPseudoLayerAtIp());
+    const unsigned int firstLayer = m_firstLayer;
 
     // Use position of track projection at calorimeter. Proceed only if projection is reasonably compatible with calo hit
     if (((searchLayer == 0) || (searchLayer < firstLayer)) && pCluster->IsTrackSeeded())
@@ -360,8 +542,9 @@ StatusCode ConeClusteringAlgorithm::GetGenericDistanceToHit(const Cluster *const
         return STATUS_CODE_UNCHANGED;
 
     ClusterFitResultMap::const_iterator fitResultIter(clusterFitResultMap.find(pCluster));
-    const ClusterFitResult clusterFitResult((clusterFitResultMap.end() != fitResultIter) ? fitResultIter->second : ClusterFitResult());
-    const CartesianVector &clusterDirection(clusterFitResult.IsFitSuccessful() ?  clusterFitResult.GetDirection() : pCluster->GetInitialDirection());
+    const ClusterFitResult *const clusterFitResult((clusterFitResultMap.end() != fitResultIter) ? &(fitResultIter->second) : nullptr);
+    const CartesianVector &clusterDirection( (clusterFitResult != nullptr && clusterFitResult->IsFitSuccessful()) ?  
+         clusterFitResult->GetDirection() : pCluster->GetInitialDirection());
 
     if (pCaloHit->GetExpectedDirection().GetCosOpeningAngle(clusterDirection) < m_minHitClusterCosAngle)
         return STATUS_CODE_UNCHANGED;
@@ -376,7 +559,7 @@ StatusCode ConeClusteringAlgorithm::GetGenericDistanceToHit(const Cluster *const
 
     if (!useTrackSeed || (searchLayer > m_trackSeedCutOffLayer))
     {
-        const CaloHitList *const pClusterCaloHitList = clusterHitListIter->second;
+        const CaloHitList *pClusterCaloHitList = clusterHitListIter->second;
 
         if (searchLayer == pCaloHit->GetPseudoLayer())
         {
@@ -398,9 +581,9 @@ StatusCode ConeClusteringAlgorithm::GetGenericDistanceToHit(const Cluster *const
         }
 
         // Measurement using current cluster direction
-        if (clusterFitResult.IsFitSuccessful())
+        if (clusterFitResult != nullptr && clusterFitResult->IsFitSuccessful())
         {
-            StatusCode currentStatusCode = this->GetConeApproachDistanceToHit(pCaloHit, pClusterCaloHitList, clusterFitResult.GetDirection(),
+            StatusCode currentStatusCode = this->GetConeApproachDistanceToHit(pCaloHit, pClusterCaloHitList, clusterFitResult->GetDirection(),
                 currentDirectionDistance);
 
             if (STATUS_CODE_SUCCESS == currentStatusCode)
@@ -409,7 +592,7 @@ StatusCode ConeClusteringAlgorithm::GetGenericDistanceToHit(const Cluster *const
                 {
                     try
                     {
-                        if (clusterFitResult.GetChi2() < m_mipTrackChi2Cut)
+                        if (clusterFitResult->GetChi2() < m_mipTrackChi2Cut)
                             currentDirectionDistance /= 5.;
                     }
                     catch (StatusCodeException &) {}
@@ -624,7 +807,7 @@ StatusCode ConeClusteringAlgorithm::RemoveEmptyClusters(const ClusterVector &clu
     {
         if (0 == (*iter)->GetNCaloHits())
         {
-            clusterDeletionList.insert(*iter);
+            clusterDeletionList.push_back(*iter);
         }
     }
 

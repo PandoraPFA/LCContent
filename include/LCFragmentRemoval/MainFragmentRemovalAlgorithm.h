@@ -142,7 +142,7 @@ private:
      *  @param  affectedClusters list of those clusters affected by previous cluster merging, for which contact details must be updated
      *  @param  chargedClusterContactMap to receive the populated cluster contact map
      */
-    pandora::StatusCode GetChargedClusterContactMap(bool &isFirstPass, const pandora::ClusterList &affectedClusters,
+    pandora::StatusCode GetChargedClusterContactMap(bool &isFirstPass, const pandora::ClusterSet &affectedClusters,
         ChargedClusterContactMap &chargedClusterContactMap) const;
 
     /**
@@ -220,7 +220,7 @@ private:
      *  @param  affectedClusters to receive the list of affected clusters
      */
     pandora::StatusCode GetAffectedClusters(const ChargedClusterContactMap &chargedClusterContactMap, const pandora::Cluster *const pBestParentCluster,
-        const pandora::Cluster *const pBestDaughterCluster, pandora::ClusterList &affectedClusters) const;
+        const pandora::Cluster *const pBestDaughterCluster, pandora::ClusterSet &affectedClusters) const;
 
     typedef ChargedClusterContact::Parameters ContactParameters;
     ContactParameters   m_contactParameters;                        ///< The charged cluster contact parameters

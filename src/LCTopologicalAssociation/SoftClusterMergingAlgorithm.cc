@@ -13,6 +13,11 @@
 
 #include "LCTopologicalAssociation/SoftClusterMergingAlgorithm.h"
 
+#include "LCUtility/KDTreeLinkerAlgoT.h"
+#include "LCUtility/QuickUnion.h"
+
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lc_content
@@ -34,126 +39,128 @@ SoftClusterMergingAlgorithm::SoftClusterMergingAlgorithm() :
     m_closestDistanceCut2(250.f),
     m_innerLayerCut2(40),
     m_maxClusterDistanceFine(100.f),
-    m_maxClusterDistanceCoarse(250.f)
+    m_maxClusterDistanceCoarse(250.f),
+    m_hitsToHitsCacheMap(new HitsToHitsCacheMap),
+    m_hitNodes3D(new std::vector<HitKDNode3D>),
+    m_hitsKdTree3D(new HitKDTree3D)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+SoftClusterMergingAlgorithm::~SoftClusterMergingAlgorithm()
+{
+    delete m_hitsToHitsCacheMap;
+    delete m_hitNodes3D;
+    delete m_hitsKdTree3D;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode SoftClusterMergingAlgorithm::Run()
 {
-    // Read specified lists of input clusters
-    ClusterListToNameMap clusterListToNameMap;
-
     ClusterList clusterList;
+    ClusterListToNameMap clusterListToNameMap;
+    this->GetInputClusters(clusterList, clusterListToNameMap);
 
-    if (m_shouldUseCurrentClusterList)
-    {
-        std::string clusterListName;
-        const ClusterList *pClusterList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList, clusterListName));
-
-        clusterList.insert(pClusterList->begin(), pClusterList->end());
-        clusterListToNameMap.insert(ClusterListToNameMap::value_type(pClusterList, clusterListName));
-
-        if (m_updateCurrentTrackClusterAssociations)
-        {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_trackClusterAssociationAlgName));
-        }
-    }
-
-    for (StringVector::const_iterator iter = m_additionalClusterListNames.begin(), iterEnd = m_additionalClusterListNames.end(); iter != iterEnd; ++iter)
-    {
-        const ClusterList *pClusterList = NULL;
-
-        if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, *iter, pClusterList))
-        {
-            clusterList.insert(pClusterList->begin(), pClusterList->end());
-            clusterListToNameMap.insert(ClusterListToNameMap::value_type(pClusterList, *iter));
-        }
-        else
-        {
-            std::cout << "SoftClusterMergingAlgorithm: Failed to obtain cluster list " << *iter << std::endl;
-        }
-    }
-
-    // Create a vector of input clusters, ordered by inner layer
     ClusterVector clusterVector(clusterList.begin(), clusterList.end());
-    std::sort(clusterVector.begin(), clusterVector.end(), SortingHelper::SortClustersByInnerLayer);
+    std::sort(clusterVector.begin(), clusterVector.end(), lc_content::SortingHelper::SortClustersByInnerLayer);
+    QuickUnion quickUnion(clusterVector.size());
 
-    // Loop over soft daughter candidate clusters
-    for (ClusterVector::iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
+    CaloHitList fullCaloHitList;
+    HitToClusterMap hitToClusterMap;
+    this->GetInputCaloHits(clusterVector, fullCaloHitList, hitToClusterMap);
+    this->InitializeKDTree(&fullCaloHitList);
+
+    int index(-1);
+
+    for (const Cluster *const pDaughterCluster : clusterVector)
     {
-        const Cluster *const pDaughterCluster = *iterI;
-
-        if (NULL == pDaughterCluster)
-            continue;
+        ++index;
 
         if (!this->IsSoftCluster(pDaughterCluster))
             continue;
 
-        const Cluster *pBestParentCluster(NULL);
-        float bestParentClusterEnergy(0.);
+        CaloHitList theseHits;
+        pDaughterCluster->GetOrderedCaloHitList().FillCaloHitList(theseHits);
+
         float closestDistance(std::numeric_limits<float>::max());
+        const int parentIndex(this->FindBestParentCluster(clusterVector, hitToClusterMap, quickUnion, pDaughterCluster, theseHits, closestDistance));
 
-        const CartesianVector &daughterInitialDirection(pDaughterCluster->GetInitialDirection());
-
-        // Find best candidate parent cluster: that with closest distance between a pair of hits in the daughter and parent
-        for (ClusterVector::iterator iterJ = clusterVector.begin(), iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
+        if ((parentIndex >= 0) && this->CanMergeSoftCluster(pDaughterCluster, closestDistance))
         {
-            const Cluster *const pParentCluster = *iterJ;
-
-            if ((NULL == pParentCluster) || (pDaughterCluster == pParentCluster))
-                continue;
-
-            if (pParentCluster->GetNCaloHits() <= m_maxHitsInSoftCluster)
-                continue;
-
-            const float parentClusterEnergy(pParentCluster->GetHadronicEnergy());
-
-            if (parentClusterEnergy < m_minClusterHadEnergy)
-                continue;
-
-            // Apply simple preselection using cosine of opening angle between the clusters
-            const float cosOpeningAngle(pParentCluster->GetInitialDirection().GetCosOpeningAngle(daughterInitialDirection));
-
-            if (cosOpeningAngle < m_minCosOpeningAngle)
-                continue;
-
-            const float distance(ClusterHelper::GetDistanceToClosestHit(pParentCluster, pDaughterCluster));
-
-            // In event of equidistant parent candidates, choose highest energy cluster
-            if ((distance < closestDistance) || ((distance == closestDistance) && (parentClusterEnergy > bestParentClusterEnergy)))
-            {
-                closestDistance = distance;
-                pBestParentCluster = pParentCluster;
-                bestParentClusterEnergy = parentClusterEnergy;
-            }
-        }
-
-        if (NULL == pBestParentCluster)
-            continue;
-
-        if (this->CanMergeSoftCluster(pDaughterCluster, closestDistance))
-        {
-            if (clusterListToNameMap.size() > 1)
-            {
-                std::string parentListName, daughterListName;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetClusterListName(pBestParentCluster, clusterListToNameMap, parentListName));
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetClusterListName(pDaughterCluster, clusterListToNameMap, daughterListName));
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestParentCluster, pDaughterCluster,
-                    parentListName, daughterListName));
-            }
-            else
-            {
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestParentCluster, pDaughterCluster));
-            }
-
-            *iterI = NULL;
+            this->MergeClusters(clusterVector.at(parentIndex), pDaughterCluster, clusterListToNameMap);
+            quickUnion.Unite(index, parentIndex);
         }
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void SoftClusterMergingAlgorithm::GetInputClusters(ClusterList &clusterList, ClusterListToNameMap &clusterListToNameMap) const
+{
+    if (m_shouldUseCurrentClusterList)
+    {
+        std::string clusterListName;
+        const ClusterList *pClusterList = nullptr;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList, clusterListName));
+
+        clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
+        clusterListToNameMap.insert(ClusterListToNameMap::value_type(pClusterList, clusterListName));
+
+        if (m_updateCurrentTrackClusterAssociations)
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_trackClusterAssociationAlgName));
+        }
+    }
+
+    for (const std::string &listName : m_additionalClusterListNames)
+    {
+        const ClusterList *pClusterList = nullptr;
+
+        if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, listName, pClusterList))
+        {
+            clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
+            clusterListToNameMap.insert(ClusterListToNameMap::value_type(pClusterList, listName));
+        }
+        else
+        {
+            std::cout << "SoftClusterMergingAlgorithm: Failed to obtain cluster list " << listName << std::endl;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void SoftClusterMergingAlgorithm::GetInputCaloHits(const ClusterVector &clusterVector, CaloHitList &fullCaloHitList, HitToClusterMap &hitToClusterMap) const
+{
+    int index(-1);
+
+    for (const Cluster *const pCluster : clusterVector)
+    {
+        ++index;
+
+        CaloHitList caloHitList;
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+        fullCaloHitList.insert(fullCaloHitList.end(), caloHitList.begin(), caloHitList.end());
+
+        for (const CaloHit *const pCaloHit : caloHitList)
+            (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, index));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void SoftClusterMergingAlgorithm::InitializeKDTree(const CaloHitList *const pCaloHitList) 
+{
+    m_hitsToHitsCacheMap->clear();
+    m_hitsKdTree3D->clear();
+    m_hitNodes3D->clear();
+    KDTreeCube hitsBoundingRegion3D = fill_and_bound_3d_kd_tree(this, *pCaloHitList, *m_hitNodes3D, true);
+    m_hitsKdTree3D->build(*m_hitNodes3D, hitsBoundingRegion3D);
+    m_hitNodes3D->clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -188,10 +195,83 @@ bool SoftClusterMergingAlgorithm::IsSoftCluster(const Cluster *const pDaughterCl
     if (pDaughterCluster->GetHadronicEnergy() < m_minClusterHadEnergy)
         isSoftCluster = true;
 
-    if (pDaughterCluster->IsPhotonFast(this->GetPandora()) && (pDaughterCluster->GetElectromagneticEnergy() > m_minClusterEMEnergy))
+    if (pDaughterCluster->PassPhotonId(this->GetPandora()) && (pDaughterCluster->GetElectromagneticEnergy() > m_minClusterEMEnergy))
         isSoftCluster = false;
 
     return isSoftCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int SoftClusterMergingAlgorithm::FindBestParentCluster(const ClusterVector &clusterVector, const HitToClusterMap &hitToClusterMap,
+    QuickUnion &quickUnion, const Cluster *const pDaughterCluster, const CaloHitList &daughterHits, float &closestDistance) const
+{
+    int bestParentIndex(-1);
+    closestDistance = std::numeric_limits<float>::max();
+
+    const float searchDistance((PandoraContentApi::GetGeometry(*this)->GetHitTypeGranularity(pDaughterCluster->GetOuterLayerHitType()) <= FINE) ?
+        m_maxClusterDistanceFine : m_maxClusterDistanceCoarse);
+
+    float bestParentClusterEnergy(0.);
+    float minDistanceSquared(std::numeric_limits<float>::max());
+
+    for (const CaloHit *const pCaloHitI : daughterHits)
+    {
+        const CartesianVector &positionVectorI(pCaloHitI->GetPositionVector());
+        CaloHitList nearby_hits;
+
+        if (m_hitsToHitsCacheMap->count(pCaloHitI))
+        {
+            const auto range = m_hitsToHitsCacheMap->equal_range(pCaloHitI);
+
+            for (auto rangeIter = range.first; rangeIter != range.second; ++rangeIter)
+                nearby_hits.push_back(rangeIter->second);
+        }
+        else
+        {
+            KDTreeCube searchRegionHits = build_3d_kd_search_region(pCaloHitI, searchDistance, searchDistance, searchDistance);
+            std::vector<HitKDNode3D> found;
+            m_hitsKdTree3D->search(searchRegionHits, found);
+
+            for (const auto &hit : found)
+            {
+                m_hitsToHitsCacheMap->emplace(pCaloHitI, hit.data);
+                nearby_hits.push_back(hit.data);
+            }
+        }
+
+        nearby_hits.sort(PointerLessThan<CaloHit>());
+
+        for (const CaloHit *const pCaloHitJ : nearby_hits)
+        {
+            if (daughterHits.end() != std::find(daughterHits.begin(), daughterHits.end(), pCaloHitJ))
+                continue;
+
+            const int parentIndex(static_cast<int>(quickUnion.Find(hitToClusterMap.at(pCaloHitJ))));
+            const Cluster *const pClusterJ = clusterVector.at(parentIndex);
+            const float clusterEnergyJ(pClusterJ->GetHadronicEnergy());
+
+            if (clusterEnergyJ < m_minClusterHadEnergy)
+                continue;
+
+            if (pClusterJ->GetNCaloHits() <= m_maxHitsInSoftCluster)
+                continue;
+
+            const float distanceSquared((positionVectorI - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
+
+            if ((distanceSquared < minDistanceSquared) || ((distanceSquared == minDistanceSquared) && (clusterEnergyJ > bestParentClusterEnergy)))
+            {
+                minDistanceSquared = distanceSquared;
+                bestParentClusterEnergy = clusterEnergyJ;
+                bestParentIndex = parentIndex;
+            }
+        }
+    }
+
+    if (bestParentIndex >= 0)
+        closestDistance = std::sqrt(minDistanceSquared);
+
+    return bestParentIndex;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -220,16 +300,33 @@ bool SoftClusterMergingAlgorithm::CanMergeSoftCluster(const Cluster *const pDaug
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void SoftClusterMergingAlgorithm::MergeClusters(const Cluster *const pParentCluster, const Cluster *const pDaughterCluster,
+    const ClusterListToNameMap &clusterListToNameMap) const
+{
+    if (clusterListToNameMap.size() > 1)
+    {
+        std::string parentListName, daughterListName;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetClusterListName(pParentCluster, clusterListToNameMap, parentListName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetClusterListName(pDaughterCluster, clusterListToNameMap, daughterListName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
+            parentListName, daughterListName));
+    }
+    else
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode SoftClusterMergingAlgorithm::GetClusterListName(const Cluster *const pCluster, const ClusterListToNameMap &clusterListToNameMap,
     std::string &listName) const
 {
-    for (ClusterListToNameMap::const_iterator iter = clusterListToNameMap.begin(), iterEnd = clusterListToNameMap.end(); iter != iterEnd; ++iter)
+    for (const auto &mapIter : clusterListToNameMap)
     {
-        const ClusterList *const pClusterList = iter->first;
-
-        if (pClusterList->end() != pClusterList->find(pCluster))
+        if (mapIter.first->end() != std::find(mapIter.first->begin(), mapIter.first->end(), pCluster))
         {
-            listName = iter->second;
+            listName = mapIter.second;
             return STATUS_CODE_SUCCESS;
         }
     }

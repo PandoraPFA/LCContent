@@ -1,14 +1,14 @@
 /**
- *  @file   LCContent/src/LCContentFast/KDTreeLinkerToolsT.cc
+ *  @file   LCContent/src/LCUtility/KDTreeLinkerToolsT.cc
  * 
  *  @brief  Implementation of the kd tree linker tools template class
  * 
  *  $Log: $
  */
 
-#include "LCContentFast/KDTreeLinkerToolsT.h"
+#include "LCUtility/KDTreeLinkerToolsT.h"
 
-namespace lc_content_fast
+namespace lc_content
 {
 
 std::pair<float, float> minmax(const float a, const float b)
@@ -19,7 +19,7 @@ std::pair<float, float> minmax(const float a, const float b)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<>
-KDTreeCube fill_and_bound_3d_kd_tree<const pandora::Track>(const pandora::Algorithm *const /*caller*/, const pandora::TrackList &points,
+KDTreeCube fill_and_bound_3d_kd_tree<const pandora::Track>(const pandora::Algorithm *const /*caller*/, const MANAGED_CONTAINER<const pandora::Track *> &points,
     std::vector<KDTreeNodeInfoT<const pandora::Track*, 3> > &nodes, bool passthru)
 {
     std::array<float, 3> minpos{ {0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f} };
@@ -57,7 +57,7 @@ KDTreeCube fill_and_bound_3d_kd_tree<const pandora::Track>(const pandora::Algori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-KDTreeTesseract fill_and_bound_4d_kd_tree(const pandora::Algorithm *const caller, const pandora::CaloHitList &points,
+KDTreeTesseract fill_and_bound_4d_kd_tree(const pandora::Algorithm *const caller, const MANAGED_CONTAINER<const pandora::CaloHit *> &points,
     std::vector<KDTreeNodeInfoT<const pandora::CaloHit*, 4> > &nodes, bool passthru)
 {
     std::array<float, 4> minpos{ {0.f, 0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f, 0.f} };
@@ -130,4 +130,4 @@ KDTreeTesseract build_4d_kd_search_region(const pandora::CartesianVector &pos, c
     return KDTreeTesseract(x_side.first, x_side.second, y_side.first, y_side.second, z_side.first, z_side.second, layer_side.first, layer_side.second);
 }
 
-} // namespace lc_content_fast
+} // namespace lc_content

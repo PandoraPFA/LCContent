@@ -71,8 +71,7 @@ StatusCode SplitMergedClustersAlg::Run()
         const float chi2Cut((chi > m_chiToForceReclustering) ? m_chiToForceReclustering * m_chiToForceReclustering : chi2 - m_minChi2Improvement);
 
         // Specify clusters and tracks to be used in reclustering
-        ClusterList reclusterClusterList;
-        reclusterClusterList.insert(pCluster);
+        const ClusterList reclusterClusterList(1, pCluster);
 
         TrackList reclusterTrackList(trackList.begin(), trackList.end());
 

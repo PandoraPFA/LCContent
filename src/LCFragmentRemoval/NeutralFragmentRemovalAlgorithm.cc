@@ -10,6 +10,8 @@
 
 #include "LCFragmentRemoval/NeutralFragmentRemovalAlgorithm.h"
 
+#include "LCHelpers/SortingHelper.h"
+
 using namespace pandora;
 
 namespace lc_content
@@ -63,7 +65,7 @@ StatusCode NeutralFragmentRemovalAlgorithm::Run()
     unsigned int nPasses(0);
     bool isFirstPass(true), shouldRecalculate(true);
 
-    ClusterList affectedClusters;
+    ClusterSet affectedClusters;
     NeutralClusterContactMap neutralClusterContactMap;
 
     while ((nPasses++ < m_nMaxPasses) && shouldRecalculate)
@@ -94,7 +96,7 @@ StatusCode NeutralFragmentRemovalAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode NeutralFragmentRemovalAlgorithm::GetNeutralClusterContactMap(bool &isFirstPass, const ClusterList &affectedClusters,
+StatusCode NeutralFragmentRemovalAlgorithm::GetNeutralClusterContactMap(bool &isFirstPass, const ClusterSet &affectedClusters,
     NeutralClusterContactMap &neutralClusterContactMap) const
 {
     const ClusterList *pClusterList = NULL;
@@ -131,7 +133,7 @@ StatusCode NeutralFragmentRemovalAlgorithm::GetNeutralClusterContactMap(bool &is
             if (pDaughterCluster == pParentCluster)
                 continue;
 
-            if (!pParentCluster->GetAssociatedTrackList().empty() || pParentCluster->IsPhotonFast(this->GetPandora()))
+            if (!pParentCluster->GetAssociatedTrackList().empty() || pParentCluster->PassPhotonId(this->GetPandora()))
                 continue;
 
             const NeutralClusterContact neutralClusterContact(this->GetPandora(), pDaughterCluster, pParentCluster, m_contactParameters);
@@ -151,7 +153,7 @@ StatusCode NeutralFragmentRemovalAlgorithm::GetNeutralClusterContactMap(bool &is
 
 bool NeutralFragmentRemovalAlgorithm::IsPhotonLike(const Cluster *const pDaughterCluster) const
 {
-    if (pDaughterCluster->IsPhotonFast(this->GetPandora()))
+    if (pDaughterCluster->PassPhotonId(this->GetPandora()))
         return true;
 
     const ClusterFitResult &clusterFitResult(pDaughterCluster->GetFitToAllHitsResult());
@@ -195,14 +197,16 @@ StatusCode NeutralFragmentRemovalAlgorithm::GetClusterMergingCandidates(const Ne
     float highestEvidence(m_minEvidence);
     float highestEvidenceParentEnergy(0.);
 
-    for (NeutralClusterContactMap::const_iterator iterI = neutralClusterContactMap.begin(), iterIEnd = neutralClusterContactMap.end(); iterI != iterIEnd; ++iterI)
+    ClusterList clusterList;
+    for (const auto &mapEntry : neutralClusterContactMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(SortingHelper::SortClustersByNHits);
+
+    for (const Cluster *const pDaughterCluster : clusterList)
     {
-        const Cluster *const pDaughterCluster = iterI->first;
+        const NeutralClusterContactVector &contactVector(neutralClusterContactMap.at(pDaughterCluster));
 
-        for (NeutralClusterContactVector::const_iterator iterJ = iterI->second.begin(), iterJEnd = iterI->second.end(); iterJ != iterJEnd; ++iterJ)
+        for (const NeutralClusterContact &neutralClusterContact : contactVector)
         {
-            NeutralClusterContact neutralClusterContact = *iterJ;
-
             if (pDaughterCluster != neutralClusterContact.GetDaughterCluster())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
@@ -270,7 +274,7 @@ float NeutralFragmentRemovalAlgorithm::GetEvidenceForMerge(const NeutralClusterC
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode NeutralFragmentRemovalAlgorithm::GetAffectedClusters(const NeutralClusterContactMap &neutralClusterContactMap, const Cluster *const pBestParentCluster,
-    const Cluster *const pBestDaughterCluster, ClusterList &affectedClusters) const
+    const Cluster *const pBestDaughterCluster, ClusterSet &affectedClusters) const
 {
     if (neutralClusterContactMap.end() == neutralClusterContactMap.find(pBestDaughterCluster))
         return STATUS_CODE_FAILURE;

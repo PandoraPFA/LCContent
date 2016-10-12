@@ -55,7 +55,7 @@ StatusCode PhotonSplittingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTrackList));
 
     TrackVector trackVector(pTrackList->begin(), pTrackList->end());
-    std::sort(trackVector.begin(), trackVector.end(), lc_content::SortingHelper::SortTracksByEnergy);
+    std::sort(trackVector.begin(), trackVector.end(), PointerLessThan<Track>());
 
     const ClusterList *pPhotonClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pPhotonClusterList));
@@ -65,7 +65,7 @@ StatusCode PhotonSplittingAlgorithm::Run()
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
-        if (pCluster->GetParticleIdFlag() != PHOTON) continue;
+        if (pCluster->GetParticleId() != PHOTON) continue;
 
         int nCloseTrack(0);
         for (TrackVector::const_iterator trackIter = trackVector.begin(), trackIterEnd = trackVector.end(); trackIter != trackIterEnd; ++trackIter)
@@ -108,8 +108,7 @@ StatusCode PhotonSplittingAlgorithm::Run()
                 split = true;
         }
         if (showersPhoton.size() > 1 && split ){
-            ClusterList tempClusterList;
-            tempClusterList.insert(pCluster);
+            const ClusterList tempClusterList(1, pCluster);
             std::string originalClusterListName, tempClusterListName;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, tempClusterList,
                 originalClusterListName, tempClusterListName));
@@ -124,7 +123,7 @@ StatusCode PhotonSplittingAlgorithm::Run()
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pNewCluster));
                 PandoraContentApi::Cluster::Metadata metadata;
                 metadata.m_particleId = PHOTON;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pNewCluster, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pNewCluster, metadata));
             }
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, tempClusterListName,
                 originalClusterListName));

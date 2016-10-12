@@ -15,28 +15,12 @@
 #include "Objects/CaloHit.h"
 #include "Objects/CartesianVector.h"
 
+#include "LCUtility/KDTreeLinkerAlgoT.h"
+
+#include <unordered_map>
+
 namespace lc_content
 {
-
-/**
- *  @brief  CustomHitOrder class
- */
-class CustomHitOrder
-{
-public:
-    /**
-     *  @brief  Operator () for determining custom calo hit ordering. Operator returns true if lhs hit is to be
-     *          placed at an earlier position than rhs hit.
-     * 
-     *  @param  lhs calo hit for comparison
-     *  @param  rhs calo hit for comparison
-     */
-    bool operator()(const pandora::CaloHit *lhs, const pandora::CaloHit *rhs) const;
-};
-
-typedef std::set<const pandora::CaloHit *, CustomHitOrder> CustomSortedCaloHitList;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  ConeClusteringAlgorithm class
@@ -63,13 +47,25 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
+     *  @brief  Fill the kd-trees we will use to do fast lookups of clusters
+     * 
+     *  @param  none, just internal initialization
+     */
+    pandora::StatusCode InitializeKDTrees(const pandora::TrackList*, const pandora::CaloHitList*);
+
+    /**
      *  @brief  Use current track list to make seed clusters
      * 
+     *  @param  pTrackList address of the track list
      *  @param  clusterVector to receive the addresses of clusters created (which could also be accessed via current cluster list)
      */
-    pandora::StatusCode SeedClustersWithTracks(pandora::ClusterVector &clusterVector) const;
+    pandora::StatusCode SeedClustersWithTracks(const pandora::TrackList *const pTrackList, pandora::ClusterVector &clusterVector);
 
-    typedef std::map<const pandora::Cluster*, const pandora::ClusterFitResult> ClusterFitResultMap;
+    typedef std::unordered_map<const pandora::Cluster*, const pandora::ClusterFitResult> ClusterFitResultMap;
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 4> HitKDTree;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 4> HitKDNode;
+    typedef KDTreeLinkerAlgo<const pandora::Track*, 3> TrackKDTree;
+    typedef KDTreeNodeInfoT<const pandora::Track*, 3> TrackKDNode;
 
     /**
      *  @brief  Update the properties of the current clusters, calculating their current directions and storing the fit results
@@ -84,23 +80,23 @@ private:
      *  @brief  Match clusters to calo hits in previous pseudo layers
      * 
      *  @param  pseudoLayer the current pseudo layer
-     *  @param  pCustomSortedCaloHitList address of the custom sorted list of calo hits in the current pseudo layer
+     *  @param  relevantCaloHits the calo hits in the current pseudo layer
      *  @param  clusterFitResultMap containing the current cluster fit results
      *  @param  clusterVector vector containing addresses of current clusters
      */
-    pandora::StatusCode FindHitsInPreviousLayers(unsigned int pseudoLayer, CustomSortedCaloHitList *const pCustomSortedCaloHitList,
-        const ClusterFitResultMap &clusterFitResultMap, pandora::ClusterVector &clusterVector) const;
+    pandora::StatusCode FindHitsInPreviousLayers(unsigned int pseudoLayer, const pandora::CaloHitVector &relevantCaloHits,
+        const ClusterFitResultMap &clusterFitResultMap, pandora::ClusterVector &clusterVector);
 
     /**
      *  @brief  Match clusters to calo hits in current pseudo layer
      * 
      *  @param  pseudoLayer the current pseudo layer
-     *  @param  pCustomSortedCaloHitList address of the custom sorted list of calo hits in the current pseudo layer
+     *  @param  relevantCaloHits the calo hits in the current pseudo layer
      *  @param  clusterFitResultMap containing the current cluster fit results
      *  @param  clusterVector vector containing addresses of current clusters
      */
-    pandora::StatusCode FindHitsInSameLayer(unsigned int pseudoLayer, CustomSortedCaloHitList *const pCustomSortedCaloHitList,
-        const ClusterFitResultMap &clusterFitResultMap, pandora::ClusterVector &clusterVector) const;
+    pandora::StatusCode FindHitsInSameLayer(unsigned int pseudoLayer, const pandora::CaloHitVector &relevantCaloHits,
+        const ClusterFitResultMap &clusterFitResultMap, pandora::ClusterVector &clusterVector);
 
     /**
      *  @brief  Get the "generic distance" between a calo hit and a cluster; the smaller the distance, the stronger the association
@@ -177,6 +173,28 @@ private:
      */
     pandora::StatusCode RemoveEmptyClusters(const pandora::ClusterVector &clusterVector) const;
 
+    /**
+     *  @brief  kd-tree containing all tracks in given to the clusterizer
+     */
+    std::vector<TrackKDNode> m_trackNodes;
+    TrackKDTree m_tracksKdTree;
+
+    /**
+     *  @brief  kd-tree containing all rechits given to the clusterizer
+     */
+    std::vector<HitKDNode> m_hitNodes;
+    HitKDTree m_hitsKdTree;
+
+    /**
+     *  @brief  hashtable to look up hits in clusters
+     */
+    std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> m_hitsToClusters;
+
+    /**
+     *  @brief  hashtable to look up hits in clusters
+     */
+    std::unordered_map<const pandora::Track*, const pandora::Cluster*> m_tracksToClusters;
+
     unsigned int    m_clusterSeedStrategy;          ///< Flag determining if and how clusters should be seeded with tracks
 
     bool            m_shouldUseOnlyECalHits;        ///< Whether to only use ecal hits in the clustering algorithm
@@ -225,19 +243,10 @@ private:
     float           m_fitSuccessChi2Cut2;           ///< 2. Max value of fit chi2 for fit success
 
     float           m_mipTrackChi2Cut;              ///< Max value of fit chi2 for track seeded cluster to retain its IsMipTrack status
+
+    unsigned int    m_firstLayer;                   ///< cache the pseudo layer at IP
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool CustomHitOrder::operator()(const pandora::CaloHit *lhs, const pandora::CaloHit *rhs) const
-{
-    return (!(lhs->GetInputEnergy() > rhs->GetInputEnergy()) && !(rhs->GetInputEnergy() > lhs->GetInputEnergy()) ?
-        (lhs > rhs) :
-        (lhs->GetInputEnergy() > rhs->GetInputEnergy()));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline pandora::Algorithm *ConeClusteringAlgorithm::Factory::CreateAlgorithm() const

@@ -211,6 +211,16 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const pandora::ParticleFlowObject *const pPfo) const
+{
+    if (1 != pPfo->GetClusterList().size())
+        return false;
+
+    return this->IsMatch(pPfo->GetClusterList().front());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode LCParticleIdPlugins::LCEmShowerId::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -308,6 +318,16 @@ bool LCParticleIdPlugins::LCPhotonId::IsMatch(const Cluster *const pCluster) con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LCParticleIdPlugins::LCPhotonId::IsMatch(const pandora::ParticleFlowObject *const pPfo) const
+{
+    if (1 != pPfo->GetClusterList().size())
+        return false;
+
+    return this->IsMatch(pPfo->GetClusterList().front());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode LCParticleIdPlugins::LCPhotonId::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
@@ -366,6 +386,16 @@ bool LCParticleIdPlugins::LCElectronId::IsMatch(const Cluster *const pCluster) c
     }
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LCParticleIdPlugins::LCElectronId::IsMatch(const pandora::ParticleFlowObject *const pPfo) const
+{
+    if (1 != pPfo->GetClusterList().size())
+        return false;
+
+    return this->IsMatch(pPfo->GetClusterList().front());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -668,6 +698,16 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
     const int nCutsFailed(nECalCutsFailed + nHCalCutsFailed - nMuonCutsPassed);
 
     return (nCutsFailed <= 0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LCParticleIdPlugins::LCMuonId::IsMatch(const pandora::ParticleFlowObject *const pPfo) const
+{
+    if (1 != pPfo->GetClusterList().size())
+        return false;
+
+    return this->IsMatch(pPfo->GetClusterList().front());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

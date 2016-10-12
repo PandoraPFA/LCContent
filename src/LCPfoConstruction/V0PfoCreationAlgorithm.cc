@@ -38,7 +38,7 @@ StatusCode V0PfoCreationAlgorithm::Run()
 
         const Track *const pTrack1 = *(trackList.begin());
 
-        const TrackList &siblingTrackList(pTrack1->GetSiblingTrackList());
+        const TrackList &siblingTrackList(pTrack1->GetSiblingList());
 
         if (siblingTrackList.size() != 1)
             continue;
@@ -58,7 +58,7 @@ StatusCode V0PfoCreationAlgorithm::Run()
                 metadata.m_particleId = PHOTON;
                 metadata.m_mass = mass;
                 metadata.m_energy = energy;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
         }
 
@@ -71,7 +71,7 @@ StatusCode V0PfoCreationAlgorithm::Run()
                 metadata.m_particleId = K_SHORT;
                 metadata.m_mass = mass;
                 metadata.m_energy = energy;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
         }
 
@@ -84,7 +84,7 @@ StatusCode V0PfoCreationAlgorithm::Run()
                 metadata.m_particleId = (pTrack1->GetParticleId() == PROTON) ? LAMBDA : LAMBDA_BAR;
                 metadata.m_mass = mass;
                 metadata.m_energy = energy;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
         }
 
@@ -97,7 +97,7 @@ StatusCode V0PfoCreationAlgorithm::Run()
                 metadata.m_particleId = (pTrack2->GetParticleId() == PROTON) ? LAMBDA : LAMBDA_BAR;
                 metadata.m_mass = mass;
                 metadata.m_energy = energy;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
         }
 
@@ -108,8 +108,8 @@ StatusCode V0PfoCreationAlgorithm::Run()
 
             try
             {
-                const MCParticle *const pMCParticle1(pTrack1->GetMainMCParticle());
-                const MCParticle *const pMCParticle2(pTrack2->GetMainMCParticle());
+                const MCParticle *const pMCParticle1(MCParticleHelper::GetMainMCParticle(pTrack1));
+                const MCParticle *const pMCParticle2(MCParticleHelper::GetMainMCParticle(pTrack2));
 
                 const int ipdg1 = pMCParticle1->GetParticleId();
                 std::cout << " Track 1 : " << " ipdg = " << ipdg1 << " E = " << pMCParticle1->GetEnergy() << std::endl;

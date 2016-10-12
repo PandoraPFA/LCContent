@@ -44,8 +44,7 @@ StatusCode ForceSplitTrackAssociationsAlg::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(pOriginalCluster->GetIsolatedCaloHitList()));
 
         // Initialize cluster fragmentation operations
-        ClusterList clusterList;
-        clusterList.insert(pOriginalCluster);
+        const ClusterList clusterList(1, pOriginalCluster);
         std::string originalClustersListName, fragmentClustersListName;
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList,
@@ -55,10 +54,8 @@ StatusCode ForceSplitTrackAssociationsAlg::Run()
         TrackToClusterMap trackToClusterMap;
         TrackToHelixMap trackToHelixMap;
 
-        for (TrackList::const_iterator trackIter = trackList.begin(), trackIterEnd = trackList.end(); trackIter != trackIterEnd;
-            ++trackIter)
+        for (const Track *const pTrack : trackList)
         {
-            const Track *const pTrack = *trackIter;
             const Helix helix(pTrack->GetTrackStateAtCalorimeter().GetPosition(), pTrack->GetTrackStateAtCalorimeter().GetMomentum(), pTrack->GetCharge(), bField);
 
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveTrackClusterAssociation(*this, pTrack, pOriginalCluster));
@@ -76,13 +73,10 @@ StatusCode ForceSplitTrackAssociationsAlg::Run()
         }
 
         // Assign the calo hits in the original cluster to the most appropriate track
-        for (OrderedCaloHitList::const_iterator listIter = orderedCaloHitList.begin(), listIterEnd = orderedCaloHitList.end();
-            listIter != listIterEnd; ++listIter)
+        for (const OrderedCaloHitList::value_type &layerEntry : orderedCaloHitList)
         {
-            for (CaloHitList::const_iterator hitIter = listIter->second->begin(), hitIterEnd = listIter->second->end();
-                hitIter != hitIterEnd; ++hitIter)
+            for (const CaloHit *const pCaloHit : *layerEntry.second)
             {
-                const CaloHit *const pCaloHit = *hitIter;
                 const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
 
                 // Identify most suitable cluster for calo hit, using distance to helix fit as figure of merit
@@ -90,11 +84,9 @@ StatusCode ForceSplitTrackAssociationsAlg::Run()
                 float bestClusterEnergy(0.);
                 float minDistanceToTrack(std::numeric_limits<float>::max());
 
-                for (TrackToClusterMap::const_iterator mapIter = trackToClusterMap.begin(), mapIterEnd = trackToClusterMap.end();
-                    mapIter != mapIterEnd; ++mapIter)
+                for (const Track *const pTrack : trackList)
                 {
-                    const Track *const pTrack(mapIter->first);
-                    const Cluster *const pCluster(mapIter->second);
+                    const Cluster *const pCluster(trackToClusterMap.at(pTrack));
 
                     TrackToHelixMap::const_iterator helixIter = trackToHelixMap.find(pTrack);
 
@@ -134,19 +126,18 @@ StatusCode ForceSplitTrackAssociationsAlg::Run()
         }
 
         // Check for any "empty" clusters and create new track-cluster associations
-        for (TrackToClusterMap::iterator mapIter = trackToClusterMap.begin(); mapIter != trackToClusterMap.end();)
+        for (const Track *const pTrack : trackList)
         {
-            const Cluster *const pCluster = mapIter->second;
+            const Cluster *const pCluster(trackToClusterMap.at(pTrack));
 
             if (0 == pCluster->GetNCaloHits())
             {
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pCluster));
-                trackToClusterMap.erase(mapIter++);
+                trackToClusterMap.erase(pTrack);
             }
             else
             {
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddTrackClusterAssociation(*this, mapIter->first, pCluster));
-                ++mapIter;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddTrackClusterAssociation(*this, pTrack, pCluster));
             }
         }
 

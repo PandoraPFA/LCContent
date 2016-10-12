@@ -10,6 +10,8 @@
 
 #include "LCUtility/TrackPreparationAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lc_content
@@ -38,7 +40,7 @@ StatusCode TrackPreparationAlgorithm::Run()
         for (TrackList::const_iterator trackIter = pTrackList->begin(), trackIterEnd = pTrackList->end(); trackIter != trackIterEnd; ++trackIter)
         {
             if ((*trackIter)->IsAvailable())
-                candidateTrackList.insert(*trackIter);
+                candidateTrackList.push_back(*trackIter);
         }
     }
 
@@ -82,27 +84,27 @@ StatusCode TrackPreparationAlgorithm::CreatePfoTrackList(const TrackList &inputT
     {
         const Track *const pTrack = *iter;
 
-        if (!pTrack->GetParentTrackList().empty())
+        if (!pTrack->GetParentList().empty())
             continue;
 
         // Sibling tracks as first evidence of pfo target
-        const TrackList &siblingTrackList(pTrack->GetSiblingTrackList());
+        const TrackList &siblingTrackList(pTrack->GetSiblingList());
 
         if (!siblingTrackList.empty())
         {
-            if (siblingTracks.end() != siblingTracks.find(pTrack))
+            if (siblingTracks.end() != std::find(siblingTracks.begin(), siblingTracks.end(), pTrack))
                 continue;
 
             if (this->HasAssociatedClusters(pTrack))
             {
-                pfoTrackList.insert(pTrack);
-                siblingTracks.insert(siblingTrackList.begin(), siblingTrackList.end());
+                pfoTrackList.push_back(pTrack);
+                siblingTracks.insert(siblingTracks.end(), siblingTrackList.begin(), siblingTrackList.end());
             }
         }
         // Single parent track as pfo target
         else if (this->HasAssociatedClusters(pTrack))
         {
-            pfoTrackList.insert(pTrack);
+            pfoTrackList.push_back(pTrack);
         }
     }
 
@@ -122,7 +124,7 @@ bool TrackPreparationAlgorithm::HasAssociatedClusters(const Track *const pTrack,
     // Consider any sibling tracks
     if (readSiblingInfo)
     {
-        const TrackList &siblingTrackList(pTrack->GetSiblingTrackList());
+        const TrackList &siblingTrackList(pTrack->GetSiblingList());
 
         for (TrackList::const_iterator iter = siblingTrackList.begin(), iterEnd = siblingTrackList.end(); iter != iterEnd; ++iter)
         {
@@ -132,7 +134,7 @@ bool TrackPreparationAlgorithm::HasAssociatedClusters(const Track *const pTrack,
     }
 
     // Consider any daughter tracks
-    const TrackList &daughterTrackList(pTrack->GetDaughterTrackList());
+    const TrackList &daughterTrackList(pTrack->GetDaughterList());
 
     for (TrackList::const_iterator iter = daughterTrackList.begin(), iterEnd = daughterTrackList.end(); iter != iterEnd; ++iter)
     {

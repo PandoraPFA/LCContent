@@ -99,7 +99,7 @@ private:
      *  @param  affectedClusters list of those clusters affected by previous cluster merging, for which contact details must be updated
      *  @param  neutralClusterContactMap to receive the populated cluster contact map
      */
-    pandora::StatusCode GetNeutralClusterContactMap(bool &isFirstPass, const pandora::ClusterList &affectedClusters,
+    pandora::StatusCode GetNeutralClusterContactMap(bool &isFirstPass, const pandora::ClusterSet &affectedClusters,
         NeutralClusterContactMap &neutralClusterContactMap) const;
 
     /**
@@ -148,7 +148,7 @@ private:
      *  @param  affectedClusters to receive the list of affected clusters
      */
     pandora::StatusCode GetAffectedClusters(const NeutralClusterContactMap &neutralClusterContactMap, const pandora::Cluster *const pBestParentCluster,
-        const pandora::Cluster *const pBestDaughterCluster, pandora::ClusterList &affectedClusters) const;
+        const pandora::Cluster *const pBestDaughterCluster, pandora::ClusterSet &affectedClusters) const;
 
     typedef NeutralClusterContact::Parameters ContactParameters;
     ContactParameters   m_contactParameters;                        ///< The neutral cluster contact parameters

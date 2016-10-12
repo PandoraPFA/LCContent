@@ -10,6 +10,8 @@
 
 #include "LCFragmentRemoval/PhotonFragmentRemovalAlgorithm.h"
 
+#include "LCHelpers/SortingHelper.h"
+
 using namespace pandora;
 
 namespace lc_content
@@ -57,7 +59,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::Run()
     unsigned int nPasses(0);
     bool isFirstPass(true), shouldRecalculate(true);
 
-    ClusterList affectedClusters;
+    ClusterSet affectedClusters;
     ClusterContactMap clusterContactMap;
 
     while ((nPasses++ < m_nMaxPasses) && shouldRecalculate)
@@ -83,7 +85,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::Run()
 
             PandoraContentApi::Cluster::Metadata metadata;
             metadata.m_particleId = PHOTON;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pBestParentCluster, metadata));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pBestParentCluster, metadata));
         }
     }
 
@@ -92,7 +94,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PhotonFragmentRemovalAlgorithm::GetClusterContactMap(bool &isFirstPass, const ClusterList &affectedClusters,
+StatusCode PhotonFragmentRemovalAlgorithm::GetClusterContactMap(bool &isFirstPass, const ClusterSet &affectedClusters,
     ClusterContactMap &clusterContactMap) const
 {
     const ClusterList *pClusterList = NULL;
@@ -144,7 +146,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::GetClusterContactMap(bool &isFirstPas
             if (pDaughterCluster->GetInitialDirection().GetCosOpeningAngle(pParentCluster->GetInitialDirection()) < m_minCosOpeningAngle)
                 continue;
 
-            if (!pParentCluster->IsPhotonFast(this->GetPandora()))
+            if (!pParentCluster->PassPhotonId(this->GetPandora()))
                 continue;
 
             // Evaluate cluster contact properties
@@ -165,7 +167,7 @@ StatusCode PhotonFragmentRemovalAlgorithm::GetClusterContactMap(bool &isFirstPas
 
 bool PhotonFragmentRemovalAlgorithm::IsPhotonLike(const Cluster *const pDaughterCluster) const
 {
-    if (pDaughterCluster->IsPhotonFast(this->GetPandora()))
+    if (pDaughterCluster->PassPhotonId(this->GetPandora()))
         return true;
 
     const ClusterFitResult &clusterFitResult(pDaughterCluster->GetFitToAllHitsResult());
@@ -208,14 +210,16 @@ StatusCode PhotonFragmentRemovalAlgorithm::GetClusterMergingCandidates(const Clu
     float highestEvidence(m_minEvidence);
     float highestEvidenceParentEnergy(0.);
 
-    for (ClusterContactMap::const_iterator iterI = clusterContactMap.begin(), iterIEnd = clusterContactMap.end(); iterI != iterIEnd; ++iterI)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterContactMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(SortingHelper::SortClustersByNHits);
+
+    for (const Cluster *const pDaughterCluster : clusterList)
     {
-        const Cluster *const pDaughterCluster = iterI->first;
+        const ClusterContactVector &contactVector(clusterContactMap.at(pDaughterCluster));
 
-        for (ClusterContactVector::const_iterator iterJ = iterI->second.begin(), iterJEnd = iterI->second.end(); iterJ != iterJEnd; ++iterJ)
+        for (const ClusterContact &clusterContact : contactVector)
         {
-            ClusterContact clusterContact = *iterJ;
-
             if (pDaughterCluster != clusterContact.GetDaughterCluster())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
@@ -270,7 +274,7 @@ float PhotonFragmentRemovalAlgorithm::GetEvidenceForMerge(const ClusterContact &
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode PhotonFragmentRemovalAlgorithm::GetAffectedClusters(const ClusterContactMap &clusterContactMap, const Cluster *const pBestParentCluster,
-    const Cluster *const pBestDaughterCluster, ClusterList &affectedClusters) const
+    const Cluster *const pBestDaughterCluster, ClusterSet &affectedClusters) const
 {
     if (clusterContactMap.end() == clusterContactMap.find(pBestDaughterCluster))
         return STATUS_CODE_FAILURE;

@@ -283,7 +283,7 @@ bool ClusterHelper::CanMergeCluster(const Pandora &pandora, const Cluster *const
     if (0 == pCluster->GetNCaloHits())
         return false;
 
-    if (!(pCluster->IsPhotonFast(pandora)))
+    if (!(pCluster->PassPhotonId(pandora)))
         return true;
 
     if (pCluster->GetMipFraction() - minMipFraction > std::numeric_limits<float>::epsilon())

@@ -82,8 +82,7 @@ StatusCode ResolveTrackAssociationsAlg::Run()
         // Specify tracks and clusters to be used in reclustering
         TrackList reclusterTrackList(trackList.begin(), trackList.end());
 
-        ClusterList reclusterClusterList;
-        reclusterClusterList.insert(pParentCluster);
+        ClusterList reclusterClusterList(1, pParentCluster);
 
         UIntVector originalClusterIndices(1, i);
 
@@ -97,7 +96,7 @@ StatusCode ResolveTrackAssociationsAlg::Run()
 
             if (FragmentRemovalHelper::GetFractionOfHitsInCone(this->GetPandora(), pDaughterCluster, pParentCluster, m_coneCosineHalfAngle) > m_minConeFraction)
             {
-                reclusterClusterList.insert(pDaughterCluster);
+                reclusterClusterList.push_back(pDaughterCluster);
                 originalClusterIndices.push_back(j);
             }
         }

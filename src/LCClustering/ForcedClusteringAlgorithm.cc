@@ -98,7 +98,7 @@ StatusCode ForcedClusteringAlgorithm::Run()
         for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
         {
             if ((m_shouldClusterIsolatedHits || !(*iter)->IsIsolated()) && PandoraContentApi::IsAvailable(*this, *iter))
-                remnantCaloHitList.insert(*iter);
+                remnantCaloHitList.push_back(*iter);
         }
 
         if (!remnantCaloHitList.empty())
@@ -132,7 +132,7 @@ StatusCode ForcedClusteringAlgorithm::RemoveEmptyClusters() const
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
         if (0 == (*iter)->GetNCaloHits())
-            clusterDeletionList.insert(*iter);
+            clusterDeletionList.push_back(*iter);
     }
 
     if (!clusterDeletionList.empty())

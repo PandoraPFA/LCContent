@@ -11,6 +11,7 @@
 #include "LCHelpers/ClusterHelper.h"
 #include "LCHelpers/FragmentRemovalHelper.h"
 #include "LCHelpers/ReclusterHelper.h"
+#include "LCHelpers/SortingHelper.h"
 
 #include "LCTrackClusterAssociation/TrackRecoveryHelixAlgorithm.h"
 
@@ -66,7 +67,7 @@ StatusCode TrackRecoveryHelixAlgorithm::GetTrackAssociationInfoMap(TrackAssociat
         if (pTrack->HasAssociatedCluster() || !pTrack->CanFormPfo())
             continue;
 
-        if (!pTrack->GetDaughterTrackList().empty())
+        if (!pTrack->GetDaughterList().empty())
             continue;
 
         // Extract track information
@@ -78,7 +79,7 @@ StatusCode TrackRecoveryHelixAlgorithm::GetTrackAssociationInfoMap(TrackAssociat
         {
             const Cluster *const pCluster = *iterC;
 
-            if (!pCluster->GetAssociatedTrackList().empty() || (0 == pCluster->GetNCaloHits()) || pCluster->IsPhotonFast(this->GetPandora()))
+            if (!pCluster->GetAssociatedTrackList().empty() || (0 == pCluster->GetNCaloHits()) || pCluster->PassPhotonId(this->GetPandora()))
                 continue;
 
             // Cut on z-coordinate separation between track calorimeter projection and the cluster
@@ -155,21 +156,25 @@ StatusCode TrackRecoveryHelixAlgorithm::MakeTrackClusterAssociations(TrackAssoci
         float minEnergyDifference(std::numeric_limits<float>::max());
         float closestApproach(std::numeric_limits<float>::max());
 
+        TrackList trackList;
+        for (const auto &mapEntry : trackAssociationInfoMap) trackList.push_back(mapEntry.first);
+        trackList.sort(PointerLessThan<Track>());
+
         // Find the closest track-cluster pairing
-        for (TrackAssociationInfoMap::const_iterator iter = trackAssociationInfoMap.begin(), iterEnd = trackAssociationInfoMap.end();
-            iter != iterEnd; ++iter)
+        for (const Track *const pTrack : trackList)
         {
-            for (AssociationInfoSet::const_iterator infoIter = iter->second.begin(), infoIterEnd = iter->second.end();
-                infoIter != infoIterEnd; ++infoIter)
+            const AssociationInfoSet &associationInfoSet(trackAssociationInfoMap.at(pTrack));
+
+            for (const AssociationInfo &associationInfo : associationInfoSet)
             {
-                const float approach(infoIter->GetClosestApproach());
-                const float energyDifference(std::fabs(infoIter->GetCluster()->GetHadronicEnergy() - iter->first->GetEnergyAtDca()));
+                const float approach(associationInfo.GetClosestApproach());
+                const float energyDifference(std::fabs(associationInfo.GetCluster()->GetHadronicEnergy() - pTrack->GetEnergyAtDca()));
 
                 if ((approach < closestApproach) || ((approach == closestApproach) && (energyDifference < minEnergyDifference)))
                 {
                     closestApproach = approach;
-                    pBestTrack = iter->first;
-                    pBestCluster = infoIter->GetCluster();
+                    pBestTrack = pTrack;
+                    pBestCluster = associationInfo.GetCluster();
                     minEnergyDifference = energyDifference;
                 }
             }
@@ -181,7 +186,7 @@ StatusCode TrackRecoveryHelixAlgorithm::MakeTrackClusterAssociations(TrackAssoci
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddTrackClusterAssociation(*this, pBestTrack, pBestCluster));
 
             // Clear information to prevent multiple associations to same track/cluster
-            trackAssociationInfoMap.erase(trackAssociationInfoMap.find(pBestTrack));
+            trackAssociationInfoMap.erase(pBestTrack);
 
             for (TrackAssociationInfoMap::iterator iter = trackAssociationInfoMap.begin(), iterEnd = trackAssociationInfoMap.end(); iter != iterEnd; ++iter)
             {
@@ -205,6 +210,15 @@ StatusCode TrackRecoveryHelixAlgorithm::MakeTrackClusterAssociations(TrackAssoci
     return STATUS_CODE_SUCCESS;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackRecoveryHelixAlgorithm::AssociationInfo::operator< (const TrackRecoveryHelixAlgorithm::AssociationInfo &rhs) const
+{
+    return (SortingHelper::SortClustersByNHits(this->m_pCluster, rhs.m_pCluster));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TrackRecoveryHelixAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
