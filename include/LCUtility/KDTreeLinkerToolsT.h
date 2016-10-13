@@ -5,8 +5,8 @@
  * 
  *  $Log: $
  */
-#ifndef KD_TREE_LINKER_TOOLS_TEMPLATED_H
-#define KD_TREE_LINKER_TOOLS_TEMPLATED_H 1
+#ifndef LC_KD_TREE_LINKER_TOOLS_TEMPLATED_H
+#define LC_KD_TREE_LINKER_TOOLS_TEMPLATED_H 1
 
 #include "Api/PandoraContentApi.h"
 
@@ -436,4 +436,4 @@ KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, con
 
 } // namespace lc_content
 
-#endif // KD_TREE_LINKER_TOOLS_TEMPLATED_H
+#endif // LC_KD_TREE_LINKER_TOOLS_TEMPLATED_H
