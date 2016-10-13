@@ -5,12 +5,10 @@
  * 
  *  $Log: $
  */
-#ifndef KD_TREE_LINKER_ALGO_TEMPLATED_H
-#define KD_TREE_LINKER_ALGO_TEMPLATED_H
+#ifndef LC_KD_TREE_LINKER_ALGO_TEMPLATED_H
+#define LC_KD_TREE_LINKER_ALGO_TEMPLATED_H
 
 #include "LCUtility/KDTreeLinkerToolsT.h"
-
-#include "Pandora/PandoraInternal.h"
 
 #include <vector>
 
@@ -550,4 +548,4 @@ inline KDTreeNodeT<DATA, DIM> *KDTreeLinkerAlgo<DATA, DIM>::recBuild(int low, in
 
 } // namespace lc_content
 
-#endif // KD_TREE_LINKER_ALGO_TEMPLATED_H
+#endif // LC_KD_TREE_LINKER_ALGO_TEMPLATED_H
