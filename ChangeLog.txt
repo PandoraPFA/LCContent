@@ -1,4 +1,17 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03-00-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Updated to reflect sdk interface changes.
+Updated to reflect change to managed container and Pandora typedefs.
+Enforced object uniqueness in lists where it was previously implicit by use of std::unordered_set.
+Reviewed all unordered containers used by algorithms.
+Provided improved functionality in SortingHelper.
+Deleted PhotonReconstruction algorithm histograms upon algorithm destruction.
+LCContentFast subsumed into wider LCContent library (some significant changes to ConeClusteringFast, MainFragmentRemovalFat not included).
+CMake: No longer any option to proceed without support for specified cxx flags.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-04-01
 --------------------------------------------------------------------------------------------------------------------------------------------
 Applied a configurable cluster energy limit above which software compensation is not used.
