@@ -64,7 +64,12 @@ void LCShowerProfilePlugin::CalculateShowerStartLayer(const Cluster *const pClus
                     nMipHits++;
             }
 
-            mipFraction = static_cast<float>(nMipHits) / static_cast<float>(iter->second->size());
+            const unsigned int nHitsInLayer(iter->second->size());
+
+            if (0 == nHitsInLayer)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            mipFraction = static_cast<float>(nMipHits) / static_cast<float>(nHitsInLayer);
         }
 
         if (mipFraction - m_showerStartMipFraction > std::numeric_limits<float>::epsilon())
@@ -99,6 +104,11 @@ void LCShowerProfilePlugin::CalculateShowerStartLayer(const Cluster *const pClus
         if (!isLayerPopulated)
             continue;
 
+        const unsigned int nHitsInLayer(iter->second->size());
+
+        if (0 == nHitsInLayer)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
         unsigned int nMipHits(0);
 
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
@@ -107,7 +117,7 @@ void LCShowerProfilePlugin::CalculateShowerStartLayer(const Cluster *const pClus
                 nMipHits++;
         }
 
-        const float mipFraction(static_cast<float>(nMipHits) / static_cast<float>(iter->second->size()));
+        const float mipFraction(static_cast<float>(nMipHits) / static_cast<float>(nHitsInLayer));
 
         if (mipFraction - m_showerStartMipFraction < std::numeric_limits<float>::epsilon())
         {
@@ -160,6 +170,11 @@ void LCShowerProfilePlugin::CalculateLongitudinalProfile(const Cluster *const pC
             continue;
         }
 
+        const unsigned int nHitsInLayer(iter->second->size());
+
+        if (0 == nHitsInLayer)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
         // Extract information from calo hits
         bool isFineGranularity(true);
         float energyInLayer(0.f), nRadiationLengthsInLayer(0.f);
@@ -181,7 +196,7 @@ void LCShowerProfilePlugin::CalculateLongitudinalProfile(const Cluster *const pC
             break;
 
         eCalEnergy += energyInLayer;
-        nRadiationLengthsInLayer /= static_cast<float>(iter->second->size());
+        nRadiationLengthsInLayer /= static_cast<float>(nHitsInLayer);
         nRadiationLengthsInLastLayer = nRadiationLengthsInLayer;
         nRadiationLengths += nRadiationLengthsInLayer;
 

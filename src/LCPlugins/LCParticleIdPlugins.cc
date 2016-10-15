@@ -126,6 +126,11 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
             continue;
         }
 
+        const unsigned int nHitsInLayer(iter->second->size());
+
+        if (0 == nHitsInLayer)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
         // Extract information from the calo hits
         float energyInLayer(0.f);
         float nRadiationLengthsInLayer(0.f);
@@ -144,7 +149,7 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
         }
 
         layer90EnergySum += energyInLayer;
-        nRadiationLengthsInLayer /= static_cast<float>(iter->second->size());
+        nRadiationLengthsInLayer /= static_cast<float>(nHitsInLayer);
         nRadiationLengthsInLastLayer = nRadiationLengthsInLayer;
         nRadiationLengths += nRadiationLengthsInLayer;
 
