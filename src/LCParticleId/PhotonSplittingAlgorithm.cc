@@ -112,21 +112,32 @@ StatusCode PhotonSplittingAlgorithm::Run()
             std::string originalClusterListName, tempClusterListName;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, tempClusterList,
                 originalClusterListName, tempClusterListName));
-            for (int iPeak = 0, iPeakEnd =showersPhoton.size(); iPeak!=iPeakEnd; ++iPeak)
+            bool usedCluster(false);
+            try
             {
-                const ShowerProfilePlugin::ShowerPeak &showerPeak(showersPhoton[iPeak]);
-                PandoraContentApi::Cluster::Parameters parameters;
-                parameters.m_caloHitList = showerPeak.GetPeakCaloHitList();
-                if (0 == iPeak)
-                    parameters.m_isolatedCaloHitList = pCluster->GetIsolatedCaloHitList();
-                const Cluster *pNewCluster = NULL;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pNewCluster));
-                PandoraContentApi::Cluster::Metadata metadata;
-                metadata.m_particleId = PHOTON;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pNewCluster, metadata));
+                for (int iPeak = 0, iPeakEnd =showersPhoton.size(); iPeak!=iPeakEnd; ++iPeak)
+                {
+                    const ShowerProfilePlugin::ShowerPeak &showerPeak(showersPhoton[iPeak]);
+                    PandoraContentApi::Cluster::Parameters parameters;
+                    parameters.m_caloHitList = showerPeak.GetPeakCaloHitList();
+                    if (0 == iPeak)
+                        parameters.m_isolatedCaloHitList = pCluster->GetIsolatedCaloHitList();
+                    const Cluster *pNewCluster = NULL;
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pNewCluster));
+                    PandoraContentApi::Cluster::Metadata metadata;
+                    metadata.m_particleId = PHOTON;
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pNewCluster, metadata));
+                }
+                usedCluster = true;
             }
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, tempClusterListName,
-                originalClusterListName));
+            catch (const StatusCodeException &)
+            {
+                usedCluster = false;
+                std::cout << "PhotonSplittingAlgorithm::Run: StatusCodeException caught during fragmentation process." << std::endl;
+            }
+            const std::string &clusterListToSaveName((usedCluster) ? tempClusterListName : originalClusterListName);
+            const std::string &clusterListToDeleteName((usedCluster) ? originalClusterListName : tempClusterListName);
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
         }
     }
     return STATUS_CODE_SUCCESS;
