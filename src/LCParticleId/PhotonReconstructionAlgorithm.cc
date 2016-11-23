@@ -222,12 +222,24 @@ StatusCode PhotonReconstructionAlgorithm::CreatePhotons(const Cluster *const pCl
     std::string originalClusterListName, peakClusterListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitialiseFragmentation(pCluster, originalClusterListName, peakClusterListName));
     bool usedCluster(false);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateClustersAndSetPhotonID(showersPhoton, pCluster->GetElectromagneticEnergy(), usedCluster, isFromTrack));
+
+    try
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateClustersAndSetPhotonID(showersPhoton, pCluster->GetElectromagneticEnergy(), usedCluster, isFromTrack));
+    }
+    catch (const StatusCodeException &)
+    {
+        usedCluster = false;
+        std::cout << "PhotonReconstructionAlgorithm::CreatePhotons: StatusCodeException caught during fragmentation process." << std::endl;
+    }
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->EndFragmentation(usedCluster, originalClusterListName, peakClusterListName));
+
     if (!usedCluster)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->DeleteCluster(pCluster));
     }
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -287,10 +299,10 @@ StatusCode PhotonReconstructionAlgorithm::CreateCluster(const ShowerProfilePlugi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode PhotonReconstructionAlgorithm::CheckAndSetPhotonID(const ShowerProfilePlugin::ShowerPeak &showerPeak, const Cluster *const pPeakCluster,
-    const float wholeClusuterEnergy, bool &isPhoton, const bool isFromTrack) const
+    const float wholeClusterEnergy, bool &isPhoton, const bool isFromTrack) const
 {
     PDFVarFloatMap pdfVarFloatMap;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CalculateForPhotonID(showerPeak, pPeakCluster, wholeClusuterEnergy, pdfVarFloatMap));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CalculateForPhotonID(showerPeak, pPeakCluster, wholeClusterEnergy, pdfVarFloatMap));
     if (this->IsPhoton(pPeakCluster, pdfVarFloatMap, isFromTrack))
     {
         isPhoton = true;
@@ -302,27 +314,18 @@ StatusCode PhotonReconstructionAlgorithm::CheckAndSetPhotonID(const ShowerProfil
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode PhotonReconstructionAlgorithm::CalculateForPhotonID(const ShowerProfilePlugin::ShowerPeak &showerPeak, const Cluster *const pPeakCluster,
-    const float wholeClusuterEnergy, PDFVarFloatMap &pdfVarFloatMap) const
+    const float wholeClusterEnergy, PDFVarFloatMap &pdfVarFloatMap) const
 {
     const float peakRMS(showerPeak.GetPeakRms());
     const float rmsRatio(showerPeak.GetRmsXYRatio());
 
-    const ShowerProfilePlugin *const pShowerProfilePlugin(PandoraContentApi::GetPlugins(*this)->GetShowerProfilePlugin());
     float profileStart(0.f), profileDiscrepancy(0.f);
-    try
-    {
-        pShowerProfilePlugin->CalculateLongitudinalProfile(pPeakCluster, profileStart, profileDiscrepancy);
-    }
-    catch (const StatusCodeException &)
-    {
-        profileStart = std::numeric_limits<float>::max();
-        profileDiscrepancy = std::numeric_limits<float>::max();
-        std::cout << "PhotonReconstructionAlgorithm::CalculateForPhotonID: WARNING pShowerProfilePlugin->CalculateLongitudinalProfile throws an exception. \n" <<
-        "profileStart and profileDiscrepancy both set to std::numeric_limits<float>::max())" << std::endl;
-    }
-    const float energyFraction(pPeakCluster->GetElectromagneticEnergy() / wholeClusuterEnergy);
+    PandoraContentApi::GetPlugins(*this)->GetShowerProfilePlugin()->CalculateLongitudinalProfile(pPeakCluster, profileStart, profileDiscrepancy);
+
+    const float energyFraction(pPeakCluster->GetElectromagneticEnergy() / wholeClusterEnergy);
     TrackVector trackVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetTrackVectors(trackVector));
+
     const Track *pMinTrack = NULL;
     float minDistance(std::numeric_limits<float>::max());
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetMinDistanceToTrack(pPeakCluster, trackVector, minDistance, pMinTrack));
@@ -764,9 +767,18 @@ pandora::StatusCode PhotonReconstructionAlgorithm::CreatePhotonsForTraining(cons
     }
     std::string originalClusterListName, peakClusterListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitialiseFragmentation(pCluster, originalClusterListName, peakClusterListName));
-    bool usedCluster(false);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateClustersAndTrainPhotonID(showersPhoton, pCluster->GetElectromagneticEnergy()));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->EndFragmentation(usedCluster, originalClusterListName, peakClusterListName));
+
+    try
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateClustersAndTrainPhotonID(showersPhoton, pCluster->GetElectromagneticEnergy()));
+    }
+    catch (const StatusCodeException &)
+    {
+        std::cout << "PhotonReconstructionAlgorithm::CreatePhotonsForTraining: StatusCodeException caught during fragmentation process." << std::endl;
+    }
+
+    bool dummyBoolean(false);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->EndFragmentation(dummyBoolean, originalClusterListName, peakClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->DeleteCluster(pCluster));
 
     return STATUS_CODE_SUCCESS;
@@ -809,7 +821,7 @@ StatusCode PhotonReconstructionAlgorithm::FillPdfHistograms(const pandora::Clust
     {
         pMCParticle = MCParticleHelper::GetMainMCParticle(pCluster);
     }
-    catch (StatusCodeException &)
+    catch (const StatusCodeException &)
     {
     }
 
