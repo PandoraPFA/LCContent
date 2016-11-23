@@ -309,7 +309,17 @@ StatusCode PhotonReconstructionAlgorithm::CalculateForPhotonID(const ShowerProfi
 
     const ShowerProfilePlugin *const pShowerProfilePlugin(PandoraContentApi::GetPlugins(*this)->GetShowerProfilePlugin());
     float profileStart(0.f), profileDiscrepancy(0.f);
-    pShowerProfilePlugin->CalculateLongitudinalProfile(pPeakCluster, profileStart, profileDiscrepancy);
+    try
+    {
+        pShowerProfilePlugin->CalculateLongitudinalProfile(pPeakCluster, profileStart, profileDiscrepancy);
+    }
+    catch (const StatusCodeException &)
+    {
+        profileStart = std::numeric_limits<float>::max();
+        profileDiscrepancy = std::numeric_limits<float>::max();
+        std::cout << "PhotonReconstructionAlgorithm::CalculateForPhotonID: WARNING pShowerProfilePlugin->CalculateLongitudinalProfile throws an exception. \n" <<
+        "profileStart and profileDiscrepancy both set to std::numeric_limits<float>::max())" << std::endl;
+    }
     const float energyFraction(pPeakCluster->GetElectromagneticEnergy() / wholeClusuterEnergy);
     TrackVector trackVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetTrackVectors(trackVector));
@@ -390,11 +400,11 @@ bool PhotonReconstructionAlgorithm::PassPhotonPIDCut(const float pid, const floa
             return true;
     }else if (clusterEnergy < m_energyCutForPid2)
     {
-        if (pid > m_pidCut2 )
+        if (pid > m_pidCut2)
             return true;
     }else
     {
-        if (pid > m_pidCut3 )
+        if (pid > m_pidCut3)
             return true;
     }
     return false;
