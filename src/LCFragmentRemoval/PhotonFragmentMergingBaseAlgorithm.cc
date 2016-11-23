@@ -300,14 +300,22 @@ StatusCode PhotonFragmentMergingBaseAlgorithm::GetShowerPeakList(const Cluster *
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, temporaryList, originalClusterListName,
         peakClusterListName));
 
-    const Cluster *pTempCluster = NULL;
-    PandoraContentApi::Cluster::Parameters clusterParameters;
-    pDaughterCluster->GetOrderedCaloHitList().FillCaloHitList(clusterParameters.m_caloHitList);
-    pParentCluster->GetOrderedCaloHitList().FillCaloHitList(clusterParameters.m_caloHitList);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParameters, pTempCluster));
+    try
+    {
+        const Cluster *pTempCluster = NULL;
+        PandoraContentApi::Cluster::Parameters clusterParameters;
+        pDaughterCluster->GetOrderedCaloHitList().FillCaloHitList(clusterParameters.m_caloHitList);
+        pParentCluster->GetOrderedCaloHitList().FillCaloHitList(clusterParameters.m_caloHitList);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParameters, pTempCluster));
 
-    const ShowerProfilePlugin *const pShowerProfilePlugin(PandoraContentApi::GetPlugins(*this)->GetShowerProfilePlugin());
-    pShowerProfilePlugin->CalculateTransverseProfile(pTempCluster, m_transProfileMaxLayer, showerPeakList, false);
+        const ShowerProfilePlugin *const pShowerProfilePlugin(PandoraContentApi::GetPlugins(*this)->GetShowerProfilePlugin());
+        pShowerProfilePlugin->CalculateTransverseProfile(pTempCluster, m_transProfileMaxLayer, showerPeakList, false);
+    }
+    catch (const StatusCodeException &)
+    {
+        std::cout << "PhotonFragmentMergingBaseAlgorithm::GetShowerPeakList: StatusCodeException caught during fragmentation process." << std::endl;
+    }
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, originalClusterListName, peakClusterListName));
 
     return STATUS_CODE_SUCCESS;
