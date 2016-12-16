@@ -49,10 +49,10 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
     ClusterVector muonClusterVector(pMuonClusterList->begin(), pMuonClusterList->end());
     std::sort(muonClusterVector.begin(), muonClusterVector.end(), SortingHelper::SortClustersByInnerLayer);
 
-    // Get the current cluster list, with which muon clusters will be associated
-    std::string inputClusterListName;
-    const ClusterList *pInputClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputClusterList, inputClusterListName));
+    // Get the target cluster list, with which muon clusters will be associated
+    // Will create target cluster list if target cluster list is not initialised
+    const ClusterList *pTargetClusterList = NULL;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_targetClusterListName, pTargetClusterList));
 
     ClusterList standaloneMuonClusters;
 
@@ -90,7 +90,7 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
         }
 
         // For each muon cluster, examine suitable clusters in the input cluster list, looking for merging possibilities
-        for (ClusterList::const_iterator iterJ = pInputClusterList->begin(), iterJEnd = pInputClusterList->end(); iterJ != iterJEnd; ++iterJ)
+        for (ClusterList::const_iterator iterJ = pTargetClusterList->begin(), iterJEnd = pTargetClusterList->end(); iterJ != iterJEnd; ++iterJ)
         {
             const Cluster *const pCluster = *iterJ;
 
@@ -168,19 +168,19 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
         }
 
         // Select best merging candidate from those identified above
-        const Cluster *pBestInputCluster(NULL);
+        const Cluster *pBestTargetCluster(NULL);
 
         if (NULL != pBestLeavingTrack)
         {
-            pBestInputCluster = pBestLeavingTrack;
+            pBestTargetCluster = pBestLeavingTrack;
         }
         else if (NULL != pBestHadron)
         {
-            pBestInputCluster = pBestHadron;
+            pBestTargetCluster = pBestHadron;
         }
         else if (NULL != pBestNonLeavingTrack)
         {
-            pBestInputCluster = pBestNonLeavingTrack;
+            pBestTargetCluster = pBestNonLeavingTrack;
         }
         else
         {
@@ -188,11 +188,11 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
         }
 
         // Merge the clusters
-        if (NULL != pBestInputCluster)
+        if (NULL != pBestTargetCluster)
         {
             *iterI = NULL;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestInputCluster,
-                pMuonCluster, inputClusterListName, m_muonClusterListName));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestTargetCluster,
+                pMuonCluster, m_targetClusterListName, m_muonClusterListName));
         }
     }
 
@@ -200,7 +200,7 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
     if (!standaloneMuonClusters.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_muonClusterListName,
-            inputClusterListName, standaloneMuonClusters));
+            m_targetClusterListName, standaloneMuonClusters));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -212,6 +212,9 @@ StatusCode MuonClusterAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "MuonClusterListName", m_muonClusterListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "TargetClusterListName", m_targetClusterListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DCosCut", m_dCosCut));
