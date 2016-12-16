@@ -50,7 +50,7 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
     std::sort(muonClusterVector.begin(), muonClusterVector.end(), SortingHelper::SortClustersByInnerLayer);
 
     // Get the target cluster list, with which muon clusters will be associated
-    // Will create target cluster list if target cluster list is not initialised
+    // Will create target cluster list if target cluster list is not initialised, and there is a standaloneMuonClusters to save
     const ClusterList *pTargetClusterList = NULL;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_targetClusterListName, pTargetClusterList));
 
@@ -65,6 +65,10 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
             continue;
 
         if (pMuonCluster->GetNCaloHits() < m_minHitsInMuonCluster)
+            continue;
+
+        // Skip if target cluster list is NULL
+        if (NULL == pTargetClusterList)
             continue;
 
         const Cluster *pBestHadron(NULL), *pBestLeavingTrack(NULL), *pBestNonLeavingTrack(NULL);
