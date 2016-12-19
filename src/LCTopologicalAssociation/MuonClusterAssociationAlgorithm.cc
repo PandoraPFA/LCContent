@@ -40,36 +40,51 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
     const ClusterList *pMuonClusterList = NULL;
     StatusCode listStatusCode = PandoraContentApi::GetList(*this, m_muonClusterListName, pMuonClusterList);
 
-    if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
+    if (STATUS_CODE_NOT_INITIALIZED == listStatusCode || NULL == pMuonClusterList)
         return STATUS_CODE_SUCCESS;
 
     if (STATUS_CODE_SUCCESS != listStatusCode)
         return listStatusCode;
 
-    ClusterVector muonClusterVector(pMuonClusterList->begin(), pMuonClusterList->end());
-    std::sort(muonClusterVector.begin(), muonClusterVector.end(), SortingHelper::SortClustersByInnerLayer);
-
-    // Get the target cluster list, with which muon clusters will be associated
-    // Will create target cluster list if target cluster list is not initialised, and there is a standaloneMuonClusters to save
-    const ClusterList *pTargetClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_targetClusterListName, pTargetClusterList));
-
-    ClusterList standaloneMuonClusters;
-
     // Loop over muon cluster list, looking for muon clusters containing sufficient hits
-    for (ClusterVector::iterator iterI = muonClusterVector.begin(), iterIEnd = muonClusterVector.end(); iterI != iterIEnd; ++iterI)
+    ClusterList candidateMuonClusters;
+    for (ClusterList::const_iterator iter = pMuonClusterList->begin(), iterEnd = pMuonClusterList->end(); iter != iterEnd; ++iter)
     {
-        const Cluster *const pMuonCluster = *iterI;
-
+        const Cluster *const pMuonCluster = *iter;
         if (NULL == pMuonCluster)
             continue;
 
         if (pMuonCluster->GetNCaloHits() < m_minHitsInMuonCluster)
             continue;
 
-        // Skip if target cluster list is NULL
-        if (NULL == pTargetClusterList)
-            continue;
+        candidateMuonClusters.push_back(pMuonCluster);
+    }
+
+    ClusterVector muonClusterVector(candidateMuonClusters.begin(), candidateMuonClusters.end());
+    std::sort(muonClusterVector.begin(), muonClusterVector.end(), SortingHelper::SortClustersByInnerLayer);
+
+    // Get the target cluster list, with which muon clusters will be associated
+    // Will create target cluster list if target cluster list is not initialised, and there is a candidateMuonClusters to save
+    const ClusterList *pTargetClusterList = NULL;
+    StatusCode targetListStatusCode = PandoraContentApi::GetList(*this, m_targetClusterListName, pTargetClusterList));
+    if (STATUS_CODE_NOT_INITIALIZED == targetListStatusCode || NULL == pTargetClusterList)
+    {
+        if (!candidateMuonClusters.empty())
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_muonClusterListName,
+                m_targetClusterListName, candidateMuonClusters));
+        }
+        return STATUS_CODE_SUCCESS;
+    }
+    else if (STATUS_CODE_SUCCESS != targetListStatusCode)
+        return targetListStatusCode;
+
+    ClusterList standaloneMuonClusters;
+
+    // Loop over muon cluster list
+    for (ClusterVector::iterator iterI = muonClusterVector.begin(), iterIEnd = muonClusterVector.end(); iterI != iterIEnd; ++iterI)
+    {
+        const Cluster *const pMuonCluster = *iterI;
 
         const Cluster *pBestHadron(NULL), *pBestLeavingTrack(NULL), *pBestNonLeavingTrack(NULL);
         float bestDCosHadron(m_dCosCut), bestDCosLeavingTrack(m_dCosCut), bestDCosNonLeavingTrack(m_dCosCut);
