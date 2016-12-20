@@ -66,7 +66,7 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
     // Get the target cluster list, with which muon clusters will be associated
     // Will create target cluster list if target cluster list is not initialised, and there is a candidateMuonClusters to save
     const ClusterList *pTargetClusterList = NULL;
-    StatusCode targetListStatusCode = PandoraContentApi::GetList(*this, m_targetClusterListName, pTargetClusterList));
+    StatusCode targetListStatusCode = PandoraContentApi::GetList(*this, m_targetClusterListName, pTargetClusterList);
     if (STATUS_CODE_NOT_INITIALIZED == targetListStatusCode || NULL == pTargetClusterList)
     {
         if (!candidateMuonClusters.empty())
