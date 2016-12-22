@@ -40,32 +40,51 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
     const ClusterList *pMuonClusterList = NULL;
     StatusCode listStatusCode = PandoraContentApi::GetList(*this, m_muonClusterListName, pMuonClusterList);
 
-    if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
+    if (STATUS_CODE_NOT_INITIALIZED == listStatusCode || NULL == pMuonClusterList)
         return STATUS_CODE_SUCCESS;
 
     if (STATUS_CODE_SUCCESS != listStatusCode)
         return listStatusCode;
 
-    ClusterVector muonClusterVector(pMuonClusterList->begin(), pMuonClusterList->end());
-    std::sort(muonClusterVector.begin(), muonClusterVector.end(), SortingHelper::SortClustersByInnerLayer);
-
-    // Get the current cluster list, with which muon clusters will be associated
-    std::string inputClusterListName;
-    const ClusterList *pInputClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputClusterList, inputClusterListName));
-
-    ClusterList standaloneMuonClusters;
-
     // Loop over muon cluster list, looking for muon clusters containing sufficient hits
-    for (ClusterVector::iterator iterI = muonClusterVector.begin(), iterIEnd = muonClusterVector.end(); iterI != iterIEnd; ++iterI)
+    ClusterList candidateMuonClusters;
+    for (ClusterList::const_iterator iter = pMuonClusterList->begin(), iterEnd = pMuonClusterList->end(); iter != iterEnd; ++iter)
     {
-        const Cluster *const pMuonCluster = *iterI;
-
+        const Cluster *const pMuonCluster = *iter;
         if (NULL == pMuonCluster)
             continue;
 
         if (pMuonCluster->GetNCaloHits() < m_minHitsInMuonCluster)
             continue;
+
+        candidateMuonClusters.push_back(pMuonCluster);
+    }
+
+    ClusterVector muonClusterVector(candidateMuonClusters.begin(), candidateMuonClusters.end());
+    std::sort(muonClusterVector.begin(), muonClusterVector.end(), SortingHelper::SortClustersByInnerLayer);
+
+    // Get the target cluster list, with which muon clusters will be associated
+    // Will create target cluster list if target cluster list is not initialised, and there is a candidateMuonClusters to save
+    const ClusterList *pTargetClusterList = NULL;
+    StatusCode targetListStatusCode = PandoraContentApi::GetList(*this, m_targetClusterListName, pTargetClusterList);
+    if (STATUS_CODE_NOT_INITIALIZED == targetListStatusCode || NULL == pTargetClusterList)
+    {
+        if (!candidateMuonClusters.empty())
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_muonClusterListName,
+                m_targetClusterListName, candidateMuonClusters));
+        }
+        return STATUS_CODE_SUCCESS;
+    }
+    else if (STATUS_CODE_SUCCESS != targetListStatusCode)
+        return targetListStatusCode;
+
+    ClusterList standaloneMuonClusters;
+
+    // Loop over muon cluster list
+    for (ClusterVector::iterator iterI = muonClusterVector.begin(), iterIEnd = muonClusterVector.end(); iterI != iterIEnd; ++iterI)
+    {
+        const Cluster *const pMuonCluster = *iterI;
 
         const Cluster *pBestHadron(NULL), *pBestLeavingTrack(NULL), *pBestNonLeavingTrack(NULL);
         float bestDCosHadron(m_dCosCut), bestDCosLeavingTrack(m_dCosCut), bestDCosNonLeavingTrack(m_dCosCut);
@@ -90,7 +109,7 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
         }
 
         // For each muon cluster, examine suitable clusters in the input cluster list, looking for merging possibilities
-        for (ClusterList::const_iterator iterJ = pInputClusterList->begin(), iterJEnd = pInputClusterList->end(); iterJ != iterJEnd; ++iterJ)
+        for (ClusterList::const_iterator iterJ = pTargetClusterList->begin(), iterJEnd = pTargetClusterList->end(); iterJ != iterJEnd; ++iterJ)
         {
             const Cluster *const pCluster = *iterJ;
 
@@ -168,19 +187,19 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
         }
 
         // Select best merging candidate from those identified above
-        const Cluster *pBestInputCluster(NULL);
+        const Cluster *pBestTargetCluster(NULL);
 
         if (NULL != pBestLeavingTrack)
         {
-            pBestInputCluster = pBestLeavingTrack;
+            pBestTargetCluster = pBestLeavingTrack;
         }
         else if (NULL != pBestHadron)
         {
-            pBestInputCluster = pBestHadron;
+            pBestTargetCluster = pBestHadron;
         }
         else if (NULL != pBestNonLeavingTrack)
         {
-            pBestInputCluster = pBestNonLeavingTrack;
+            pBestTargetCluster = pBestNonLeavingTrack;
         }
         else
         {
@@ -188,11 +207,11 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
         }
 
         // Merge the clusters
-        if (NULL != pBestInputCluster)
+        if (NULL != pBestTargetCluster)
         {
             *iterI = NULL;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestInputCluster,
-                pMuonCluster, inputClusterListName, m_muonClusterListName));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestTargetCluster,
+                pMuonCluster, m_targetClusterListName, m_muonClusterListName));
         }
     }
 
@@ -200,7 +219,7 @@ StatusCode MuonClusterAssociationAlgorithm::Run()
     if (!standaloneMuonClusters.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_muonClusterListName,
-            inputClusterListName, standaloneMuonClusters));
+            m_targetClusterListName, standaloneMuonClusters));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -212,6 +231,9 @@ StatusCode MuonClusterAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "MuonClusterListName", m_muonClusterListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "TargetClusterListName", m_targetClusterListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DCosCut", m_dCosCut));

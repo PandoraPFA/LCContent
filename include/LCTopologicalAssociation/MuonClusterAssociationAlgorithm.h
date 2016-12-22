@@ -38,6 +38,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_muonClusterListName;              ///< The name of the muon cluster list
+    std::string     m_targetClusterListName;            ///< The name of the target cluster list
 
     float           m_dCosCut;                          ///< The direction cosine cut for association of muon and input (non-muon) clusters
     unsigned int    m_minHitsInMuonCluster;             ///< Minimum number of hits in a muon cluster
