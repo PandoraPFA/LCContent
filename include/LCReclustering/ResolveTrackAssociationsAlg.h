@@ -20,15 +20,6 @@ class ResolveTrackAssociationsAlg : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ResolveTrackAssociationsAlg();
@@ -67,13 +58,6 @@ private:
     float                   m_minForcedChi2Improvement;             ///< The min improvement in chi2 required to use forced clustering
     float                   m_maxForcedChi2;                        ///< The max allowed chi2 value to use forced clustering
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ResolveTrackAssociationsAlg::Factory::CreateAlgorithm() const
-{
-    return new ResolveTrackAssociationsAlg();
-}
 
 } // namespace lc_content
 

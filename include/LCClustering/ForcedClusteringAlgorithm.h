@@ -22,15 +22,6 @@ class ForcedClusteringAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ForcedClusteringAlgorithm();
@@ -158,14 +149,6 @@ inline float ForcedClusteringAlgorithm::TrackDistanceInfo::GetTrackEnergy() cons
 inline float ForcedClusteringAlgorithm::TrackDistanceInfo::GetTrackDistance() const
 {
     return m_trackDistance;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ForcedClusteringAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ForcedClusteringAlgorithm();
 }
 
 } // namespace lc_content

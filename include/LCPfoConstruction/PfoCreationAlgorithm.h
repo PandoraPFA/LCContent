@@ -22,15 +22,6 @@ class PfoCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     PfoCreationAlgorithm();
@@ -115,13 +106,6 @@ private:
     bool            m_allowSingleLayerClusters;             ///< Whether to allow neutral clusters spanning only a single pseudolayer
     unsigned int    m_photonPositionAlgorithm;              ///< Identifies the algorithm used to calculate photon pfo position vectors
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PfoCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PfoCreationAlgorithm();
-}
 
 } // namespace lc_content
 

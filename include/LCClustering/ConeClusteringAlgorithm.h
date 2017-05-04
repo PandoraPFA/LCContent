@@ -29,15 +29,6 @@ class ConeClusteringAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ConeClusteringAlgorithm();
@@ -246,13 +237,6 @@ private:
 
     unsigned int    m_firstLayer;                   ///< cache the pseudo layer at IP
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ConeClusteringAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ConeClusteringAlgorithm();
-}
 
 } // namespace lc_content
 

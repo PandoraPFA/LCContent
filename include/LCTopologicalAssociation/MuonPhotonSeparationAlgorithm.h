@@ -20,15 +20,6 @@ class MuonPhotonSeparationAlgorithm : public MipPhotonSeparationAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     MuonPhotonSeparationAlgorithm();
@@ -45,13 +36,6 @@ private:
     float           m_highEnergyMuonCut;            ///< Cut for muon to be considered high energy
     unsigned int    m_nTransitionLayers;            ///< Number of transition layers, treated more flexibly, between shower and mip-region
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *MuonPhotonSeparationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new MuonPhotonSeparationAlgorithm();
-}
 
 } // namespace lc_content
 

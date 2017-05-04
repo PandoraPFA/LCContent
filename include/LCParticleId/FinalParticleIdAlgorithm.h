@@ -18,16 +18,6 @@ namespace lc_content
  */
 class FinalParticleIdAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -41,13 +31,6 @@ private:
      */
     bool ContainsSiblingTrack(const pandora::TrackList &trackList) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *FinalParticleIdAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new FinalParticleIdAlgorithm();
-}
 
 } // namespace lc_content
 

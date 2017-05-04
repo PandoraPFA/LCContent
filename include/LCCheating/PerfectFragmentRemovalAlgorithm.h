@@ -20,15 +20,6 @@ class PerfectFragmentRemovalAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     PerfectFragmentRemovalAlgorithm();
@@ -41,13 +32,6 @@ private:
 
     bool    m_shouldMergeChargedClusters;   ///< Whether to merge charged clusters sharing same mc particle (otherwise use only highest E charged cluster)
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PerfectFragmentRemovalAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PerfectFragmentRemovalAlgorithm();
-}
 
 } // namespace lc_content
 

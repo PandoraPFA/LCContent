@@ -20,15 +20,6 @@ class SplitMergedClustersAlg : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     SplitMergedClustersAlg();
@@ -61,13 +52,6 @@ private:
     float                   m_minForcedChi2Improvement;             ///< The min improvement in chi2 required to use forced clustering
     float                   m_maxForcedChi2;                        ///< The max allowed chi2 value to use forced clustering
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *SplitMergedClustersAlg::Factory::CreateAlgorithm() const
-{
-    return new SplitMergedClustersAlg();
-}
 
 } // namespace lc_content
 

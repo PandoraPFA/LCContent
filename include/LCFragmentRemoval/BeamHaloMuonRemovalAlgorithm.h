@@ -20,15 +20,6 @@ class BeamHaloMuonRemovalAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     BeamHaloMuonRemovalAlgorithm();
@@ -59,13 +50,6 @@ private:
     bool            m_displayRetainedClusters;                      ///< Whether to display monitoring information concerning selected clusters
     bool            m_displayRejectedClusters;                      ///< Whether to display monitoring information concerning rejected clusters
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *BeamHaloMuonRemovalAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new BeamHaloMuonRemovalAlgorithm();
-}
 
 } // namespace lc_content
 

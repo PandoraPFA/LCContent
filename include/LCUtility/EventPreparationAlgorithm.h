@@ -18,16 +18,6 @@ namespace lc_content
  */
 class EventPreparationAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -39,13 +29,6 @@ private:
     std::string     m_replacementTrackListName;     ///< The replacement track list name
     std::string     m_replacementCaloHitListName;   ///< The replacement calo hit list name
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *EventPreparationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new EventPreparationAlgorithm();
-}
 
 } // namespace lc_content
 

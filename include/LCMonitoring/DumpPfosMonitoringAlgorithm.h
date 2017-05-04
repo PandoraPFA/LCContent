@@ -161,15 +161,6 @@ class DumpPfosMonitoringAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     DumpPfosMonitoringAlgorithm();
@@ -312,14 +303,6 @@ inline void DumpPfosMonitoringAlgorithm::DumpPhotonPfo(const pandora::ParticleFl
 inline void DumpPfosMonitoringAlgorithm::DumpNeutralPfo(const pandora::ParticleFlowObject *const pPfo)
 {
     return this->DumpNeutralOrPhotonPfo(pPfo, false);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *DumpPfosMonitoringAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new DumpPfosMonitoringAlgorithm();
 }
 
 } // namespace lc_content

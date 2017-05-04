@@ -117,15 +117,6 @@ class MainFragmentRemovalAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     MainFragmentRemovalAlgorithm();
@@ -354,14 +345,6 @@ inline float ChargedClusterContact::GetMeanDistanceToHelix() const
 inline float ChargedClusterContact::GetClosestDistanceToHelix() const
 {
     return m_closestDistanceToHelix;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *MainFragmentRemovalAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new MainFragmentRemovalAlgorithm();
 }
 
 } // namespace lc_content

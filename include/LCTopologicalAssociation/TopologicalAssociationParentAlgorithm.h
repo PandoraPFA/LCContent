@@ -18,29 +18,12 @@ namespace lc_content
  */
 class TopologicalAssociationParentAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector   m_associationAlgorithms;    ///< The ordered list of topological association algorithms to be used
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TopologicalAssociationParentAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TopologicalAssociationParentAlgorithm();
-}
 
 } // namespace lc_content
 

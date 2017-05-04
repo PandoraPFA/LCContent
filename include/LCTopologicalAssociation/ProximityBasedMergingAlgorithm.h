@@ -20,15 +20,6 @@ class ProximityBasedMergingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ProximityBasedMergingAlgorithm();
@@ -90,14 +81,6 @@ private:
     unsigned int    m_helixDistanceMaxOccupiedLayers;   ///< Max number of occupied layers to consider in helix-cluster distance calculation
     float           m_maxClusterHelixDistance;          ///< Max distance between parent cluster associated helix projections and daughter
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ProximityBasedMergingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ProximityBasedMergingAlgorithm();
-}
 
 } // namespace lc_content
 

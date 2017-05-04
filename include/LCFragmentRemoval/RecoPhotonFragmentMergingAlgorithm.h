@@ -19,15 +19,6 @@ class RecoPhotonFragmentMergingAlgorithm : public PhotonFragmentMergingBaseAlgor
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     RecoPhotonFragmentMergingAlgorithm();
@@ -153,13 +144,6 @@ private:
     float                   m_hitSeparationPhotonPhotonThresholdLow3;                   ///< Closest distance separation threshold for low energy photon 3
     float                   m_hitSeparationPhotonPhotonThresholdLow4;                   ///< Closest distance separation threshold for low energy photon 4
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *RecoPhotonFragmentMergingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new RecoPhotonFragmentMergingAlgorithm();
-}
 
 } // end namespace lc_content
 

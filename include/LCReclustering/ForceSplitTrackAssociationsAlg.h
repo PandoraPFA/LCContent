@@ -20,15 +20,6 @@ class ForceSplitTrackAssociationsAlg : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ForceSplitTrackAssociationsAlg();
@@ -42,13 +33,6 @@ private:
 
     unsigned int    m_minTrackAssociations;         ///< The minimum number of track associations to forcibly resolve
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ForceSplitTrackAssociationsAlg::Factory::CreateAlgorithm() const
-{
-    return new ForceSplitTrackAssociationsAlg();
-}
 
 } // namespace lc_content
 

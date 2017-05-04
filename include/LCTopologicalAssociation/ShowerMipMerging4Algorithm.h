@@ -20,15 +20,6 @@ class ShowerMipMerging4Algorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ShowerMipMerging4Algorithm();
@@ -61,13 +52,6 @@ private:
 
     float           m_maxCentroidDistance;              ///< Max value of closest layer centroid separation between parent/daughter clusters
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ShowerMipMerging4Algorithm::Factory::CreateAlgorithm() const
-{
-    return new ShowerMipMerging4Algorithm();
-}
 
 } // namespace lc_content
 

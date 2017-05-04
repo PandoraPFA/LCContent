@@ -20,15 +20,6 @@ class TrackRecoveryInteractionsAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     TrackRecoveryInteractionsAlgorithm();
@@ -49,13 +40,6 @@ private:
     float           m_parallelDistanceCut;              ///< Max allowed projection of track-hit separation along track direction
     float           m_minTrackClusterCosAngle;          ///< Min cos(angle) between track and cluster initial direction
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TrackRecoveryInteractionsAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TrackRecoveryInteractionsAlgorithm();
-}
 
 } // namespace lc_content
 

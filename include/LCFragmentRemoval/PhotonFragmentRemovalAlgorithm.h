@@ -22,15 +22,6 @@ class PhotonFragmentRemovalAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     PhotonFragmentRemovalAlgorithm();
@@ -134,13 +125,6 @@ private:
 
     float               m_minEvidence;                              ///< Min evidence before parent/daughter candidates can be merged
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PhotonFragmentRemovalAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PhotonFragmentRemovalAlgorithm();
-}
 
 } // namespace lc_content
 

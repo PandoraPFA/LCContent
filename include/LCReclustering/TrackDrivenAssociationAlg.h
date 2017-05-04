@@ -20,15 +20,6 @@ class TrackDrivenAssociationAlg : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     TrackDrivenAssociationAlg();
@@ -63,13 +54,6 @@ private:
 
     float                   m_minExcessEnergy;                      ///< If large chi2, still recluster if sufficient excess energy nearby
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TrackDrivenAssociationAlg::Factory::CreateAlgorithm() const
-{
-    return new TrackDrivenAssociationAlg();
-}
 
 } // namespace lc_content
 

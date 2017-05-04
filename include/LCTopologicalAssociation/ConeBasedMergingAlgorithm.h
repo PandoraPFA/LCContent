@@ -24,15 +24,6 @@ class ConeBasedMergingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ConeBasedMergingAlgorithm();
@@ -88,13 +79,6 @@ private:
     float           m_cosConeAngleWrtRadialCut2;        ///< 2nd pair of cuts: Min cosine of angle between cone and radial direction
     float           m_minHitSeparationCut2;             ///< 2nd pair of cuts: Max separation between cone vertex and daughter cluster hit
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ConeBasedMergingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ConeBasedMergingAlgorithm();
-}
 
 } // namespace lc_content
 

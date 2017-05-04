@@ -22,15 +22,6 @@ class LoopingTracksAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     LoopingTracksAlgorithm();
@@ -135,14 +126,6 @@ private:
     float           m_goodFeaturesMinMipFraction;       ///< Min cluster mip fraction for good feature
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *LoopingTracksAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new LoopingTracksAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LoopingTracksAlgorithm::ClusterFitRelation::ClusterFitRelation(const pandora::Cluster *const pCluster, const pandora::ClusterFitResult &clusterFitResult) :

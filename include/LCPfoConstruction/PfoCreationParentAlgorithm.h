@@ -20,15 +20,6 @@ class PfoCreationParentAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     PfoCreationParentAlgorithm();
@@ -51,13 +42,6 @@ private:
     std::string     m_vertexListName;               ///< The name under which to save the new vertex list
     bool            m_replaceCurrentVertexList;     ///< Whether to subsequently use the new vertex list as the "current" list
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PfoCreationParentAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PfoCreationParentAlgorithm();
-}
 
 } // namespace lc_content
 

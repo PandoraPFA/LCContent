@@ -75,15 +75,6 @@ class TrackDrivenMergingAlg : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     TrackDrivenMergingAlg();
@@ -107,14 +98,6 @@ private:
     unsigned int            m_maxLayerSeparationMultiple;           ///< Max layers between parent/daughter clusters for multiple merging
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TrackDrivenMergingAlg::Factory::CreateAlgorithm() const
-{
-    return new TrackDrivenMergingAlg();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ClusterConeFraction::ClusterConeFraction(float coneFraction, const pandora::Cluster *const pCluster, unsigned int clusterIndex) :

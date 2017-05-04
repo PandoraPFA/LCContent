@@ -20,15 +20,6 @@ class BackscatteredTracks2Algorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     BackscatteredTracks2Algorithm();
@@ -48,13 +39,6 @@ private:
 
     float           m_maxCentroidDistance;              ///< Max value of closest layer centroid distance between parent/daughter clusters
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *BackscatteredTracks2Algorithm::Factory::CreateAlgorithm() const
-{
-    return new BackscatteredTracks2Algorithm();
-}
 
 } // namespace lc_content
 

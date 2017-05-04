@@ -28,15 +28,6 @@ class SoftClusterMergingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     SoftClusterMergingAlgorithm();
@@ -166,13 +157,6 @@ private:
     std::vector<HitKDNode3D>   *m_hitNodes3D;                       ///< nodes for the KD tree (used for filling)
     HitKDTree3D                *m_hitsKdTree3D;                     ///< the kd-tree itself, 3D in x,y,z
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *SoftClusterMergingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new SoftClusterMergingAlgorithm();
-}
 
 } // namespace lc_content
 

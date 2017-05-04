@@ -20,15 +20,6 @@ class MergeSplitPhotonsAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     MergeSplitPhotonsAlgorithm();
@@ -57,13 +48,6 @@ private:
     float           m_acceptSubsidiaryPeakEnergyRatio;      ///< Max value of subsidiary peak/small fragment energy ratio to accept cluster merge
     unsigned int    m_earlyTransProfileMaxLayer;            ///< Maximum layer to consider in calculation of early shower transverse profiles
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *MergeSplitPhotonsAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new MergeSplitPhotonsAlgorithm();
-}
 
 } // namespace lc_content
 

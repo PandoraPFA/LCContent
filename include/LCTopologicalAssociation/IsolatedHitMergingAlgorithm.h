@@ -20,15 +20,6 @@ class IsolatedHitMergingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     IsolatedHitMergingAlgorithm();
@@ -54,13 +45,6 @@ private:
     float                   m_maxRecombinationDistance;     ///< Max distance between calo hit and cluster to allow addition of hit
     float                   m_minCosOpeningAngle;           ///< Min cos(angle) between hit and cluster directions to allow addition of hit
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *IsolatedHitMergingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new IsolatedHitMergingAlgorithm();
-}
 
 } // namespace lc_content
 

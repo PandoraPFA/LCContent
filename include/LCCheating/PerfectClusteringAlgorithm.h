@@ -20,15 +20,6 @@ class PerfectClusteringAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     PerfectClusteringAlgorithm();
@@ -80,13 +71,6 @@ private:
     bool                m_simpleMCParticleCollection;   ///< Whether to use simple mc particle collection mechanism, or full mechanism
     float               m_minWeightFraction;            ///< The minimum mc particle calo hit weight for clustering consideration
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PerfectClusteringAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PerfectClusteringAlgorithm();
-}
 
 } // namespace lc_content
 

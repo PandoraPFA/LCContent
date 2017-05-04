@@ -20,15 +20,6 @@ class MipPhotonSeparationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     MipPhotonSeparationAlgorithm();
@@ -106,13 +97,6 @@ protected:
     float           m_additionalPadWidthsFine;      ///< Fine granularity adjacent pad widths used to calculate cone approach distance
     float           m_additionalPadWidthsCoarse;    ///< Coarse granularity adjacent pad widths used to calculate cone approach distance
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *MipPhotonSeparationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new MipPhotonSeparationAlgorithm();
-}
 
 } // namespace lc_content
 
