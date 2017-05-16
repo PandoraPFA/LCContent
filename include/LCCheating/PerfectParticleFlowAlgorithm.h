@@ -22,15 +22,6 @@ class PerfectParticleFlowAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     PerfectParticleFlowAlgorithm();
@@ -119,13 +110,6 @@ private:
     bool            m_simpleCaloHitCollection;              ///< Whether to use simple calo hit collection mechanism, or full mechanism
     float           m_minWeightFraction;                    ///< The minimum mc particle calo hit weight for hit fragmentation
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PerfectParticleFlowAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PerfectParticleFlowAlgorithm();
-}
 
 } // namespace lc_content
 

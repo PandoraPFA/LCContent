@@ -20,15 +20,6 @@ class LoopingTrackAssociationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     LoopingTrackAssociationAlgorithm();
@@ -74,13 +65,6 @@ private:
     float           m_directionCosineCut4;              ///< Pair of selection params: min direction cosine between track/cluster directions
     float           m_deltaRCut4;                       ///< Pair of selection params: max absolute distance between cluster and helix centre
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *LoopingTrackAssociationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new LoopingTrackAssociationAlgorithm();
-}
 
 } // namespace lc_content
 

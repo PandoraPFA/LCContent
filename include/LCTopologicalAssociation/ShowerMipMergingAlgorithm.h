@@ -20,15 +20,6 @@ class ShowerMipMergingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ShowerMipMergingAlgorithm();
@@ -54,13 +45,6 @@ private:
     float           m_maxDistanceToClosestHit;          ///< The max distance between projected cluster fit and hits in second cluster
     float           m_maxDistanceToClosestCentroid;     ///< The max distance between projected cluster fit and second cluster centroid
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ShowerMipMergingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ShowerMipMergingAlgorithm();
-}
 
 } // namespace lc_content
 

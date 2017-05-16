@@ -74,15 +74,6 @@ class NeutralFragmentRemovalAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     NeutralFragmentRemovalAlgorithm();
@@ -205,14 +196,6 @@ inline float NeutralClusterContact::GetConeFraction2() const
 inline float NeutralClusterContact::GetConeFraction3() const
 {
     return m_coneFraction3;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *NeutralFragmentRemovalAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new NeutralFragmentRemovalAlgorithm();
 }
 
 } // namespace lc_content

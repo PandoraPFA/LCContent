@@ -18,16 +18,6 @@ namespace lc_content
  */
 class ClusterPreparationAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -35,13 +25,6 @@ private:
     pandora::StringVector   m_candidateListNames;           ///< The list of cluster list names to use
     std::string             m_mergedCandidateListName;      ///< The name of the merged candidate list name
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ClusterPreparationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ClusterPreparationAlgorithm();
-}
 
 } // namespace lc_content
 

@@ -20,15 +20,6 @@ class TrainingSoftwareCompensation : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     TrainingSoftwareCompensation();
@@ -45,13 +36,6 @@ private:
     std::string             m_myRootFileName;               ///< Output root file for training of software compensation weights
     std::string             m_trainingTreeName;             ///< Name of the TTree in root file produced for training of software compensation weights
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TrainingSoftwareCompensation::Factory::CreateAlgorithm() const
-{
-    return new TrainingSoftwareCompensation();
-}
 
 } // namespace lc_content
 

@@ -19,15 +19,6 @@ class PhotonFragmentMergingAlgorithm : public PhotonFragmentMergingBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     PhotonFragmentMergingAlgorithm();
@@ -209,13 +200,6 @@ private:
     float           m_energyRatioCandidateToMainPhotonThresholdHigh2;       ///< Ratio of energy of candidate culster to main cluster for high energy photon 2
     float           m_weightedLayerSeparationPhotonPhotonThresholdHigh2;    ///< Distance weighted over layer between candidate and main threshold for high energy photon 2
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PhotonFragmentMergingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PhotonFragmentMergingAlgorithm();
-}
 
 } // end namespace lc_content
 

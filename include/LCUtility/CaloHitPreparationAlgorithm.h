@@ -28,15 +28,6 @@ public:
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 4> HitKDNode4D;
 
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     CaloHitPreparationAlgorithm();
@@ -102,13 +93,6 @@ private:
     std::vector<HitKDNode4D>   *m_hitNodes4D;           ///< nodes for the KD tree (used for filling)
     HitKDTree4D                *m_hitsKdTree4D;         ///< the kd-tree itself, 4D in x,y,z,pseudolayer
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CaloHitPreparationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CaloHitPreparationAlgorithm();
-}
 
 } // namespace lc_content
 

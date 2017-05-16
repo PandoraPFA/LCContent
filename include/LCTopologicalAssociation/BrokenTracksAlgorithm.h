@@ -22,15 +22,6 @@ class BrokenTracksAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     BrokenTracksAlgorithm();
@@ -136,15 +127,6 @@ private:
     float           m_maxChi2ForGapCheck;               ///< The max chi2 to check whether clusters pass through detector gaps
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *BrokenTracksAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new BrokenTracksAlgorithm();
-}
-
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline BrokenTracksAlgorithm::ClusterFitRelation::ClusterFitRelation(const pandora::Cluster *const pCluster, const pandora::ClusterFitResult &startFitResult,

@@ -20,15 +20,6 @@ class TrackPreparationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     TrackPreparationAlgorithm();
@@ -64,13 +55,6 @@ private:
     bool                    m_shouldMakePfoTrackList;       ///< Whether to make pfo track list, containing parent tracks of charged pfos
     std::string             m_pfoTrackListName;             ///< The name of the pfo track list, containing parent tracks of charged pfos
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TrackPreparationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TrackPreparationAlgorithm();
-}
 
 } // namespace lc_content
 

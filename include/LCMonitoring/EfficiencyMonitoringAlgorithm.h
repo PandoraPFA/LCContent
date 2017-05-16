@@ -20,15 +20,6 @@ class EfficiencyMonitoringAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     EfficiencyMonitoringAlgorithm();
@@ -45,13 +36,6 @@ private:
     std::string     m_monitoringFileName;       ///< The name of the file in which to save the monitoring tree
     float           m_mcThresholdEnergy;        ///< MC particle threshold energy, units GeV
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *EfficiencyMonitoringAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new EfficiencyMonitoringAlgorithm();
-}
 
 } // namespace lc_content
 

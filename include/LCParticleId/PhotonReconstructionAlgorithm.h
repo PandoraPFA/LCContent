@@ -22,15 +22,6 @@ class PhotonReconstructionAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     PhotonReconstructionAlgorithm();
@@ -465,13 +456,6 @@ private:
     pandora::IntVector      m_nBackgroundEvents;            ///< Number of background pfos in training
     PDFVarLikelihoodPDFMap  m_pdfVarLikelihoodPDFMap;       ///< Histogram varible to signal background map
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PhotonReconstructionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PhotonReconstructionAlgorithm();
-}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

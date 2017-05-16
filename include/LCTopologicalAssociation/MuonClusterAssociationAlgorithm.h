@@ -20,15 +20,6 @@ class MuonClusterAssociationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     MuonClusterAssociationAlgorithm();
@@ -53,13 +44,6 @@ private:
 
     float           m_clusterAssociationChi;            ///< Track-cluster chi value used to identify compatible, track-associated clusters
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *MuonClusterAssociationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new MuonClusterAssociationAlgorithm();
-}
 
 } // namespace lc_content
 

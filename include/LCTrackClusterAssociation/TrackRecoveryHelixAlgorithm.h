@@ -20,15 +20,6 @@ class TrackRecoveryHelixAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     TrackRecoveryHelixAlgorithm();
@@ -110,14 +101,6 @@ private:
     float           m_maxMeanHelixClusterDistance;      ///< Max helix-cluster mean approach to allow association
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TrackRecoveryHelixAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TrackRecoveryHelixAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TrackRecoveryHelixAlgorithm::AssociationInfo::AssociationInfo(const pandora::Cluster *const pCluster, const float closestApproach) :

@@ -20,15 +20,6 @@ class ShowerMipMerging2Algorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ShowerMipMerging2Algorithm();
@@ -55,13 +46,6 @@ private:
     float           m_perpendicularDistanceCutFine;     ///< Fine granularity cut on perp. distance between fit direction and centroid difference
     float           m_perpendicularDistanceCutCoarse;   ///< Coarse granularity cut on perp. distance between fit direction and centroid difference
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ShowerMipMerging2Algorithm::Factory::CreateAlgorithm() const
-{
-    return new ShowerMipMerging2Algorithm();
-}
 
 } // namespace lc_content
 

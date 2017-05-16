@@ -20,15 +20,6 @@ class ShowerMipMerging3Algorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     ShowerMipMerging3Algorithm();
@@ -52,13 +43,6 @@ private:
 
     float           m_maxClusterApproach;               ///< The max value of smallest hit separation between parent and daughter clusters
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ShowerMipMerging3Algorithm::Factory::CreateAlgorithm() const
-{
-    return new ShowerMipMerging3Algorithm();
-}
 
 } // namespace lc_content
 

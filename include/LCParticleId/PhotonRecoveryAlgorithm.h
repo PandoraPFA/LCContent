@@ -20,15 +20,6 @@ class PhotonRecoveryAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     PhotonRecoveryAlgorithm();
@@ -100,13 +91,6 @@ private:
     float           m_softPhotonLowEnergyCut;           ///< Soft photon id low electromagnetic energy cut
     float           m_softPhotonLowEnergyMaxDCosR;      ///< Soft photon id max radial direction cosine for low energy cluster
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PhotonRecoveryAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PhotonRecoveryAlgorithm();
-}
 
 } // namespace lc_content
 

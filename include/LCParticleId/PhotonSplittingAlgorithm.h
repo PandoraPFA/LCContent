@@ -20,15 +20,6 @@ class PhotonSplittingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     PhotonSplittingAlgorithm();
@@ -56,13 +47,6 @@ private:
     float           m_minDaughterEnergy3;        ///< Minimum daughter cluster energy for cluster to more than 1 track
     unsigned int    m_maxNPeaks;                 ///< Max peaks to split
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PhotonSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PhotonSplittingAlgorithm();
-}
 
 } // namespace lc_content
 

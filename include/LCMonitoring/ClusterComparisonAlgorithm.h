@@ -20,15 +20,6 @@ class ClusterComparisonAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ClusterComparisonAlgorithm();
@@ -98,13 +89,6 @@ private:
 
     std::string             m_clusterListName;              ///< The name under which to save the new cluster list
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ClusterComparisonAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ClusterComparisonAlgorithm();
-}
 
 } // namespace lc_content
 

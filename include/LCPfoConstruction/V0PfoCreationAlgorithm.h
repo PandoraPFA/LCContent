@@ -22,15 +22,6 @@ class V0PfoCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     V0PfoCreationAlgorithm();
@@ -54,13 +45,6 @@ private:
 
     bool    m_mcMonitoring;         ///< Whether to use mc monitoring functionality
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *V0PfoCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new V0PfoCreationAlgorithm();
-}
 
 } // namespace lc_content
 

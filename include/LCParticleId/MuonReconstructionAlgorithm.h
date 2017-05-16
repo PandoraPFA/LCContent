@@ -20,15 +20,6 @@ class MuonReconstructionAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     MuonReconstructionAlgorithm();
@@ -139,14 +130,6 @@ private:
 inline bool MuonReconstructionAlgorithm::SortByDistanceToTrack(const TrackDistanceInfo &lhs, const TrackDistanceInfo &rhs)
 {
     return (lhs.second < rhs.second);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *MuonReconstructionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new MuonReconstructionAlgorithm();
 }
 
 } // namespace lc_content

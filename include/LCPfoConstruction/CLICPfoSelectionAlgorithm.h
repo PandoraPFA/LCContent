@@ -20,15 +20,6 @@ class CLICPfoSelectionAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief Default constructor
      */
     CLICPfoSelectionAlgorithm();
@@ -89,13 +80,6 @@ private:
     bool            m_useClusterLessPfos;                           ///< Whether to accept any cluster-less pfos
     float           m_minMomentumForClusterLessPfos;                ///< Minimum momentum for a cluster-less pfo
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CLICPfoSelectionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CLICPfoSelectionAlgorithm();
-}
 
 } // namespace lc_content
 
