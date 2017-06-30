@@ -25,7 +25,14 @@ TrainingSoftwareCompensation::TrainingSoftwareCompensation() :
 
 TrainingSoftwareCompensation::~TrainingSoftwareCompensation()
 {   
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName, m_myRootFileName, "UPDATE"));
+    try
+    {
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName, m_myRootFileName, "UPDATE"));
+    }
+    catch (const StatusCodeException &)
+    {
+        std::cout << "TrainingSoftwareCompensation: Unable to write tree " << m_trainingTreeName << " to file " << m_myRootFileName << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

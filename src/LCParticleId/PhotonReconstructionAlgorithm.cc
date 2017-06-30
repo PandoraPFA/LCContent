@@ -581,7 +581,7 @@ StatusCode PhotonReconstructionAlgorithm::InitialiseHistogramWriting(const pando
     // ATTN Sanity check: m_nEnergyBins should have a reasonable value
     if (0 == m_nEnergyBins || 10000 < m_nEnergyBins)
     {
-        std::cout << "PhotonReconstructionAlgorithm::ReadHistogramSettings - Invalid number PDF energy bins specified." << std::endl;
+        std::cout << "PhotonReconstructionAlgorithm::InitialiseHistogramWriting - Invalid number PDF energy bins specified." << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
@@ -635,6 +635,14 @@ StatusCode PhotonReconstructionAlgorithm::InitialiseHistogramReading()
     const TiXmlHandle pdfXmlHandle(&pdfXmlDocument);
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetNEnergyBins(pdfXmlHandle, "NEnergyBins", m_nEnergyBins));
+
+    // ATTN Sanity check: m_nEnergyBins should have a reasonable value
+    if (0 == m_nEnergyBins || 10000 < m_nEnergyBins)
+    {
+        std::cout << "PhotonReconstructionAlgorithm::InitialiseHistogramReading - Invalid number PDF energy bins specified." << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetEnergyBinLowerEdges(pdfXmlHandle, "EnergyBinLowerEdges", m_energyBinLowerEdges));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetNSignalBackgroundEvts(pdfXmlHandle, "NSignalEvents", "NBackgroundEvents", m_nSignalEvents, m_nBackgroundEvents));
 
@@ -921,13 +929,21 @@ void PhotonReconstructionAlgorithm::DrawHistograms() const
 {
     for (unsigned int energyBin = 0; energyBin < m_nEnergyBins; ++energyBin)
     {
-        std::cout << "PDF EnergyBin " << energyBin << std::endl;
+        std::cout << "PhotonReconstructionAlgorithm: PDF EnergyBin " << energyBin << std::endl;
         for (PDFVarLikelihoodPDFMap::const_iterator iter = m_pdfVarLikelihoodPDFMap.begin(), iterEnd = m_pdfVarLikelihoodPDFMap.end(); iter != iterEnd; ++iter)
         {
             const LikelihoodPDFObject &likelihoodPDFObject((*iter).second);
-            std::cout << likelihoodPDFObject.m_pdfVarName << ", Signal, Background " << std::endl;
-            PANDORA_MONITORING_API(DrawPandoraHistogram(this->GetPandora(), *likelihoodPDFObject.m_pSignalPDF[energyBin]));
-            PANDORA_MONITORING_API(DrawPandoraHistogram(this->GetPandora(), *likelihoodPDFObject.m_pBackgroundPDF[energyBin]));
+            std::cout << "PhotonReconstructionAlgorithm: " << likelihoodPDFObject.m_pdfVarName << ", Signal, Background " << std::endl;
+
+            try
+            {
+                PANDORA_MONITORING_API(DrawPandoraHistogram(this->GetPandora(), *likelihoodPDFObject.m_pSignalPDF[energyBin]));
+                PANDORA_MONITORING_API(DrawPandoraHistogram(this->GetPandora(), *likelihoodPDFObject.m_pBackgroundPDF[energyBin]));
+            }
+            catch (const StatusCodeException &)
+            {
+                std::cout << "PhotonReconstructionAlgorithm: unable to draw histograms for variable " << likelihoodPDFObject.m_pdfVarName << std::endl;
+            }
         }
     }
 }

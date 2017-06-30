@@ -26,7 +26,14 @@ EfficiencyMonitoringAlgorithm::EfficiencyMonitoringAlgorithm() :
 
 EfficiencyMonitoringAlgorithm::~EfficiencyMonitoringAlgorithm()
 {
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "EffTree", m_monitoringFileName, "UPDATE"));
+    try
+    {
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "EffTree", m_monitoringFileName, "UPDATE"));
+    }
+    catch (const StatusCodeException &)
+    {
+        std::cout << "EfficiencyMonitoringAlgorithm: Unable to write tree EffTree to file " << m_monitoringFileName << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
