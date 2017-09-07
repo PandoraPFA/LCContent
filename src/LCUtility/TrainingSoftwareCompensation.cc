@@ -61,7 +61,7 @@ StatusCode TrainingSoftwareCompensation::Run()
     const float pfoEnergy(pPfo->GetEnergy());
     
     FloatVector cellSize0, cellSize1, cellThickness, hitEnergies;
-    IntVector hitType;
+    IntVector hitType, pseudoLayers, isolatedHit;
 
     for (pandora::CaloHitList::const_iterator hitIter = clusterCaloHitList.begin() , endhitIter = clusterCaloHitList.end() ; endhitIter != hitIter ; ++hitIter)
     {
@@ -70,11 +70,15 @@ StatusCode TrainingSoftwareCompensation::Run()
         const float cellSize1ToAdd(pCaloHit->GetCellSize1());
         const float cellThicknessToAdd(pCaloHit->GetCellThickness());
         const float cellHadronicEnergy(pCaloHit->GetHadronicEnergy());
+        const int pseudoLayer(pCaloHit->GetPseudoLayer());
+        const int isIsolated(pCaloHit->IsIsolated());
 
         cellSize0.push_back(cellSize0ToAdd);
         cellSize1.push_back(cellSize1ToAdd);
         cellThickness.push_back(cellThicknessToAdd);
         hitEnergies.push_back(cellHadronicEnergy);
+        pseudoLayers.push_back(pseudoLayer);
+        isolatedHit.push_back(isIsolated);
 
         if (HCAL == pCaloHit->GetHitType())
         {
@@ -90,6 +94,9 @@ StatusCode TrainingSoftwareCompensation::Run()
         }
     }
 
+    const int firstPseudoLayer(this->GetPandora().GetPlugins()->GetPseudoLayerPlugin()->GetPseudoLayerAtIp());
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "FirstPseudoLayer", firstPseudoLayer));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "EnergyOfPfo", pfoEnergy));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "RawEnergyOfCluster", rawEnergyOfCluster));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "HitEnergies", &hitEnergies));
@@ -97,6 +104,8 @@ StatusCode TrainingSoftwareCompensation::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "CellSize1", &cellSize1));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "CellThickness", &cellThickness));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "HitType", &hitType));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "PseudoLayer", &pseudoLayers));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "IsIsolated", &isolatedHit));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName));
 
 #endif
