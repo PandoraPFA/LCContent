@@ -15,6 +15,8 @@
 
 #include "LCUtility/KDTreeLinkerAlgoT.h"
 
+#include "LCObjects/LCTrack.h"
+
 using namespace pandora;
 
 // setup templates for tracking track:pseudolayer pair
@@ -101,9 +103,6 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
         if (!pTrack->GetDaughterList().empty())
             continue;
 
-        const TrackState &trackState(pTrack->GetTrackStateAtCalorimeter());
-        const CartesianVector &trackPosition(trackState.GetPosition());
-
         const Cluster *pBestCluster = nullptr;
         const Cluster *pBestLowEnergyCluster = nullptr;
 
@@ -112,6 +111,24 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
 
         float minEnergyDifference(std::numeric_limits<float>::max());
         float minLowEnergyDifference(std::numeric_limits<float>::max());
+
+        LCTrackStates trackStates;
+        const LCTrack* lcTrack = dynamic_cast<const LCTrack*>(pTrack);
+        if( lcTrack )
+        {
+            trackStates = lcTrack->GetTrackStates();
+        }
+        else
+        {
+            const TrackState &trackState(pTrack->GetTrackStateAtCalorimeter());
+            trackStates.push_back( trackState );
+        }
+
+        for (auto const& trackState : trackStates)
+        {
+
+        const CartesianVector &trackPosition(trackState.GetPosition());
+
 
         // short circuit this loop with a kd-tree search beforehand
         // iterating over a std::map is expensive, avoid where possible
@@ -206,8 +223,8 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddTrackClusterAssociation(*this, pTrack, pMatchedCluster));
         }
-    }
-
+        } //for all trackStates
+    } //for all tracks
     return STATUS_CODE_SUCCESS;
 }
 
