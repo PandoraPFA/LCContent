@@ -10,6 +10,7 @@
 #include "Pandora/Pandora.h"
 
 #include "LCCheating/CheatingClusterCleaningAlgorithm.h"
+#include "LCCheating/CheatingParticleIDAlgorithm.h"
 #include "LCCheating/CheatingTrackToClusterMatching.h"
 #include "LCCheating/PerfectClusteringAlgorithm.h"
 #include "LCCheating/PerfectFragmentRemovalAlgorithm.h"
@@ -93,6 +94,7 @@
 
 #define LC_ALGORITHM_LIST(d)                                                                                                    \
     d("CheatingClusterCleaning",                CheatingClusterCleaningAlgorithm)                                               \
+    d("CheatingParticleID",                     CheatingParticleIDAlgorithm)                                                    \
     d("CheatingTrackToClusterMatching",         CheatingTrackToClusterMatching)                                                 \
     d("PerfectClustering",                      PerfectClusteringAlgorithm)                                                     \
     d("PerfectFragmentRemoval",                 PerfectFragmentRemovalAlgorithm)                                                \
