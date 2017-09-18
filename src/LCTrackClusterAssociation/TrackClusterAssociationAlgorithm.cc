@@ -204,7 +204,8 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
                     minLowEnergyDifference = energyDifference;
                 }
             }
-        }
+        } // for all clusters
+        } //for all trackStates
 
         // Apply a final track-cluster association distance cut
         const Cluster *pMatchedCluster = nullptr;
@@ -223,7 +224,6 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddTrackClusterAssociation(*this, pTrack, pMatchedCluster));
         }
-        } //for all trackStates
     } //for all tracks
     return STATUS_CODE_SUCCESS;
 }
