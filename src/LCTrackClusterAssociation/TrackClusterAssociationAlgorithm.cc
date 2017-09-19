@@ -127,84 +127,84 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
         for (auto const& trackState : trackStates)
         {
 
-        const CartesianVector &trackPosition(trackState.GetPosition());
+            const CartesianVector &trackPosition(trackState.GetPosition());
 
 
-        // short circuit this loop with a kd-tree search beforehand
-        // iterating over a std::map is expensive, avoid where possible
-        for (unsigned iPseudoLayer = 0; iPseudoLayer <= m_maxSearchLayer; ++iPseudoLayer)
-        {
-            // save the hash key since we may use it a few times
-            auto hash_key = std::make_pair(pTrack, iPseudoLayer);
-            // see if we have a cached search, otherwise do the search and cache
-            auto cached_result = tracks_to_hits.equal_range(hash_key);
-            if (cached_result.first != tracks_to_hits.end())
+            // short circuit this loop with a kd-tree search beforehand
+            // iterating over a std::map is expensive, avoid where possible
+            for (unsigned iPseudoLayer = 0; iPseudoLayer <= m_maxSearchLayer; ++iPseudoLayer)
             {
-                for (auto iter = cached_result.first; iter != cached_result.second; ++iter )
+                // save the hash key since we may use it a few times
+                auto hash_key = std::make_pair(pTrack, iPseudoLayer);
+                // see if we have a cached search, otherwise do the search and cache
+                auto cached_result = tracks_to_hits.equal_range(hash_key);
+                if (cached_result.first != tracks_to_hits.end())
                 {
-                    // build a list of nearby clusters
-                    nearby_clusters.insert(hits_to_clusters.find(iter->second)->second);
-                }
-            }
-            else
-            {
-                // do search and cache result
-                KDTreeTesseract searchRegionHits = build_4d_kd_search_region(trackPosition, m_parallelDistanceCut, m_parallelDistanceCut, m_parallelDistanceCut, iPseudoLayer);
-                hits_kdtree.search(searchRegionHits, found_hits);
-
-                for (const auto &hit : found_hits)
-                {
-                    auto assc_cluster = hits_to_clusters.find(hit.data);
-                    if (assc_cluster != hits_to_clusters.end())
+                    for (auto iter = cached_result.first; iter != cached_result.second; ++iter )
                     {
-                        // cache all hits that are nearby the track
-                        tracks_to_hits.emplace(hash_key,hit.data);
-                        // add to the list of nearby clusters
-                        nearby_clusters.insert(assc_cluster->second);
+                        // build a list of nearby clusters
+                        nearby_clusters.insert(hits_to_clusters.find(iter->second)->second);
                     }
                 }
-                found_hits.clear();
-            }
-        }
-
-        ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
-        nearbyClusterList.sort(SortingHelper::SortClustersByNHits);
-        nearby_clusters.clear();
-
-        // Identify the closest cluster and also the closest cluster below a specified hadronic energy threshold
-        for (const Cluster *const pCluster : nearbyClusterList)
-        {
-            if (0 == pCluster->GetNCaloHits())
-                continue;
-
-            float trackClusterDistance(std::numeric_limits<float>::max());
-            if (STATUS_CODE_SUCCESS != lc_content::ClusterHelper::GetTrackClusterDistance(pTrack, pCluster, m_maxSearchLayer, m_parallelDistanceCut,
-                m_minTrackClusterCosAngle, trackClusterDistance))
-            {
-                continue;
-            }
-
-            const float energyDifference(std::fabs(pCluster->GetHadronicEnergy() - pTrack->GetEnergyAtDca()));
-
-            if (pCluster->GetHadronicEnergy() > m_lowEnergyCut)
-            {
-                if ((trackClusterDistance < minDistance) || ((trackClusterDistance == minDistance) && (energyDifference < minEnergyDifference)))
+                else
                 {
-                    minDistance = trackClusterDistance;
-                    pBestCluster = pCluster;
-                    minEnergyDifference = energyDifference;
+                    // do search and cache result
+                    KDTreeTesseract searchRegionHits = build_4d_kd_search_region(trackPosition, m_parallelDistanceCut, m_parallelDistanceCut, m_parallelDistanceCut, iPseudoLayer);
+                    hits_kdtree.search(searchRegionHits, found_hits);
+
+                    for (const auto &hit : found_hits)
+                    {
+                        auto assc_cluster = hits_to_clusters.find(hit.data);
+                        if (assc_cluster != hits_to_clusters.end())
+                        {
+                            // cache all hits that are nearby the track
+                            tracks_to_hits.emplace(hash_key,hit.data);
+                            // add to the list of nearby clusters
+                            nearby_clusters.insert(assc_cluster->second);
+                        }
+                    }
+                    found_hits.clear();
                 }
             }
-            else
+
+            ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
+            nearbyClusterList.sort(SortingHelper::SortClustersByNHits);
+            nearby_clusters.clear();
+
+            // Identify the closest cluster and also the closest cluster below a specified hadronic energy threshold
+            for (const Cluster *const pCluster : nearbyClusterList)
             {
-                if ((trackClusterDistance < minLowEnergyDistance) || ((trackClusterDistance == minLowEnergyDistance) && (energyDifference < minLowEnergyDifference)))
+                if (0 == pCluster->GetNCaloHits())
+                    continue;
+
+                float trackClusterDistance(std::numeric_limits<float>::max());
+                if (STATUS_CODE_SUCCESS != lc_content::ClusterHelper::GetTrackClusterDistance(pTrack, pCluster, m_maxSearchLayer, m_parallelDistanceCut,
+                    m_minTrackClusterCosAngle, trackClusterDistance))
                 {
-                    minLowEnergyDistance = trackClusterDistance;
-                    pBestLowEnergyCluster = pCluster;
-                    minLowEnergyDifference = energyDifference;
+                    continue;
                 }
-            }
-        } // for all clusters
+
+                const float energyDifference(std::fabs(pCluster->GetHadronicEnergy() - pTrack->GetEnergyAtDca()));
+
+                if (pCluster->GetHadronicEnergy() > m_lowEnergyCut)
+                {
+                    if ((trackClusterDistance < minDistance) || ((trackClusterDistance == minDistance) && (energyDifference < minEnergyDifference)))
+                    {
+                        minDistance = trackClusterDistance;
+                        pBestCluster = pCluster;
+                        minEnergyDifference = energyDifference;
+                    }
+                }
+                else
+                {
+                    if ((trackClusterDistance < minLowEnergyDistance) || ((trackClusterDistance == minLowEnergyDistance) && (energyDifference < minLowEnergyDifference)))
+                    {
+                        minLowEnergyDistance = trackClusterDistance;
+                        pBestLowEnergyCluster = pCluster;
+                        minLowEnergyDifference = energyDifference;
+                    }
+                }
+            } // for all clusters
         } //for all trackStates
 
         // Apply a final track-cluster association distance cut
