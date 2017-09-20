@@ -178,7 +178,7 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
                     continue;
 
                 float trackClusterDistance(std::numeric_limits<float>::max());
-                if (STATUS_CODE_SUCCESS != lc_content::ClusterHelper::GetTrackClusterDistance(pTrack, pCluster, m_maxSearchLayer, m_parallelDistanceCut,
+                if (STATUS_CODE_SUCCESS != lc_content::ClusterHelper::GetTrackClusterDistance(&trackState, pCluster, m_maxSearchLayer, m_parallelDistanceCut,
                     m_minTrackClusterCosAngle, trackClusterDistance))
                 {
                     continue;
