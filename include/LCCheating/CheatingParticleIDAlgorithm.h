@@ -5,8 +5,8 @@
  * 
  *  $Log: $
  */
-#ifndef CHEATING_PARTICLE_ID_ALGORITHM_H
-#define CHEATING_PARTICLE_ID_ALGORITHM_H 1
+#ifndef LC_CHEATING_PARTICLE_ID_ALGORITHM_H
+#define LC_CHEATING_PARTICLE_ID_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -28,4 +28,4 @@ private:
     bool            m_useClusterOverTrackID;    ///< In case of PFO with tracks and clusters, take best mc particle from cluster
 };
 
-#endif // #ifndef CHEATING_PARTICLE_ID_ALGORITHM_H
+#endif // #ifndef LC_CHEATING_PARTICLE_ID_ALGORITHM_H

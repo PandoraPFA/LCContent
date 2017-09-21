@@ -21,7 +21,7 @@ CheatingParticleIDAlgorithm::CheatingParticleIDAlgorithm() :
 
 StatusCode CheatingParticleIDAlgorithm::Run()
 {
-    const PfoList *pPfoList = NULL;
+    const PfoList *pPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pPfoList));
 
     for (const ParticleFlowObject *const pPfo : *pPfoList)
@@ -35,7 +35,10 @@ StatusCode CheatingParticleIDAlgorithm::Run()
             const int nTracks(trackList.size());
 
             if (nTracks > 1) 
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+            {
+                std::cout << "Unable to associate a single mc particle to a pfo with multiple tracks." << std::endl;
+                continue;
+            }
 
             PandoraContentApi::ParticleFlowObject::Metadata metadata;
 
