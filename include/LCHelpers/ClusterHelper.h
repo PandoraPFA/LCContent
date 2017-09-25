@@ -94,14 +94,15 @@ public:
      *  @brief  Get the distance of closest approach between the projected track direction at calorimeter and the hits within a cluster.
      *          Note that only a specified number of layers are examined.
      * 
-     *  @param  pTrack address of the track
+     *  @param  pT track, trackState or vector of trackStates, for a Track the TrackStateAtCalorimeter is used
      *  @param  pCluster address of the cluster
      *  @param  maxSearchLayer the maximum pseudolayer to examine
      *  @param  parallelDistanceCut maximum allowed projection of track-cluster separation along track direction
      *  @param  minTrackClusterCosAngle min cos(angle) between track and cluster initial direction
      *  @param  trackClusterDistance to receive the track cluster distance
      */
-    static pandora::StatusCode GetTrackClusterDistance(const pandora::Track *const pTrack, const pandora::Cluster *const pCluster,
+    template<typename T>
+    static pandora::StatusCode GetTrackClusterDistance(const T *const pT, const pandora::Cluster *const pCluster,
         const unsigned int maxSearchLayer, const float parallelDistanceCut, const float minTrackClusterCosAngle, float &trackClusterDistance);
 
     /**
