@@ -231,14 +231,14 @@ StatusCode ClusterHelper::GetClosestIntraLayerDistance(const Cluster *const pClu
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <>
-StatusCode ClusterHelper::GetTrackClusterDistance(const TrackState *const trackState, const Cluster *const pCluster, const unsigned int maxSearchLayer,
+StatusCode ClusterHelper::GetTrackClusterDistance(const TrackState *const pTrackState, const Cluster *const pCluster, const unsigned int maxSearchLayer,
     const float parallelDistanceCut, const float minTrackClusterCosAngle, float &trackClusterDistance)
 {
     if ((0 == pCluster->GetNCaloHits()) || (pCluster->GetInnerPseudoLayer() > maxSearchLayer))
         return STATUS_CODE_NOT_FOUND;
 
-    const CartesianVector &trackPosition(trackState->GetPosition());
-    const CartesianVector trackDirection(trackState->GetMomentum().GetUnitVector());
+    const CartesianVector &trackPosition(pTrackState->GetPosition());
+    const CartesianVector trackDirection(pTrackState->GetMomentum().GetUnitVector());
 
     if (trackDirection.GetCosOpeningAngle(pCluster->GetInitialDirection()) < minTrackClusterCosAngle)
         return STATUS_CODE_NOT_FOUND;
@@ -276,37 +276,34 @@ StatusCode ClusterHelper::GetTrackClusterDistance(const TrackState *const trackS
     return STATUS_CODE_SUCCESS;
 }
 
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 template <>
 StatusCode ClusterHelper::GetTrackClusterDistance(const Track *const pTrack, const Cluster *const pCluster, const unsigned int maxSearchLayer,
     const float parallelDistanceCut, const float minTrackClusterCosAngle, float &trackClusterDistance)
 {
-    return GetTrackClusterDistance( &pTrack->GetTrackStateAtCalorimeter(), pCluster, maxSearchLayer, parallelDistanceCut, minTrackClusterCosAngle, trackClusterDistance);
+    return GetTrackClusterDistance(&(pTrack->GetTrackStateAtCalorimeter()), pCluster, maxSearchLayer, parallelDistanceCut, minTrackClusterCosAngle, trackClusterDistance);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 template <>
-StatusCode ClusterHelper::GetTrackClusterDistance(const std::vector<TrackState> *const pTrackStates, const Cluster *const pCluster, const unsigned int maxSearchLayer,
+StatusCode ClusterHelper::GetTrackClusterDistance(const TrackStateVector *const pTrackStates, const Cluster *const pCluster, const unsigned int maxSearchLayer,
     const float parallelDistanceCut, const float minTrackClusterCosAngle, float &trackClusterDistance)
 {
-    bool successful=false;
+    bool successful(false);
+
     for (auto const& trackState: *pTrackStates)
     {
         float trackClusterDistanceTemp(std::numeric_limits<float>::max());
-        StatusCode statusCode = GetTrackClusterDistance(&trackState, pCluster, maxSearchLayer, parallelDistanceCut, minTrackClusterCosAngle, trackClusterDistanceTemp);
-        if(STATUS_CODE_SUCCESS == statusCode)
+        const StatusCode statusCode(GetTrackClusterDistance(&trackState, pCluster, maxSearchLayer, parallelDistanceCut, minTrackClusterCosAngle, trackClusterDistanceTemp));
+
+        if (STATUS_CODE_SUCCESS == statusCode)
         {
             successful = true;
-            if(trackClusterDistanceTemp < trackClusterDistance)
+            if (trackClusterDistanceTemp < trackClusterDistance)
                  trackClusterDistance = trackClusterDistanceTemp;
         }
     }
+
     return successful ? STATUS_CODE_SUCCESS : STATUS_CODE_NOT_FOUND;
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
