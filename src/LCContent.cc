@@ -90,9 +90,14 @@
 #include "LCUtility/TrackPreparationAlgorithm.h"
 #include "LCUtility/TrainingSoftwareCompensation.h"
 
+#include "LCPersistency/LCEventReadingAlgorithm.h"
+#include "LCPersistency/LCEventWritingAlgorithm.h"
+
 #include "LCContent.h"
 
 #define LC_ALGORITHM_LIST(d)                                                                                                    \
+    d("LCEventReading",                         LCEventReadingAlgorithm)                                                        \
+    d("LCEventWriting",                         LCEventWritingAlgorithm)                                                        \
     d("CheatingClusterCleaning",                CheatingClusterCleaningAlgorithm)                                               \
     d("CheatingParticleID",                     CheatingParticleIDAlgorithm)                                                    \
     d("CheatingTrackToClusterMatching",         CheatingTrackToClusterMatching)                                                 \
