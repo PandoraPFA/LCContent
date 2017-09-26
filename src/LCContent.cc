@@ -39,6 +39,9 @@
 #include "LCParticleId/PhotonRecoveryAlgorithm.h"
 #include "LCParticleId/PhotonSplittingAlgorithm.h"
 
+#include "LCPersistency/LCEventReadingAlgorithm.h"
+#include "LCPersistency/LCEventWritingAlgorithm.h"
+
 #include "LCPfoConstruction/CLICPfoSelectionAlgorithm.h"
 #include "LCPfoConstruction/PfoCreationAlgorithm.h"
 #include "LCPfoConstruction/PfoCreationParentAlgorithm.h"
@@ -118,6 +121,8 @@
     d("PhotonReconstruction",                   PhotonReconstructionAlgorithm)                                                  \
     d("PhotonRecovery",                         PhotonRecoveryAlgorithm)                                                        \
     d("PhotonSplitting",                        PhotonSplittingAlgorithm)                                                       \
+    d("LCEventReading",                         LCEventReadingAlgorithm)                                                        \
+    d("LCEventWriting",                         LCEventWritingAlgorithm)                                                        \
     d("CLICPfoSelection",                       CLICPfoSelectionAlgorithm)                                                      \
     d("PfoCreation",                            PfoCreationAlgorithm)                                                           \
     d("PfoCreationParent",                      PfoCreationParentAlgorithm)                                                     \
