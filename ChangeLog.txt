@@ -1,4 +1,13 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03-01-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added LCTrack implementation to store multiple track states.
+LCPersistency: implemented LCEventReading and LCEventWriting algorithms
+ClusterHelper::GetTrackClusterDistance: templated function to accept a Track, TrackState or TrackStateVector
+Created cheating particle ID algorithm.
+Added extra variables to SoftwareCompensation tree to account for CleanClusters logic when training software compensation.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03-00-04
 --------------------------------------------------------------------------------------------------------------------------------------------
 Selected license: GPLv3.
