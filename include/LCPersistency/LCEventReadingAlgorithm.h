@@ -22,15 +22,6 @@ class LCEventReadingAlgorithm : public EventReadingAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     LCEventReadingAlgorithm();
@@ -42,14 +33,8 @@ public:
 
 protected:
     pandora::StatusCode Initialize();
-
 };
 
 } // namespace lc_content
-
-inline pandora::Algorithm *lc_content::LCEventReadingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new LCEventReadingAlgorithm();
-}
 
 #endif // #ifndef LC_CONTENT_EVENT_READING_ALGORITHM_H

@@ -22,15 +22,6 @@ class LCEventWritingAlgorithm : public EventWritingAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     LCEventWritingAlgorithm();
@@ -42,14 +33,8 @@ public:
 
 protected:
     pandora::StatusCode Initialize();
-
 };
 
 } // namespace lc_content
-
-inline pandora::Algorithm *lc_content::LCEventWritingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new LCEventWritingAlgorithm();
-}
 
 #endif // #ifndef LC_CONTENT_EVENT_WRITING_ALGORITHM_H
