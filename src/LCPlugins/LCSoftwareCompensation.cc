@@ -15,28 +15,41 @@ using namespace pandora;
 namespace lc_content
 {
 
-LCSoftwareCompensation::LCSoftwareCompensation() :
-    m_energyDensityFinalBin(30.f),
-    m_maxClusterEnergyToApplySoftComp(100.f),
-    m_minCleanHitEnergy(0.5f),
-    m_minCleanHitEnergyFraction(0.01f),
-    m_minCleanCorrectedHitEnergy(0.1f)
+LCSoftwareCompensation::LCSoftwareCompensation(const LCSoftwareCompensationParameters &lcSoftwareCompensationParameters) :
+    m_softCompParameters(lcSoftwareCompensationParameters.m_softCompParameters),
+    m_softCompEnergyDensityBins(lcSoftwareCompensationParameters.m_softCompEnergyDensityBins),
+    m_energyDensityFinalBin(lcSoftwareCompensationParameters.m_energyDensityFinalBin),
+    m_maxClusterEnergyToApplySoftComp(lcSoftwareCompensationParameters.m_maxClusterEnergyToApplySoftComp),
+    m_minCleanHitEnergy(lcSoftwareCompensationParameters.m_minCleanHitEnergy),
+    m_minCleanHitEnergyFraction(lcSoftwareCompensationParameters.m_minCleanHitEnergyFraction),
+    m_minCleanCorrectedHitEnergy(lcSoftwareCompensationParameters.m_minCleanCorrectedHitEnergy)
 {
-    const unsigned int nWeights(9);
-    const float weights[nWeights] = {2.49632f, -0.0697302f, 0.000946986f, -0.112311f, 0.0028182f, -9.62602e-05f, 0.168614f, 0.224318f, -0.0872853f};
-    m_softCompWeights.insert(m_softCompWeights.begin(), weights, weights + nWeights);
+    if (9 != m_softCompParameters.size())
+    {
+        std::cout << "LCSoftwareCompensation:LCSoftwareCompensation - Incorrect number of parameters required for software compensation technique." << std::endl;
+        throw STATUS_CODE_INVALID_PARAMETER;
+    }
+    std::sort(m_softCompEnergyDensityBins.begin(), m_softCompEnergyDensityBins.end());
 
-    const unsigned int nBins(10);
-    const float bins[nBins] = {0.f, 2.f, 5.f, 7.5f, 9.5f, 13.f, 16.f, 20.f, 23.5f, 28.f};
-    m_softCompEnergyDensityBins.insert(m_softCompEnergyDensityBins.begin(), bins, bins + nBins);
+    if (m_softCompEnergyDensityBins.front() < 0.f)
+    {
+        std::cout << "LCSoftwareCompensation:LCSoftwareCompensation - Input density bins contains an unphysical value" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
+
+    if (m_energyDensityFinalBin < m_softCompEnergyDensityBins.back())
+    {
+        std::cout << "LCSoftwareCompensation::LCSoftwareCompensation - Input energy density final bin inconsistent with input density bins" << std::endl;
+        throw STATUS_CODE_FAILURE;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode LCSoftwareCompensation::MakeEnergyCorrections(const pandora::Cluster *const pCluster, float &correctedHadronicEnergy) const
 {
-    if (NULL == pCluster || m_softCompWeights.size() != 9)
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    if (nullptr == pCluster || m_softCompParameters.size() != 9)
+        throw STATUS_CODE_INVALID_PARAMETER;
 
     if (0 == pCluster->GetNCaloHits())
     {
@@ -75,13 +88,11 @@ StatusCode LCSoftwareCompensation::CleanCluster(const pandora::Cluster *const pC
     {
         const unsigned int pseudoLayer(layerIter->first);
 
-        for (CaloHitList::const_iterator hitIter = layerIter->second->begin(), hitIterEnd = layerIter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        for (const CaloHit *const pCaloHit : *layerIter->second)
         {
-            const CaloHit *const pCaloHit = *hitIter;
-
             if (ECAL != pCaloHit->GetHitType()) continue;
 
-            if (this->GetPandora().GetGeometry()->GetHitTypeGranularity((*hitIter)->GetHitType()) > FINE)
+            if (this->GetPandora().GetGeometry()->GetHitTypeGranularity(pCaloHit->GetHitType()) > FINE)
             {
                 isFineGranularity = false;
                 break;
@@ -129,9 +140,9 @@ float LCSoftwareCompensation::GetHadronicEnergyInLayer(const OrderedCaloHitList 
 
     if (iter != orderedCaloHitList.end())
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        for (const CaloHit *const pCaloHit : *iter->second)
         {
-            hadronicEnergy += (*hitIter)->GetHadronicEnergy();
+            hadronicEnergy += pCaloHit->GetHadronicEnergy();
         }
     }
 
@@ -144,19 +155,25 @@ StatusCode LCSoftwareCompensation::SoftComp(float clusterEnergyEstimation, const
 {
     float energySoftComp(0.f);
 
-    const float p1 = m_softCompWeights.at(0) + m_softCompWeights.at(1)*clusterEnergyEstimation + m_softCompWeights.at(2)*clusterEnergyEstimation*clusterEnergyEstimation;
-    const float p2 = m_softCompWeights.at(3) + m_softCompWeights.at(4)*clusterEnergyEstimation + m_softCompWeights.at(5)*clusterEnergyEstimation*clusterEnergyEstimation;
-    const float p3 = m_softCompWeights.at(6)/(m_softCompWeights.at(7) + exp(m_softCompWeights.at(8)*clusterEnergyEstimation));
+    const float p1 = m_softCompParameters.at(0) + m_softCompParameters.at(1)*clusterEnergyEstimation + m_softCompParameters.at(2)*clusterEnergyEstimation*clusterEnergyEstimation;
+    const float p2 = m_softCompParameters.at(3) + m_softCompParameters.at(4)*clusterEnergyEstimation + m_softCompParameters.at(5)*clusterEnergyEstimation*clusterEnergyEstimation;
+    const float p3 = m_softCompParameters.at(6)/(m_softCompParameters.at(7) + exp(m_softCompParameters.at(8)*clusterEnergyEstimation));
 
-    for (pandora::CaloHitList::const_iterator iter = caloHitList.begin() , endIter = caloHitList.end() ; endIter != iter ; ++iter)
+    for (const pandora::CaloHit *const pCaloHit : caloHitList)
     {
-        const pandora::CaloHit *pCaloHit = *iter;
-
         if (HCAL == pCaloHit->GetHitType())
         {
             const float hitEnergy = pCaloHit->GetHadronicEnergy();
             float rho(0.f);
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindDensity(pCaloHit,rho));
+
+            try 
+            {
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindDensity(pCaloHit,rho));
+            }
+            catch (const StatusCodeException &)
+            {
+                std::cout << "LCSoftwareCompensation: Unable to find energy density of calorimeter hit" << std::endl;
+            }
             const float weight(p1*exp(p2*rho) + p3);
             const float correctedHitEnergy(hitEnergy*weight);
             energySoftComp += correctedHitEnergy;
@@ -177,8 +194,13 @@ StatusCode LCSoftwareCompensation::SoftComp(float clusterEnergyEstimation, const
 StatusCode LCSoftwareCompensation::FindDensity(const pandora::CaloHit *const pCaloHit, float &energyDensity) const
 {
     const float mm3Todm3 = 1e-6f;    // ATTN: Cell energy density defined in GeV per dm3 but Pandora cell size defined in mm, so needs conversion
-
     const float cellVolume = pCaloHit->GetCellSize0() * pCaloHit->GetCellSize1() * pCaloHit->GetCellThickness() * mm3Todm3;
+
+    if (cellVolume < std::numeric_limits<float>::epsilon())
+    {
+        throw STATUS_CODE_FAILURE;
+    }
+
     const float hitEnergyHadronic(pCaloHit->GetHadronicEnergy());
     const float hitEnergyDensity(hitEnergyHadronic/cellVolume);
 
@@ -209,52 +231,30 @@ StatusCode LCSoftwareCompensation::FindDensity(const pandora::CaloHit *const pCa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    FloatVector softCompWeightsFromXml;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "SoftwareCompensationWeights", softCompWeightsFromXml));
-
-    if (!softCompWeightsFromXml.empty())
-        m_softCompWeights = softCompWeightsFromXml;
-
-    FloatVector softCompEnergyDensityBinsFromXml;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "SoftwareCompensationEnergyDensityBins", softCompEnergyDensityBinsFromXml));
-
-    if (!softCompEnergyDensityBinsFromXml.empty())
-        m_softCompEnergyDensityBins = softCompEnergyDensityBinsFromXml;
-
-    std::sort(m_softCompEnergyDensityBins.begin(), m_softCompEnergyDensityBins.end());
-
-    if (m_softCompEnergyDensityBins.front() < 0.f)
-    {
-        std::cout << "LCSoftwareCompensation::ReadSettings - SoftCompEnergyDensityBins contains an unphysical value" << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FinalEnergyDensityBin", m_energyDensityFinalBin));
-
-    if (m_energyDensityFinalBin < m_softCompEnergyDensityBins.back())
-    {
-        std::cout << "LCSoftwareCompensation::ReadSettings - EnergyDensityFinalBin inconsistent with SoftCompEnergyDensityBins" << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterEnergyToApplySoftComp", m_maxClusterEnergyToApplySoftComp));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCleanHitEnergy", m_minCleanHitEnergy));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCleanHitEnergyFraction", m_minCleanHitEnergyFraction));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCleanCorrectedHitEnergy", m_minCleanCorrectedHitEnergy));
-
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LCSoftwareCompensationParameters::LCSoftwareCompensationParameters() :
+    m_softCompParameters(),
+    m_softCompEnergyDensityBins(),
+    m_energyDensityFinalBin(30.f),
+    m_maxClusterEnergyToApplySoftComp(100.f),
+    m_minCleanHitEnergy(0.5f),
+    m_minCleanHitEnergyFraction(0.01f),
+    m_minCleanCorrectedHitEnergy(0.1f)
+{
+    const unsigned int nParameters(9);
+    const float parameters[nParameters] = {2.49632f, -0.0697302f, 0.000946986f, -0.112311f, 0.0028182f, -9.62602e-05f, 0.168614f, 0.224318f, -0.0872853f};
+    m_softCompParameters.insert(m_softCompParameters.begin(), parameters, parameters + nParameters);
+
+    const unsigned int nBins(10);
+    const float bins[nBins] = {0.f, 2.f, 5.f, 7.5f, 9.5f, 13.f, 16.f, 20.f, 23.5f, 28.f};
+    m_softCompEnergyDensityBins.insert(m_softCompEnergyDensityBins.begin(), bins, bins + nBins);
 }
 
 } // namespace lc_content

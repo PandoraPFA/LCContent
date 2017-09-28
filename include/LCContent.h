@@ -10,6 +10,8 @@
 
 #include "Api/PandoraApi.h"
 
+namespace lc_content {class LCSoftwareCompensationParameters;}
+
 /**
  *  @brief  LCContent class
  */
@@ -53,6 +55,17 @@ public:
     static pandora::StatusCode RegisterNonLinearityEnergyCorrection(const pandora::Pandora &pandora, const std::string &name,
         const pandora::EnergyCorrectionType energyCorrectionType, const pandora::FloatVector &inputEnergyCorrectionPoints,
         const pandora::FloatVector &outputEnergyCorrectionPoints);
+    
+    /**
+     *  @brief  Register the software compensation energy correction plugin (note user side configuration) with pandora
+     * 
+     *  @param  pandora the pandora instance with which to register content
+     *  @param  name the name/label associated with the energy correction plugin
+     *  @param  energyCorrectionType the energy correction type
+     *  @param  parameters the software compensation input parameters
+     */
+    static pandora::StatusCode RegisterSoftwareCompensationEnergyCorrection(const pandora::Pandora &pandora, const std::string &name,
+        const lc_content::LCSoftwareCompensationParameters &parameters);
 };
 
 #endif // #ifndef LINEAR_COLLIDER_CONTENT_H
