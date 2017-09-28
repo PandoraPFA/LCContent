@@ -24,7 +24,7 @@ LCSoftwareCompensation::LCSoftwareCompensation(const LCSoftwareCompensationParam
     m_minCleanHitEnergyFraction(0.01f),
     m_minCleanCorrectedHitEnergy(0.1f)
 {
-    if (9 != m_softCompWeights.size() || 10 != m_softCompEnergyDensityBins.size())
+    if (9 != m_softCompWeights.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
         
     std::sort(m_softCompEnergyDensityBins.begin(), m_softCompEnergyDensityBins.end());
