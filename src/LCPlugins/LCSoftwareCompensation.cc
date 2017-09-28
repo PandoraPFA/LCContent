@@ -15,20 +15,31 @@ using namespace pandora;
 namespace lc_content
 {
 
-LCSoftwareCompensation::LCSoftwareCompensation() :
-    m_energyDensityFinalBin(30.f),
+LCSoftwareCompensation::LCSoftwareCompensation(const LCSoftwareCompensationParameters &parameters) :
+    m_softCompWeights(parameters.m_softCompWeights),
+    m_softCompEnergyDensityBins(parameters.m_softCompEnergyDensityBins),
+    m_energyDensityFinalBin(parameters.m_energyDensityFinalBin),
     m_maxClusterEnergyToApplySoftComp(100.f),
     m_minCleanHitEnergy(0.5f),
     m_minCleanHitEnergyFraction(0.01f),
     m_minCleanCorrectedHitEnergy(0.1f)
 {
-    const unsigned int nWeights(9);
-    const float weights[nWeights] = {2.49632f, -0.0697302f, 0.000946986f, -0.112311f, 0.0028182f, -9.62602e-05f, 0.168614f, 0.224318f, -0.0872853f};
-    m_softCompWeights.insert(m_softCompWeights.begin(), weights, weights + nWeights);
+    if (9 != m_softCompWeights.size() || 10 != m_softCompEnergyDensityBins.size())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+        
+    std::sort(m_softCompEnergyDensityBins.begin(), m_softCompEnergyDensityBins.end());
 
-    const unsigned int nBins(10);
-    const float bins[nBins] = {0.f, 2.f, 5.f, 7.5f, 9.5f, 13.f, 16.f, 20.f, 23.5f, 28.f};
-    m_softCompEnergyDensityBins.insert(m_softCompEnergyDensityBins.begin(), bins, bins + nBins);
+    if (m_softCompEnergyDensityBins.front() < 0.f)
+    {
+        std::cout << "LCSoftwareCompensation:LCSoftwareCompensation - Input density bins contains an unphysical value" << std::endl;
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+    }
+
+    if (m_energyDensityFinalBin < m_softCompEnergyDensityBins.back())
+    {
+        std::cout << "LCSoftwareCompensation::LCSoftwareCompensation - Input energy density final bin inconsistent with input density bins" << std::endl;
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -211,37 +222,6 @@ StatusCode LCSoftwareCompensation::FindDensity(const pandora::CaloHit *const pCa
 
 StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    FloatVector softCompWeightsFromXml;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "SoftwareCompensationWeights", softCompWeightsFromXml));
-
-    if (!softCompWeightsFromXml.empty())
-        m_softCompWeights = softCompWeightsFromXml;
-
-    FloatVector softCompEnergyDensityBinsFromXml;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "SoftwareCompensationEnergyDensityBins", softCompEnergyDensityBinsFromXml));
-
-    if (!softCompEnergyDensityBinsFromXml.empty())
-        m_softCompEnergyDensityBins = softCompEnergyDensityBinsFromXml;
-
-    std::sort(m_softCompEnergyDensityBins.begin(), m_softCompEnergyDensityBins.end());
-
-    if (m_softCompEnergyDensityBins.front() < 0.f)
-    {
-        std::cout << "LCSoftwareCompensation::ReadSettings - SoftCompEnergyDensityBins contains an unphysical value" << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FinalEnergyDensityBin", m_energyDensityFinalBin));
-
-    if (m_energyDensityFinalBin < m_softCompEnergyDensityBins.back())
-    {
-        std::cout << "LCSoftwareCompensation::ReadSettings - EnergyDensityFinalBin inconsistent with SoftCompEnergyDensityBins" << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterEnergyToApplySoftComp", m_maxClusterEnergyToApplySoftComp));
 
@@ -255,6 +235,23 @@ StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle xmlHandle)
         "MinCleanCorrectedHitEnergy", m_minCleanCorrectedHitEnergy));
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LCSoftwareCompensationParameters::LCSoftwareCompensationParameters() :
+      m_softCompWeights(),
+      m_softCompEnergyDensityBins(),
+      m_energyDensityFinalBin(30.f)
+{
+    const unsigned int nWeights(9);
+    const float weights[nWeights] = {2.49632f, -0.0697302f, 0.000946986f, -0.112311f, 0.0028182f, -9.62602e-05f, 0.168614f, 0.224318f, -0.0872853f};
+    m_softCompWeights.insert(m_softCompWeights.begin(), weights, weights + nWeights);
+
+    const unsigned int nBins(10);
+    const float bins[nBins] = {0.f, 2.f, 5.f, 7.5f, 9.5f, 13.f, 16.f, 20.f, 23.5f, 28.f};
+    m_softCompEnergyDensityBins.insert(m_softCompEnergyDensityBins.begin(), bins, bins + nBins);
 }
 
 } // namespace lc_content
