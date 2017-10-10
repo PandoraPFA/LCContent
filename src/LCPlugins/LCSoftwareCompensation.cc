@@ -19,10 +19,10 @@ LCSoftwareCompensation::LCSoftwareCompensation(const LCSoftwareCompensationParam
     m_softCompWeights(parameters.m_softCompWeights),
     m_softCompEnergyDensityBins(parameters.m_softCompEnergyDensityBins),
     m_energyDensityFinalBin(parameters.m_energyDensityFinalBin),
-    m_maxClusterEnergyToApplySoftComp(100.f),
-    m_minCleanHitEnergy(0.5f),
-    m_minCleanHitEnergyFraction(0.01f),
-    m_minCleanCorrectedHitEnergy(0.1f)
+    m_maxClusterEnergyToApplySoftComp(parameters.m_maxClusterEnergyToApplySoftComp),
+    m_minCleanHitEnergy(parameters.m_minCleanHitEnergy),
+    m_minCleanHitEnergyFraction(parameters.m_minCleanHitEnergyFraction),
+    m_minCleanCorrectedHitEnergy(parameters.m_minCleanCorrectedHitEnergy)
 {
     if (9 != m_softCompWeights.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -220,20 +220,9 @@ StatusCode LCSoftwareCompensation::FindDensity(const pandora::CaloHit *const pCa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterEnergyToApplySoftComp", m_maxClusterEnergyToApplySoftComp));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCleanHitEnergy", m_minCleanHitEnergy));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCleanHitEnergyFraction", m_minCleanHitEnergyFraction));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCleanCorrectedHitEnergy", m_minCleanCorrectedHitEnergy));
-
+    /* nop */
     return STATUS_CODE_SUCCESS;
 }
 
@@ -243,7 +232,11 @@ StatusCode LCSoftwareCompensation::ReadSettings(const TiXmlHandle xmlHandle)
 LCSoftwareCompensationParameters::LCSoftwareCompensationParameters() :
       m_softCompWeights(),
       m_softCompEnergyDensityBins(),
-      m_energyDensityFinalBin(30.f)
+      m_energyDensityFinalBin(30.f),
+      m_maxClusterEnergyToApplySoftComp(100.f),
+      m_minCleanHitEnergy(0.5f),
+      m_minCleanHitEnergyFraction(0.01f),
+      m_minCleanCorrectedHitEnergy(0.1f)
 {
     const unsigned int nWeights(9);
     const float weights[nWeights] = {2.49632f, -0.0697302f, 0.000946986f, -0.112311f, 0.0028182f, -9.62602e-05f, 0.168614f, 0.224318f, -0.0872853f};

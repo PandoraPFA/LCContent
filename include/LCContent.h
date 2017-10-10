@@ -10,10 +10,7 @@
 
 #include "Api/PandoraApi.h"
 
-namespace lc_content
-{
-    class LCSoftwareCompensationParameters;
-}
+namespace lc_content {class LCSoftwareCompensationParameters;}
 
 /**
  *  @brief  LCContent class
