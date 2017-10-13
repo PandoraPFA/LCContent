@@ -166,7 +166,6 @@
 #define LC_ENERGY_CORRECTION_LIST(d)                                                                                            \
     d("CleanClusters",          pandora::HADRONIC,      lc_content::LCEnergyCorrectionPlugins::CleanCluster)                    \
     d("ScaleHotHadrons",        pandora::HADRONIC,      lc_content::LCEnergyCorrectionPlugins::ScaleHotHadrons)                 \
-    d("SoftwareCompensation",   pandora::HADRONIC,      lc_content::LCSoftwareCompensation)                                     \
     d("MuonCoilCorrection",     pandora::HADRONIC,      lc_content::LCEnergyCorrectionPlugins::MuonCoilCorrection)
 
 #define LC_PARTICLE_ID_LIST(d)                                                                                                  \
@@ -239,4 +238,13 @@ pandora::StatusCode LCContent::RegisterNonLinearityEnergyCorrection(const pandor
 {
     return PandoraApi::RegisterEnergyCorrectionPlugin(pandora, name, energyCorrectionType,
         new lc_content::LCEnergyCorrectionPlugins::NonLinearityCorrection(inputEnergyCorrectionPoints, outputEnergyCorrectionPoints));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::StatusCode LCContent::RegisterSoftwareCompensationEnergyCorrection(const pandora::Pandora &pandora, const std::string &name,
+    const lc_content::LCSoftwareCompensationParameters &parameters)
+{
+    return PandoraApi::RegisterEnergyCorrectionPlugin(pandora, name, pandora::HADRONIC,
+        new lc_content::LCSoftwareCompensation(parameters));
 }
