@@ -41,7 +41,7 @@ float FragmentRemovalHelper::GetFractionOfCloseHits(const Cluster *const pCluste
             {
                 for (CaloHitList::const_iterator hitIterJ = iterJ->second->begin(), hitIterJEnd = iterJ->second->end(); hitIterJ != hitIterJEnd; ++hitIterJ)
                 {
-                    const float distanceSquared((positionVectorI - (*hitIterJ)->GetPositionVector()).GetMagnitudeSquared());
+                    const float distanceSquared(positionVectorI.GetDistanceSquared((*hitIterJ)->GetPositionVector()));
 
                     if (distanceSquared < distanceThresholdSquared)
                     {
@@ -281,8 +281,7 @@ StatusCode FragmentRemovalHelper::GetClusterContactDetails(const Cluster *const 
             for (CaloHitList::const_iterator hitIterJ = iterJ->second->begin(), hitIterJEnd = iterJ->second->end(); hitIterJ != hitIterJEnd; ++hitIterJ)
             {
                 const CartesianVector &positionJ((*hitIterJ)->GetPositionVector());
-                const CartesianVector positionDifference(positionI - positionJ);
-                const float separationSquared(positionDifference.GetMagnitudeSquared());
+                const float separationSquared(positionI.GetDistanceSquared(positionJ));
 
                 if (separationSquared < separationCutSquared)
                 {
@@ -340,7 +339,7 @@ float FragmentRemovalHelper::GetEMEnergyWeightedLayerSeparation(const Cluster *c
                 const CaloHit *const pCaloHitI(*hIterI);
                 const CartesianVector &positionI(pCaloHitI->GetPositionVector());
 
-                const float distanceSquared((positionI - positionJ).GetMagnitudeSquared()); 
+                const float distanceSquared(positionI.GetDistanceSquared(positionJ));
 
                 if (distanceSquared < closestDistanceSquared)
                 {
@@ -443,7 +442,7 @@ void ClusterContact::HitDistanceComparison(const Cluster *const pDaughterCluster
             {
                 for (CaloHitList::const_iterator hitIterJ = iterJ->second->begin(), hitIterJEnd = iterJ->second->end(); hitIterJ != hitIterJEnd; ++hitIterJ)
                 {
-                    const float distanceSquared((positionVectorI - (*hitIterJ)->GetPositionVector()).GetMagnitudeSquared());
+                    const float distanceSquared(positionVectorI.GetDistanceSquared((*hitIterJ)->GetPositionVector()));
 
                     if (!isCloseHit1 && (distanceSquared < closeHitDistance1Squared))
                         isCloseHit1 = true;

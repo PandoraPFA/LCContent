@@ -94,7 +94,7 @@ float ClusterHelper::GetDistanceToClosestHit(const Cluster *const pClusterI, con
             {
                 for (CaloHitList::const_iterator hitIterJ = iterJ->second->begin(), hitIterJEnd = iterJ->second->end(); hitIterJ != hitIterJEnd; ++hitIterJ)
                 {
-                    const float distanceSquared((positionVectorI - (*hitIterJ)->GetPositionVector()).GetMagnitudeSquared());
+                    const float distanceSquared(positionVectorI.GetDistanceSquared((*hitIterJ)->GetPositionVector()));
 
                     if (distanceSquared < minDistanceSquared)
                     {
@@ -171,7 +171,7 @@ StatusCode ClusterHelper::GetDistanceToClosestCentroid(const Cluster *const pClu
 
             const CartesianVector centroidJ(pClusterJ->GetCentroid(iterJ->first));
 
-            const float distanceSquared((centroidI - centroidJ).GetMagnitudeSquared());
+            const float distanceSquared(centroidI.GetDistanceSquared(centroidJ));
 
             if (distanceSquared < minDistanceSquared)
             {
@@ -212,7 +212,7 @@ StatusCode ClusterHelper::GetClosestIntraLayerDistance(const Cluster *const pClu
         const CartesianVector centroidI(pClusterI->GetCentroid(pseudoLayer));
         const CartesianVector centroidJ(pClusterJ->GetCentroid(pseudoLayer));
 
-        const float distanceSquared((centroidI - centroidJ).GetMagnitudeSquared());
+        const float distanceSquared(centroidI.GetDistanceSquared(centroidJ));
 
         if (distanceSquared < minDistanceSquared)
         {
