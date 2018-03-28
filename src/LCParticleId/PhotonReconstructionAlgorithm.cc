@@ -88,6 +88,10 @@ StatusCode PhotonReconstructionAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitialiseInputClusterListName(inputClusterListName));
     ClusterVector clusterVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateClustersOfInterest(clusterVector));
+    
+    if (clusterVector.empty())
+      return STATUS_CODE_SUCCESS;
+    
     TrackVector trackVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetTrackVectors(trackVector));
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
@@ -150,8 +154,8 @@ StatusCode PhotonReconstructionAlgorithm::CreateClustersOfInterest(ClusterVector
 
     if (pPhotonClusterList->empty())
     {
-        std::cout << "PhotonReconstructionAlgorithm::CreateRegionsOfInterests no photon candidates avaiable, no regions of interests are created" << std::endl;
-        return STATUS_CODE_INVALID_PARAMETER;
+        std::cout << "PhotonReconstructionAlgorithm::CreateRegionsOfInterests - no photon candidates available, no regions of interests created." << std::endl;
+        return STATUS_CODE_SUCCESS;
     }
 
     // Fragmentation can only proceed with reference to a saved cluster list, so save these temporary clusters
