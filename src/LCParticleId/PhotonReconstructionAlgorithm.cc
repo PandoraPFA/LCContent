@@ -89,7 +89,7 @@ StatusCode PhotonReconstructionAlgorithm::Run()
     ClusterVector clusterVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateClustersOfInterest(clusterVector));
     
-    if(clusterVector.empty())
+    if (clusterVector.empty())
       return STATUS_CODE_SUCCESS;
     
     TrackVector trackVector;
@@ -154,7 +154,7 @@ StatusCode PhotonReconstructionAlgorithm::CreateClustersOfInterest(ClusterVector
 
     if (pPhotonClusterList->empty())
     {
-        std::cout << "PhotonReconstructionAlgorithm::CreateRegionsOfInterests no photon candidates avaiable, no regions of interests are created" << std::endl;
+        std::cout << "PhotonReconstructionAlgorithm::CreateRegionsOfInterests - no photon candidates available, no regions of interests created." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
