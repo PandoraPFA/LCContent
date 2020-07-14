@@ -1,28 +1,37 @@
 language: cpp
 
 sudo: required
-dist: trusty
+dist: eoan
 
 services:
   - docker
 
-env:
-  matrix:
-    - COMPILER=g++
-    - COMPILER=clang
+matrix:
+  include:
+    - os: linux
+      env: MATRIX_EVAL="COMPILER=g++-7"
+
+    - os: linux
+      env: MATRIX_EVAL="COMPILER=clang-8"
 
 before_install:
-  - docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa:latest /bin/bash
-  - if [[ "${TRAVIS_EVENT_TYPE}" == "cron" && "${COMPILER}" == "g++" ]]; then
-        export COVERITY_BUILD=true;
+  - eval "${MATRIX_EVAL}"
+  - if [[ ${TRAVIS_EVENT_TYPE} == cron && ${COMPILER} == g++* ]]; then
+        export CRON_GCC_BUILD=true;
         export COVERITY_DESC=`date`;
         export COVERITY_REPO=`echo ${TRAVIS_REPO_SLUG} | sed 's/\//\%2F/g'`;
     else
-        export COVERITY_BUILD=false;
+        export CRON_GCC_BUILD=false;
+    fi
+  - if [[ "${CRON_GCC_BUILD}" == true ]]; then
+      docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+      docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" -e "CODECOV_TOKEN=$CODECOV_TOKEN" pandorapfa/pandorapfa_c17:latest /bin/bash;
+    else
+      docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa_c17:latest /bin/bash;
     fi
 
 install:
-  - if [[ "${COVERITY_BUILD}" == true ]]; then
+  - if [[ "${CRON_GCC_BUILD}" == true ]]; then
         echo "Downloading Coverity Scan tool...";
         wget https://scan.coverity.com/download/linux64 --post-data "token=${COVERITY_SCAN_TOKEN}&project=${COVERITY_REPO}" --no-check-certificate -O ./coverity_tool.tgz; mkdir cov-analysis-linux64; tar -xf coverity_tool.tgz -C cov-analysis-linux64 --strip-components=1 > /dev/null 2>&1;
     fi
@@ -31,15 +40,14 @@ install:
   - docker exec -it pandora /bin/bash -c "source install_pandora_monitoring.sh"
 
 script:
-  - if [[ "${COVERITY_BUILD}" == true ]]; then
+  - if [[ "${CRON_GCC_BUILD}" == true ]]; then
         docker exec -it pandora /bin/bash -c "cd /pandora/package && source /pandora/build_lccontent.sh coverity";
+        curl --form token=${COVERITY_SCAN_TOKEN} --form email=${COVERITY_TARGET_EMAIL} --form file=@build/coverity_build.tgz --form version="master" --form description="${COVERITY_DESC}" https://scan.coverity.com/builds?project=${COVERITY_REPO};
+        docker exec -it pandora /bin/bash -c "cd /pandora/package && rm -rf build && source /pandora/build_lccontent.sh";
     elif [[ "${TRAVIS_EVENT_TYPE}" == "cron" ]]; then
         echo "Coverity does not use this build";
-    else 
+    else
         docker exec -it pandora /bin/bash -c "cd /pandora/package && source /pandora/build_lccontent.sh";
-    fi
-  - if [[ "${COVERITY_BUILD}" == true ]]; then
-      curl --form token=${COVERITY_SCAN_TOKEN} --form email=${COVERITY_TARGET_EMAIL} --form file=@build/coverity_build.tgz --form version="master" --form description="${COVERITY_DESC}" https://scan.coverity.com/builds?project=${COVERITY_REPO};
     fi
 
 notifications:
