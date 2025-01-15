@@ -175,7 +175,8 @@ void LCPseudoLayerPlugin::StoreLayerPositions()
     if ((m_barrelLayerPositions.end() != barrelIter) || (m_endCapLayerPositions.end() != endcapIter))
     {
         std::cout << "LCPseudoLayerPlugin: Duplicate layer position detected." << std::endl;
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+        // FIXME:  AD: for the ALLEGRO HCAL ENDCAP we have different layers with the same inner radius -> for the moment throwing the exception is disabled...
+        // throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 }
 
@@ -211,8 +212,9 @@ void LCPseudoLayerPlugin::StoreDetectorOuterEdge()
         std::fabs(pGeometryManager->GetSubDetector(HCAL_ENDCAP).GetOuterZCoordinate()),
         std::fabs(pGeometryManager->GetSubDetector(MUON_ENDCAP).GetOuterZCoordinate())) ));
 
-    if ((m_barrelLayerPositions.end() != std::upper_bound(m_barrelLayerPositions.begin(), m_barrelLayerPositions.end(), m_barrelEdgeR)) ||
-        (m_endCapLayerPositions.end() != std::upper_bound(m_endCapLayerPositions.begin(), m_endCapLayerPositions.end(), m_endCapEdgeZ)))
+    if ((m_barrelLayerPositions.end() != std::upper_bound(m_barrelLayerPositions.begin(), m_barrelLayerPositions.end(), m_barrelEdgeR)) )
+// FIXME: AD: why this line is checking if all layers inner radii are lower than endcap outter z coordinate??? ALLEGRO detector can not satisfy this -> disabled 
+// || (m_endCapLayerPositions.end() != std::upper_bound(m_endCapLayerPositions.begin(), m_endCapLayerPositions.end(), m_endCapEdgeZ)))
     {
         std::cout << "LCPseudoLayerPlugin: Layers specified outside detector edge." << std::endl;
         throw StatusCodeException(STATUS_CODE_FAILURE);
