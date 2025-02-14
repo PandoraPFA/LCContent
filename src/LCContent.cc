@@ -51,6 +51,7 @@
 #include "LCPlugins/LCEnergyCorrectionPlugins.h"
 #include "LCPlugins/LCParticleIdPlugins.h"
 #include "LCPlugins/LCPseudoLayerPlugin.h"
+#include "LCPlugins/ALLEGROPseudoLayerPlugin.h"
 #include "LCPlugins/LCShowerProfilePlugin.h"
 #include "LCPlugins/LCSoftwareCompensation.h"
 
@@ -216,7 +217,9 @@ pandora::StatusCode LCContent::RegisterBasicPlugins(const pandora::Pandora &pand
     LC_ENERGY_CORRECTION_LIST(PANDORA_REGISTER_ENERGY_CORRECTION);
     LC_PARTICLE_ID_LIST(PANDORA_REGISTER_PARTICLE_ID);
 
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, new lc_content::LCPseudoLayerPlugin));
+    // GM: can we decide the pseudolayer plugin to use at runtime via the xml pandora config?
+    // PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, new lc_content::LCPseudoLayerPlugin));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, new allegro_content::ALLEGROPseudoLayerPlugin));
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetShowerProfilePlugin(pandora, new lc_content::LCShowerProfilePlugin));
 
     return pandora::STATUS_CODE_SUCCESS;
