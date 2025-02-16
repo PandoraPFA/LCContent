@@ -212,14 +212,18 @@ pandora::StatusCode LCContent::RegisterAlgorithms(const pandora::Pandora &pandor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode LCContent::RegisterBasicPlugins(const pandora::Pandora &pandora)
+pandora::StatusCode LCContent::RegisterBasicPlugins(const pandora::Pandora &pandora, const std::string detectorName)
 {
     LC_ENERGY_CORRECTION_LIST(PANDORA_REGISTER_ENERGY_CORRECTION);
     LC_PARTICLE_ID_LIST(PANDORA_REGISTER_PARTICLE_ID);
 
-    // GM: can we decide the pseudolayer plugin to use at runtime via the xml pandora config?
-    // PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, new lc_content::LCPseudoLayerPlugin));
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, new allegro_content::ALLEGROPseudoLayerPlugin));
+    if (detectorName == "ALLEGRO")
+    {
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, new allegro_content::ALLEGROPseudoLayerPlugin));
+    }
+    else {
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, new lc_content::LCPseudoLayerPlugin));
+    }
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetShowerProfilePlugin(pandora, new lc_content::LCShowerProfilePlugin));
 
     return pandora::STATUS_CODE_SUCCESS;
