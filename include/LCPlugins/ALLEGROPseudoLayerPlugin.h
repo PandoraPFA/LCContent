@@ -1,8 +1,8 @@
 /**
  *  @file   LCContent/include/LCPlugins/ALLEGROPseudoLayerPlugin.h
- * 
+ *
  *  @brief  Header file for the ALLEGRO pseudo layer plugin class.
- * 
+ *
  *  @author Giovanni Marchiori
  */
 #ifndef ALLEGRO_PSEUDO_LAYER_PLUGIN_H
@@ -33,7 +33,7 @@ private:
 
     /**
      *  @brief  Get the appropriate pseudolayer for a specified parameters
-     * 
+     *
      *  @param  rCoordinate the radial coordinate
      *  @param  zCoordinate the z coordinate
      *  @param  rCorrection the barrel/endcap overlap r correction
@@ -42,14 +42,14 @@ private:
      *  @param  endCapInnerZ the endcap inner z coordinate
      *  @param  pseudoLayer to receive the appropriate pseudolayer
      */
-    pandora::StatusCode GetPseudoLayer(const float rCoordinate, const float zCoordinate, const float rCorrection, const float zCorrection, 
+    pandora::StatusCode GetPseudoLayer(const float rCoordinate, const float zCoordinate, const float rCorrection, const float zCorrection,
         const float barrelInnerR, const float endCapInnerZ, unsigned int &pseudoLayer) const;
 
     typedef std::vector<float> LayerPositionList;
 
     /**
      *  @brief  Find the layer number corresponding to a specified position, via reference to a specified layer position list
-     * 
+     *
      *  @param  position the specified position
      *  @param  layerPositionList the specified layer position list
      *  @param  layer to receive the layer number
@@ -63,7 +63,7 @@ private:
 
     /**
      *  @brief  Store subdetector layer positions upon initialization
-     * 
+     *
      *  @param  subDetector the sub detector
      *  @param  layerParametersList the layer parameters list
      */
@@ -86,11 +86,12 @@ private:
     LayerPositionList m_ecalBarrelLayerRadii;       ///< List of radial positions of the ECAL barrel layers
     int m_ecalBarrelNLayers;                        ///< Number of ECAL barrel layers
 
+    float m_ecalEndCapInnerZ;                       ///< Minimum z of ECAL endcap (added temporarily until we get info about endcap layers)
     float m_ecalEndCapInnerR;                       ///< Minimum r of ECAL endcap
-    float  m_ecalEndCapOuterR;                      ///< Maximum r of ECAL endcap
+    float m_ecalEndCapOuterR;                       ///< Maximum r of ECAL endcap
     LayerPositionList m_ecalEndCapLayerZ;           ///< List of z positions of the ECAL endcap layers
     int m_ecalEndCapNLayers;                        ///< Number of ECAL endcap layers
-  
+
     float m_hcalBarrelOuterZ;                       ///< Maximum z of HCAL barrel
     LayerPositionList m_hcalBarrelLayerRadii;       ///< List of radial positions of the HCAL barrel layers
     int m_hcalBarrelNLayers;                        ///< Number of ECAL barrel layers

@@ -14,6 +14,8 @@
 
 #include <list>
 
+const bool debug = true;
+
 using namespace pandora;
 
 namespace lc_content
@@ -68,8 +70,12 @@ StatusCode ConeClusteringAlgorithm::Run()
     const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
-    if (pCaloHitList->empty())
+    if (pCaloHitList->empty()) {
+        if (debug) {
+            std::cout << "ConeClustering: input hit list is empty, nothing to be done" << std::endl;
+        }
         return STATUS_CODE_SUCCESS;
+    }
 
     const TrackList *pTrackList = nullptr;
     if (0 != m_clusterSeedStrategy)
@@ -109,7 +115,13 @@ StatusCode ConeClusteringAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindHitsInSameLayer(pseudoLayer, relevantCaloHits, clusterFitResultMap, clusterVector));
     }
 
+    if (debug) {
+        std::cout << "ConeClusteringAlgorithm: found " << clusterVector.size() << " clusters" << std::endl;
+    }
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveEmptyClusters(clusterVector));
+    if (debug) {
+        std::cout << "ConeClusteringAlgorithm: number of cluster after removing empty clusters: " << clusterVector.size() << std::endl;
+    }
 
     //reset our kd trees and maps if everything turned out well
     m_tracksKdTree.clear();
@@ -152,9 +164,16 @@ StatusCode ConeClusteringAlgorithm::SeedClustersWithTracks(const TrackList *cons
     if (0 == m_clusterSeedStrategy)
         return STATUS_CODE_SUCCESS;
 
+    if (debug) {
+      std::cout << "ConeClusteringAlgorithm: seeding clusters with tracks" << std::endl;
+    }
     // if we are known to be seeding with tracks we must have a track list
-    if (nullptr == pTrackList)
+    if (nullptr == pTrackList) {
+        if (debug) {
+            std::cout << "ConeClusteringAlgorithm: no track list available" << std::endl;
+        }
         return STATUS_CODE_FAILURE;
+    }
 
     for (TrackList::const_iterator iter = pTrackList->begin(), iterEnd = pTrackList->end(); iter != iterEnd; ++iter)
     {
@@ -184,7 +203,9 @@ StatusCode ConeClusteringAlgorithm::SeedClustersWithTracks(const TrackList *cons
             m_tracksToClusters.emplace(pTrack,pCluster);
         }
     }
-
+    if (debug) {
+        std::cout << "ConeClusteringAlgorithm: found " << m_tracksToClusters.size() << " track seeds" << std::endl;
+    }
     return STATUS_CODE_SUCCESS;
 }
 

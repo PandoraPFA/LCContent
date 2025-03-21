@@ -19,6 +19,8 @@
 
 using namespace pandora;
 
+const bool debug = true;
+
 // setup templates for tracking track:pseudolayer pair
 namespace std
 {
@@ -94,14 +96,28 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
     std::vector<HitKDNode> found_hits;
 
     // Look to make new associations
+    if (debug) {
+      std::cout << "Looping over tracks"  << std::endl;
+    }
     for (const Track *const pTrack : trackVector)
     {
+        if (debug) {
+            std::cout << "Processing new track" << std::endl; 
+        }
         // Use only tracks that can be used to form a pfo
-        if (!pTrack->CanFormPfo())
+        if (!pTrack->CanFormPfo()) {
+            if (debug) {
+                std::cout << "Track cannot form PFO, skipping" << std::endl;
+            }
             continue;
+        }
 
-        if (!pTrack->GetDaughterList().empty())
+        if (!pTrack->GetDaughterList().empty()) {
+            if (debug) {
+                std::cout << "Track daughter list is empty, skipping" << std::endl;
+            }
             continue;
+        }
 
         const Cluster *pBestCluster = nullptr;
         const Cluster *pBestLowEnergyCluster = nullptr;
@@ -116,19 +132,25 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
         const LCTrack* lcTrack = dynamic_cast<const LCTrack*>(pTrack);
         if( lcTrack )
         {
+            if (debug) {
+                std::cout << "Successfully cast track to LCTrack, reading track states" << std::endl;
+            }
             trackStates = lcTrack->GetTrackStates();
         }
         else
         {
+            if (debug) {
+                std::cout << "Creating track state at calo from GetTrackStateAtCalorimeter()" << std::endl;
+            }
             const TrackState &trackState(pTrack->GetTrackStateAtCalorimeter());
             trackStates.push_back( trackState );
         }
 
+        // GM: why for all track states - even those not at calo?
         for (auto const& trackState : trackStates)
         {
 
             const CartesianVector &trackPosition(trackState.GetPosition());
-
 
             // short circuit this loop with a kd-tree search beforehand
             // iterating over a std::map is expensive, avoid where possible
@@ -167,11 +189,17 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
                 }
             }
 
+            if (debug) {
+                std::cout << "Found " << nearby_clusters.size() << " nearby clusters for given track state. Sorting by n(hits)" << std::endl;
+            }
             ClusterList nearbyClusterList(nearby_clusters.begin(), nearby_clusters.end());
             nearbyClusterList.sort(SortingHelper::SortClustersByNHits);
             nearby_clusters.clear();
 
             // Identify the closest cluster and also the closest cluster below a specified hadronic energy threshold
+            if (debug) {
+                std::cout << "Finding closest cluster, and closest cluster below given hadronic energy threshold" << std::endl;
+            }
             for (const Cluster *const pCluster : nearbyClusterList)
             {
                 if (0 == pCluster->GetNCaloHits())
@@ -207,15 +235,22 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
             } // for all clusters
         } //for all trackStates
 
+
         // Apply a final track-cluster association distance cut
         const Cluster *pMatchedCluster = nullptr;
 
         if (nullptr != pBestCluster)
         {
+            if (debug) {
+                std::cout << "Found a high energy best matched cluster" << std::endl;
+            }
             pMatchedCluster = pBestCluster;
         }
         else if (nullptr != pBestLowEnergyCluster)
         {
+            if (debug) {
+                std::cout << "Found a low energy best matched cluster" << std::endl;
+            }
             pMatchedCluster = pBestLowEnergyCluster;
         }
 

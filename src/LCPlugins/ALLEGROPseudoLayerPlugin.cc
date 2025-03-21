@@ -1,8 +1,8 @@
 /**
  *  @file   LCContent/src/LCPlugins/ALLEGROPseudoLayerPlugin.cc
- * 
+ *
  *  @brief  Implementation of the ALLEGRO pseudo layer plugin class.
- * 
+ *
  *  @author Giovanni Marchiori
  */
 
@@ -18,6 +18,7 @@ namespace allegro_content
 ALLEGROPseudoLayerPlugin::ALLEGROPseudoLayerPlugin() :
     m_ecalBarrelOuterZ(0.),
     m_ecalBarrelNLayers(0),
+    m_ecalEndCapInnerZ(0.),
     m_ecalEndCapInnerR(0.),
     m_ecalEndCapOuterR(0.),
     m_ecalEndCapNLayers(0),
@@ -79,11 +80,11 @@ unsigned int ALLEGROPseudoLayerPlugin::GetPseudoLayer(const CartesianVector &pos
         std::cout << "Hit coordinates are: " << positionVector << " r: " << r << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-    
+
     if (r < (m_ecalBarrelLayerRadii[0] - tolerance) && z < m_ecalBarrelOuterZ)
     {
-        // Hit is upstream of calo volume, set layer to 0
-        // std::cout << "Hit is beyond muon outer r" << std::endl;
+        // Hit is upstream of calo volume, set layer to 0 (could be track extrapolation)
+        // std::cout << "Hit is upstream of calorimeter" << std::endl;
         // std::cout << "Hit coordinates are: " << positionVector << " r: " << r << std::endl;
         return 0;
     }
@@ -91,8 +92,19 @@ unsigned int ALLEGROPseudoLayerPlugin::GetPseudoLayer(const CartesianVector &pos
     // Reserve a pseudo layer for track projections, etc.
     unsigned int pseudoLayer(1);
 
+    // GM debug code to be removed
+    /*
+    std::cout << " z : " << z << std::endl;
+    std::cout << " m_ecalBarrelOuterZ : " << m_ecalBarrelOuterZ << std::endl;
+    std::cout << " r : " << r << std::endl;
+    std::cout << " m_ecalBarrelLayerRadii[0] " << m_ecalBarrelLayerRadii[0] << std::endl;
+    std::cout << " m_ecalBarrelLayerRadii[m_ecalBarrelNLayers-1] " << m_ecalBarrelLayerRadii[m_ecalBarrelNLayers-1] << std::endl;
+    */
     // ecal barrel
-    if (z < m_ecalBarrelOuterZ && r > (m_ecalBarrelLayerRadii[0]-tolerance) && r < (m_ecalBarrelLayerRadii[m_ecalBarrelNLayers-1]+tolerance))
+    // if (z < m_ecalBarrelOuterZ && r > (m_ecalBarrelLayerRadii[0]-tolerance) && r < (m_ecalBarrelLayerRadii[m_ecalBarrelNLayers-1]+tolerance))
+    // using this instead because the cells at the edge of the barrel are positioned outside of the barrel volume
+    // and thus fail the z < m_ecalBarrelOuterZ check..
+    if (z < m_ecalEndCapInnerZ && r > (m_ecalBarrelLayerRadii[0]-tolerance) && r < (m_ecalBarrelLayerRadii[m_ecalBarrelNLayers-1]+tolerance))
     {
         unsigned int iLayer(0);
         StatusCode statusCode = FindMatchingLayer(r, m_ecalBarrelLayerRadii, iLayer);
@@ -140,7 +152,7 @@ unsigned int ALLEGROPseudoLayerPlugin::GetPseudoLayer(const CartesianVector &pos
     }
 
     // endcaps to be implemented
-    
+
     // if layer not found
     std::cout << "Layer not found" << std::endl;
     std::cout << "Hit coordinates are: " << positionVector << " r: " << r << std::endl;
@@ -154,14 +166,18 @@ unsigned int ALLEGROPseudoLayerPlugin::GetPseudoLayer(const CartesianVector &pos
 StatusCode ALLEGROPseudoLayerPlugin::FindMatchingLayer(const float position, const LayerPositionList &layerPositionList,
                                                        unsigned int &layer) const
 {
+    // GM debug code to be removed
+    // std::cout << "FindMatchingLayer: position = " << position << std::endl;
     const float tolerance = 5e-2; // 50 um
     for (int i=0; i<layerPositionList.size(); i++) {
+        // GM debug code to be removed
+        // std::cout << "FindMatchingLayer: layer = " << i << " position = " << layerPositionList[i] << std::endl;
         if (std::fabs(position - layerPositionList[i]) < tolerance) {
             layer = i;
             return STATUS_CODE_SUCCESS;
         }
     }
-        
+
     layer = -1;
     return STATUS_CODE_NOT_FOUND;
 }
@@ -174,6 +190,8 @@ void ALLEGROPseudoLayerPlugin::StoreLayerPositions()
     // in case we split the HCAL endcap in 3 different subdetectors (at least logically, for pandora)
     // we would then retrieve the subdetectors by name rather than type, unless we use something different
     // than HCAL_ENDCAP for the other two wheels of the EC (like plug and ring?)
+
+    // also for the ECAL endcap we will have to deal properly with the layer information..
 
     // retrieve the layer positions of the various subdetectors
     // GM: check if we get both min and max...
@@ -193,6 +211,7 @@ void ALLEGROPseudoLayerPlugin::StoreLayerPositions()
 
     // retrieve the needed envelope info of the various subdetectors
     m_ecalBarrelOuterZ = pGeometryManager->GetSubDetector(ECAL_BARREL).GetOuterZCoordinate();
+    m_ecalEndCapInnerZ = pGeometryManager->GetSubDetector(ECAL_ENDCAP).GetInnerZCoordinate();
     m_ecalEndCapInnerR = pGeometryManager->GetSubDetector(ECAL_ENDCAP).GetInnerRCoordinate();
     m_ecalEndCapOuterR = pGeometryManager->GetSubDetector(ECAL_ENDCAP).GetOuterRCoordinate();
     m_hcalBarrelOuterZ = pGeometryManager->GetSubDetector(HCAL_BARREL).GetOuterZCoordinate();
@@ -216,6 +235,7 @@ void ALLEGROPseudoLayerPlugin::StoreLayerPositions()
         m_ecalBarrelOuterZ == 0. ||
         m_hcalBarrelOuterZ == 0. ||
         m_muonBarrelOuterZ == 0. ||
+        m_ecalEndCapInnerZ == 0. ||
         m_ecalEndCapInnerR == 0. ||
         m_hcalEndCapInnerR == 0. ||
         m_muonEndCapInnerR == 0. ||
@@ -262,8 +282,8 @@ void ALLEGROPseudoLayerPlugin::StoreDetectorOuterEdge()
         std::fabs(pGeometryManager->GetSubDetector(MUON_ENDCAP).GetOuterZCoordinate())) ));
 
     if ((m_barrelLayerPositions.end() != std::upper_bound(m_barrelLayerPositions.begin(), m_barrelLayerPositions.end(), m_barrelEdgeR)) )
-// FIXME: AD: why this line is checking if all layers inner radii are lower than endcap outter z coordinate??? ALLEGRO detector can not satisfy this -> disabled 
-// || (m_endCapLayerPositions.end() != std::upper_bound(m_endCapLayerPositions.begin(), m_endCapLayerPositions.end(), m_endCapEdgeZ)))
+    // FIXME: AD: why this line is checking if all layers inner radii are lower than endcap outer z coordinate??? ALLEGRO detector can not satisfy this -> disabled
+    // || (m_endCapLayerPositions.end() != std::upper_bound(m_endCapLayerPositions.begin(), m_endCapLayerPositions.end(), m_endCapEdgeZ)))
     {
         std::cout << "ALLEGROPseudoLayerPlugin: Layers specified outside detector edge." << std::endl;
         throw StatusCodeException(STATUS_CODE_FAILURE);

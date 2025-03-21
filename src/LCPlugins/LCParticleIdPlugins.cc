@@ -14,6 +14,8 @@
 
 using namespace pandora;
 
+const bool debug = true;
+
 namespace lc_content
 {
 
@@ -487,20 +489,36 @@ LCParticleIdPlugins::LCMuonId::LCMuonId() :
 
 bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
 {
+    if (debug) {
+        std::cout << "Checking if PFO is a muon" << std::endl;
+    }
+
     // Simple pre-selection cuts
-    if (pCluster->GetInnerPseudoLayer() > m_maxInnerLayer)
+    if (pCluster->GetInnerPseudoLayer() > m_maxInnerLayer) {
+        if (debug) {
+            std::cout << "Cluster inner pseudo layer (" << pCluster->GetInnerPseudoLayer() << ") > maxInnerLayer (" << m_maxInnerLayer << ")" << std::endl;
+        }
         return false;
+    }
 
     const TrackList &trackList(pCluster->GetAssociatedTrackList());
 
-    if (trackList.size() != 1)
+    if (trackList.size() != 1) {
+        if (debug) {
+            std::cout << "Cluster has != 1 associated track" << std::endl;
+        }
         return false;
+    }
 
     // For now only try to identify "high" energy muons
     const Track *const pTrack = *(trackList.begin());
 
-    if (pTrack->GetEnergyAtDca() < m_minTrackEnergy)
+    if (pTrack->GetEnergyAtDca() < m_minTrackEnergy) {
+        if (debug) {
+            std::cout << "Track energy at dca (" << pTrack->GetEnergyAtDca() << ") < minTrackEnergy (" << m_minTrackEnergy << ")" << std::endl;
+        }
         return false;
+    }
 
     // Calculate cut variables
     unsigned int nECalHits(0), nHCalHits(0), nMuonHits(0), nECalMipHits(0), nHCalMipHits(0), nHCalEndCapHits(0), nHCalBarrelHits(0);
@@ -566,18 +584,34 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
     const unsigned int nPseudoLayersECal(pseudoLayersECal.size());
     const unsigned int nPseudoLayersHCal(pseudoLayersHCal.size());
 
-    if ((nPseudoLayersECal < m_minECalLayers) && (layersECal.size() < m_minECalLayers))
+    if ((nPseudoLayersECal < m_minECalLayers) && (layersECal.size() < m_minECalLayers)) {
+        if (debug) {
+            std::cout << "nPseudoLayersECal (" << nPseudoLayersECal << ") and layersECal.size() (" << layersECal.size() << ") are < minECalLayers (" << m_minECalLayers << ")" << std::endl;
+        }
         return false;
-
-    if ((nPseudoLayersHCal < m_minHCalLayers) && (layersHCal.size() < m_minHCalLayers))
-    {
-        if (!m_shouldPerformGapCheck || (nPseudoLayersHCal < m_minHCalLayersForGapCheck) || (nMuonHits < m_minMuonHitsForGapCheck))
-            return false;
-
-        if (!ClusterHelper::DoesClusterCrossGapRegion(this->GetPandora(), pCluster, *(pseudoLayersHCal.begin()), *(pseudoLayersHCal.rbegin())))
-            return false;
     }
 
+    /*
+    if ((nPseudoLayersHCal < m_minHCalLayers) && (layersHCal.size() < m_minHCalLayers))
+    {
+        if (!m_shouldPerformGapCheck || (nPseudoLayersHCal < m_minHCalLayersForGapCheck) || (nMuonHits < m_minMuonHitsForGapCheck)) {
+            if (debug) {
+                std::cout << "nPseudoLayersHCal (" << nPseudoLayersHCal << ") and layersHCal.size() (" << layersHCal.size() << ") are < minHCalLayers (" << m_minHCalLayers << ")" << std::endl
+                          << "and fails gap check" << std::endl;
+            }
+            return false;
+        }
+
+        if (!ClusterHelper::DoesClusterCrossGapRegion(this->GetPandora(), pCluster, *(pseudoLayersHCal.begin()), *(pseudoLayersHCal.rbegin()))) {
+            if (debug) {
+                std::cout << "nPseudoLayersHCal (" << nPseudoLayersHCal << ") and layersHCal.size() (" << layersHCal.size() << ") are < minHCalLayers (" << m_minHCalLayers << ")" << std::endl
+                          << "and cluster does not cross gap region" << std::endl;
+            }
+            return false;
+        }
+    }
+    */
+    
     // Calculate energies per layer
     float energyECalDCos(0.), nHitsPerLayerECal(0.), nHitsPerLayerHCal(0.), mipFractionECal(0.), mipFractionHCal(0.);
 
@@ -601,8 +635,12 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
     const float eCalEnergyCut(m_eCalEnergyCut0 + (m_eCalEnergyCut1 * trackEnergy));
     const float hCalEnergyCut(m_hCalEnergyCut0 + (m_hCalEnergyCut1 * trackEnergy));
 
-    if ((energyECalDCos > eCalEnergyCut) || (energyHCal > hCalEnergyCut))
+    if ((energyECalDCos > eCalEnergyCut) || (energyHCal > hCalEnergyCut)) {
+        if (debug) {
+            std::cout << "Cluster fails loose energy cuts (e,hEnergyCut0 + e,hEnergyCut1*trackEnergy)" << std::endl;
+        }
         return false;
+    }
 
     // Calculate event shape variables for ecal
     float eCalRms(std::numeric_limits<float>::max());
@@ -690,8 +728,11 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
         if (newFitResult.IsFitSuccessful())
             muonRms = newFitResult.GetRms();
     }
-
-    const float maxMuonHitsCut(std::max(m_maxMuonHitsCut0 + (m_maxMuonHitsCut1 * trackEnergy), m_maxMuonHitsCutMinValue));
+     if (debug) {
+        std::cout << "n(muon hits) : " << nMuonHits << std::endl;
+        std::cout << "muon RMS : " << muonRms << std::endl;
+    }
+     const float maxMuonHitsCut(std::max(m_maxMuonHitsCut0 + (m_maxMuonHitsCut1 * trackEnergy), m_maxMuonHitsCutMinValue));
 
     if ((nMuonHits > m_minMuonHitsCut) && (nMuonHits < maxMuonHitsCut))
         nMuonCutsPassed++;
@@ -702,6 +743,12 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
     // Make final decision
     const int nCutsFailed(nECalCutsFailed + nHCalCutsFailed - nMuonCutsPassed);
 
+    if (debug) {
+        std::cout << "Number of failed event shape cuts: " << nCutsFailed << std::endl;
+        std::cout << "- ecal cuts failed: " << nECalCutsFailed << std::endl;
+        std::cout << "- hcal cuts failed: " << nHCalCutsFailed << std::endl;
+        std::cout << "- muon cuts passed: " << nMuonCutsPassed << std::endl;
+    }
     return (nCutsFailed <= 0);
 }
 

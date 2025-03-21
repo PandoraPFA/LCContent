@@ -12,6 +12,8 @@
 
 using namespace pandora;
 
+const bool debug = true;
+
 namespace lc_content
 {
 
@@ -55,6 +57,15 @@ StatusCode EventPreparationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, muonCaloHitList, m_outputMuonCaloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, caloHitList, m_outputCaloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_replacementCaloHitListName));
+
+    if (debug) {
+        std::cout << "EventPreparationAlgorithm:" << std::endl
+                  << "Initial number of tracks: " << pCurrentTrackList->size() << std::endl
+                  << "Tracks for clustering: " << clusteringTrackList.size() << std::endl
+                  << "Initial number of calo hits: " << pCaloHitList->size() << std::endl
+                  << "- ecal/hcal hits: " << caloHitList.size() << std::endl
+                  << "- muon hits: " << muonCaloHitList.size() << std::endl;
+    }
 
     return STATUS_CODE_SUCCESS;
 }

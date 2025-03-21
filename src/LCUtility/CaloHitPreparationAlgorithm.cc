@@ -13,6 +13,8 @@
 
 using namespace pandora;
 
+const bool debug = true;
+
 namespace lc_content
 {
 
@@ -28,7 +30,9 @@ CaloHitPreparationAlgorithm::CaloHitPreparationAlgorithm() :
     m_mipNCellsForNearbyHit(2),
     m_mipMaxNearbyHits(1),
     m_hitNodes4D(new std::vector<HitKDNode4D>),
-    m_hitsKdTree4D(new HitKDTree4D)
+    m_hitsKdTree4D(new HitKDTree4D),
+    m_nIsolatedHits(0),
+    m_nPossibleMipHits(0)
 {
 }
 
@@ -53,7 +57,8 @@ StatusCode CaloHitPreparationAlgorithm::Run()
 
         OrderedCaloHitList orderedCaloHitList;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(*pCaloHitList));
-
+	m_nPossibleMipHits = 0;
+	m_nIsolatedHits = 0;
         for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
         {
             for (CaloHitList::iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
@@ -61,6 +66,13 @@ StatusCode CaloHitPreparationAlgorithm::Run()
                 this->CalculateCaloHitProperties(*hitIter, orderedCaloHitList);
             }
         }
+	if (debug) {
+	  std::cout << "CaloHitPreparationAlgorithm:" << std::endl
+		    << "Initial number of hits: " << pCaloHitList->size() << std::endl
+		    << "Number of hits in ordered calo hit list: " << orderedCaloHitList.size() << std::endl
+		    << "Isolated hits: " << m_nIsolatedHits << std::endl
+		    << "Possible MIP hits : " << m_nPossibleMipHits << std::endl;
+	}
     }
     catch (StatusCodeException &statusCodeException)
     {
@@ -118,6 +130,7 @@ void CaloHitPreparationAlgorithm::CalculateCaloHitProperties(const CaloHit *cons
                 PandoraContentApi::CaloHit::Metadata metadata;
                 metadata.m_isPossibleMip = true;
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
+		m_nPossibleMipHits++;
                 continue;
             }
 
@@ -136,6 +149,7 @@ void CaloHitPreparationAlgorithm::CalculateCaloHitProperties(const CaloHit *cons
                 PandoraContentApi::CaloHit::Metadata metadata;
                 metadata.m_isPossibleMip = true;
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
+		m_nPossibleMipHits++;
             }
         }
     }
@@ -145,6 +159,7 @@ void CaloHitPreparationAlgorithm::CalculateCaloHitProperties(const CaloHit *cons
         PandoraContentApi::CaloHit::Metadata metadata;
         metadata.m_isIsolated = true;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
+	m_nIsolatedHits++;
     }
 }
 
