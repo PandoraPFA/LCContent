@@ -13,8 +13,6 @@
 
 using namespace pandora;
 
-const bool debug = true;
-
 namespace lc_content
 {
 
@@ -66,13 +64,10 @@ StatusCode CaloHitPreparationAlgorithm::Run()
                 this->CalculateCaloHitProperties(*hitIter, orderedCaloHitList);
             }
         }
-	if (debug) {
-	  std::cout << "CaloHitPreparationAlgorithm:" << std::endl
-		    << "Initial number of hits: " << pCaloHitList->size() << std::endl
-		    << "Number of hits in ordered calo hit list: " << orderedCaloHitList.size() << std::endl
-		    << "Isolated hits: " << m_nIsolatedHits << std::endl
-		    << "Possible MIP hits : " << m_nPossibleMipHits << std::endl;
-	}
+        pdebug() << "Initial number of hits: " << pCaloHitList->size() << std::endl;
+        pdebug() << "Number of hits in ordered calo hit list: " << orderedCaloHitList.size() << std::endl;
+        pdebug() << "Isolated hits: " << m_nIsolatedHits << std::endl;
+        pdebug() << "Possible MIP hits : " << m_nPossibleMipHits << std::endl;
     }
     catch (StatusCodeException &statusCodeException)
     {

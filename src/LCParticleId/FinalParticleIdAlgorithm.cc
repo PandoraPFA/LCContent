@@ -12,8 +12,6 @@
 
 using namespace pandora;
 
-const bool debug = true;
-
 namespace lc_content
 {
 
@@ -22,16 +20,13 @@ StatusCode FinalParticleIdAlgorithm::Run()
     const PfoList *pPfoList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pPfoList));
 
-    if (debug) {
-        std::cout << "Number of PFOs: " << pPfoList->size() << std::endl;
-    }
+    pdebug() << "Number of PFOs: " << pPfoList->size() << std::endl;
 
     for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end();
         iter != iterEnd; ++iter)
     {
-        if (debug) {
-            std::cout << "Processing PFO" << std::endl;
-        }
+        pdebug() << "Processing PFO" << std::endl;
+
         const ParticleFlowObject *const pPfo = *iter;
 
         const TrackList &trackList(pPfo->GetTrackList());
@@ -39,25 +34,19 @@ StatusCode FinalParticleIdAlgorithm::Run()
 
         // Consider only pfos with a single cluster and no track sibling relationships
         if ((clusterList.size() != 1) || (trackList.empty()) || this->ContainsSiblingTrack(trackList)) {
-            if (debug) {
-                std::cout << "n(cluster)!=1 or empty track list or contains sibling track, skipping" << std::endl;
-            }
+            pdebug() << "n(cluster)!=1 or empty track list or contains sibling track, skipping" << std::endl;
             continue;
         }
         const int charge(pPfo->GetCharge());
 
         if (0 == charge) {
-            if (debug) {
-                std::cout << "ERROR: charge is zero" << std::endl;
-            }
+            perror() << "charge is zero" << std::endl;
             return STATUS_CODE_FAILURE;
         }
 
         // Ignore particle flow objects already tagged as electrons or muons
         if ((std::abs(pPfo->GetParticleId()) == E_MINUS) || (std::abs(pPfo->GetParticleId()) == MU_MINUS)) {
-            if (debug) {
-                std::cout << "PFO already tagged as electron or muon, skipping" << std::endl;
-            }
+            pdebug() << "PFO already tagged as electron or muon, skipping" << std::endl;
             continue;
         }
 
@@ -69,16 +58,12 @@ StatusCode FinalParticleIdAlgorithm::Run()
 
         if (pParticleId->IsElectron(pCluster))
         {
-            if (debug) {
-                std::cout << "PFO tagged as electron" << std::endl;
-            }
+            pdebug() << "PFO tagged as electron" << std::endl;
             metadata.m_particleId = (charge < 0) ? E_MINUS : E_PLUS;
         }
         else if (pParticleId->IsMuon(pCluster))
         {
-            if (debug) {
-                std::cout << "PFO tagged as muon" << std::endl;
-            }
+            pdebug() << "PFO tagged as muon" << std::endl;
             metadata.m_particleId = (charge < 0) ? MU_MINUS : MU_PLUS;
         }
 

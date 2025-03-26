@@ -12,8 +12,6 @@
 
 #include <algorithm>
 
-const bool debug = true;
-
 using namespace pandora;
 
 namespace lc_content

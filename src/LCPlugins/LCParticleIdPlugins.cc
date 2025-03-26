@@ -14,8 +14,6 @@
 
 using namespace pandora;
 
-const bool debug = true;
-
 namespace lc_content
 {
 
@@ -45,6 +43,7 @@ LCParticleIdPlugins::LCEmShowerId::LCEmShowerId() :
     m_maxHighRadLengthEnergyFraction(0.04f),
     m_maxRadial90(40.f)
 {
+    std::cout << "output level is " << getLogLevel() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -357,39 +356,59 @@ LCParticleIdPlugins::LCElectronId::LCElectronId() :
 
 bool LCParticleIdPlugins::LCElectronId::IsMatch(const Cluster *const pCluster) const
 {
+    pdebug() << "Checking if PFO is an electron" << std::endl;
+
     const TrackList &associatedTrackList(pCluster->GetAssociatedTrackList());
 
-    if (associatedTrackList.empty())
+    if (associatedTrackList.empty()) {
+        pdebug() << "  Associated track list is empty" << std::endl;
         return false;
+    }
 
     const float electromagneticEnergy(pCluster->GetElectromagneticEnergy());
 
     if (!this->GetPandora().GetPlugins()->GetParticleId()->IsEmShower(pCluster) &&
         ((pCluster->GetInnerPseudoLayer() > m_maxInnerLayer) || (electromagneticEnergy > m_maxEnergy)))
     {
+        pdebug() << "  PFO is not classified as EM shower and (inner peudo layer > max inner layer or EM energy > max energy)" << std::endl;
+        pdebug() << "  - isEMShower: " << (this->GetPandora().GetPlugins()->GetParticleId()->IsEmShower(pCluster)) << std::endl;
+        pdebug() << "  - inner layer: " << pCluster->GetInnerPseudoLayer() << " , max inner layer: " << m_maxInnerLayer << std::endl;
+        pdebug() << "  - EM energy: " << electromagneticEnergy << " , max energy: " << m_maxEnergy << std::endl;
         return false;
     }
 
     const float showerProfileStart(pCluster->GetShowerProfileStart(this->GetPandora()));
     const float showerProfileDiscrepancy(pCluster->GetShowerProfileDiscrepancy(this->GetPandora()));
 
-    if ((showerProfileStart > m_maxProfileStart) || (showerProfileDiscrepancy > m_maxProfileDiscrepancy))
+    if ((showerProfileStart > m_maxProfileStart) || (showerProfileDiscrepancy > m_maxProfileDiscrepancy)) {
+        pdebug() << "  PFO fails shower profile criteria" << std::endl;
         return false;
+    }
 
     if (showerProfileDiscrepancy < m_profileDiscrepancyForAutoId)
         return true;
 
+    pdebug() << "  Looping over tracks associated to PFO" << std::endl;
     for (TrackList::const_iterator iter = associatedTrackList.begin(), iterEnd = associatedTrackList.end(); iter != iterEnd; ++iter)
     {
         const float momentumAtDca((*iter)->GetMomentumAtDca().GetMagnitude());
 
-        if (momentumAtDca < std::numeric_limits<float>::epsilon())
+        if (momentumAtDca < std::numeric_limits<float>::epsilon()) {
+            perror() << "    Momentum at DCA is zero" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
 
         const float eOverP(electromagneticEnergy / momentumAtDca);
 
-        if (std::fabs(eOverP - 1.f) < m_maxResidualEOverP)
+        const float eOverPResidual = std::fabs(eOverP - 1.f);
+        if (eOverPResidual < m_maxResidualEOverP) {
+            pdebug() << "    PFO passes all previous requirements and has E/p close to 1 (< maxResidualEOverP)" << std::endl;
             return true;
+        }
+        else {
+            pdebug() << "    E/p too far from one, passing to next track" << std::endl;
+            pdebug() << "    - |E/p-1| : " << eOverPResidual << " , maxResidualEOverP : " << m_maxResidualEOverP << std::endl;
+        }
     }
 
     return false;
@@ -489,24 +508,18 @@ LCParticleIdPlugins::LCMuonId::LCMuonId() :
 
 bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
 {
-    if (debug) {
-        std::cout << "Checking if PFO is a muon" << std::endl;
-    }
+    pdebug() << "Checking if PFO is a muon" << std::endl;
 
     // Simple pre-selection cuts
     if (pCluster->GetInnerPseudoLayer() > m_maxInnerLayer) {
-        if (debug) {
-            std::cout << "Cluster inner pseudo layer (" << pCluster->GetInnerPseudoLayer() << ") > maxInnerLayer (" << m_maxInnerLayer << ")" << std::endl;
-        }
+        pdebug() << "  Cluster inner pseudo layer (" << pCluster->GetInnerPseudoLayer() << ") > maxInnerLayer (" << m_maxInnerLayer << ")" << std::endl;
         return false;
     }
 
     const TrackList &trackList(pCluster->GetAssociatedTrackList());
 
     if (trackList.size() != 1) {
-        if (debug) {
-            std::cout << "Cluster has != 1 associated track" << std::endl;
-        }
+        pdebug() << "  Cluster has != 1 associated track" << std::endl;
         return false;
     }
 
@@ -514,9 +527,7 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
     const Track *const pTrack = *(trackList.begin());
 
     if (pTrack->GetEnergyAtDca() < m_minTrackEnergy) {
-        if (debug) {
-            std::cout << "Track energy at dca (" << pTrack->GetEnergyAtDca() << ") < minTrackEnergy (" << m_minTrackEnergy << ")" << std::endl;
-        }
+        pdebug() << "  Track energy at dca (" << pTrack->GetEnergyAtDca() << ") < minTrackEnergy (" << m_minTrackEnergy << ")" << std::endl;
         return false;
     }
 
@@ -585,9 +596,7 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
     const unsigned int nPseudoLayersHCal(pseudoLayersHCal.size());
 
     if ((nPseudoLayersECal < m_minECalLayers) && (layersECal.size() < m_minECalLayers)) {
-        if (debug) {
-            std::cout << "nPseudoLayersECal (" << nPseudoLayersECal << ") and layersECal.size() (" << layersECal.size() << ") are < minECalLayers (" << m_minECalLayers << ")" << std::endl;
-        }
+        pdebug() << "nPseudoLayersECal (" << nPseudoLayersECal << ") and layersECal.size() (" << layersECal.size() << ") are < minECalLayers (" << m_minECalLayers << ")" << std::endl;
         return false;
     }
 
@@ -636,9 +645,7 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
     const float hCalEnergyCut(m_hCalEnergyCut0 + (m_hCalEnergyCut1 * trackEnergy));
 
     if ((energyECalDCos > eCalEnergyCut) || (energyHCal > hCalEnergyCut)) {
-        if (debug) {
-            std::cout << "Cluster fails loose energy cuts (e,hEnergyCut0 + e,hEnergyCut1*trackEnergy)" << std::endl;
-        }
+        pdebug() << "Cluster fails loose energy cuts (e,hEnergyCut0 + e,hEnergyCut1*trackEnergy)" << std::endl;
         return false;
     }
 
@@ -728,11 +735,10 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
         if (newFitResult.IsFitSuccessful())
             muonRms = newFitResult.GetRms();
     }
-     if (debug) {
-        std::cout << "n(muon hits) : " << nMuonHits << std::endl;
-        std::cout << "muon RMS : " << muonRms << std::endl;
-    }
-     const float maxMuonHitsCut(std::max(m_maxMuonHitsCut0 + (m_maxMuonHitsCut1 * trackEnergy), m_maxMuonHitsCutMinValue));
+    pdebug() << "n(muon hits) : " << nMuonHits << std::endl;
+    pdebug() << "muon RMS : " << muonRms << std::endl;
+
+    const float maxMuonHitsCut(std::max(m_maxMuonHitsCut0 + (m_maxMuonHitsCut1 * trackEnergy), m_maxMuonHitsCutMinValue));
 
     if ((nMuonHits > m_minMuonHitsCut) && (nMuonHits < maxMuonHitsCut))
         nMuonCutsPassed++;
@@ -743,12 +749,11 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
     // Make final decision
     const int nCutsFailed(nECalCutsFailed + nHCalCutsFailed - nMuonCutsPassed);
 
-    if (debug) {
-        std::cout << "Number of failed event shape cuts: " << nCutsFailed << std::endl;
-        std::cout << "- ecal cuts failed: " << nECalCutsFailed << std::endl;
-        std::cout << "- hcal cuts failed: " << nHCalCutsFailed << std::endl;
-        std::cout << "- muon cuts passed: " << nMuonCutsPassed << std::endl;
-    }
+    pdebug() << "Number of failed event shape cuts: " << nCutsFailed << std::endl;
+    pdebug() << "- ecal cuts failed: " << nECalCutsFailed << std::endl;
+    pdebug() << "- hcal cuts failed: " << nHCalCutsFailed << std::endl;
+    pdebug() << "- muon cuts passed: " << nMuonCutsPassed << std::endl;
+
     return (nCutsFailed <= 0);
 }
 
