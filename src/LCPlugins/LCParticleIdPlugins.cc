@@ -43,7 +43,6 @@ LCParticleIdPlugins::LCEmShowerId::LCEmShowerId() :
     m_maxHighRadLengthEnergyFraction(0.04f),
     m_maxRadial90(40.f)
 {
-    std::cout << "output level is " << getLogLevel() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
