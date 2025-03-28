@@ -49,9 +49,13 @@ LCParticleIdPlugins::LCEmShowerId::LCEmShowerId() :
 
 bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) const
 {
+    pdebug() << "Checking if PFO is an EM shower" << std::endl;
+
     // Reject clusters starting outside inner fine granularity detectors
-    if (this->GetPandora().GetGeometry()->GetHitTypeGranularity(pCluster->GetInnerLayerHitType()) > FINE)
+    if (this->GetPandora().GetGeometry()->GetHitTypeGranularity(pCluster->GetInnerLayerHitType()) > FINE) {
+        pdebug() << "Granularity of inner layer hit > FINE" << std::endl;
         return false;
+    }
 
     // Cut on cluster mip fraction
     const float totalElectromagneticEnergy(pCluster->GetElectromagneticEnergy() - pCluster->GetIsolatedElectromagneticEnergy());
@@ -75,8 +79,10 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
         mipCut = m_mipCut_4;
     }
 
-    if (pCluster->GetMipFraction() > mipCut)
+    if (pCluster->GetMipFraction() > mipCut) {
+      pdebug() << "MIP fraction of cluster (" << pCluster->GetMipFraction() << ") > threshold (" << mipCut << ")" << std::endl;
         return false;
+    }
 
     // Cut on results of fit to all hits in cluster
     float dCosR(0.f);
@@ -89,16 +95,23 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
         dCosR = clusterFitResult.GetRadialDirectionCosine();
         clusterRms = clusterFitResult.GetRms();
     }
+    else {
+        pdebug() << "Fit of cluster direction unsuccessful" << std::endl;
+    }
 
     const float dCosRCut(totalElectromagneticEnergy < m_dCosRCutEnergy ? m_dCosRLowECut : m_dCosRHighECut);
 
-    if (dCosR < dCosRCut)
+    if (dCosR < dCosRCut) {
+        pdebug() << "Cluster dCosR ("<< dCosR << ") < threshold (" << dCosRCut << ")" << std::endl;
         return false;
+    }
 
     const float rmsCut(totalElectromagneticEnergy < m_rmsCutEnergy ? m_rmsLowECut : m_rmsHighECut);
 
-    if (clusterRms > rmsCut)
+    if (clusterRms > rmsCut) {
+        pdebug() << "Cluster RMS ("<< clusterRms << ") > threshold (" << rmsCut << ")" << std::endl;
         return false;
+    }
 
     const CartesianVector &clusterDirection(pCluster->GetFitToAllHitsResult().IsFitSuccessful() ?
         pCluster->GetFitToAllHitsResult().GetDirection() : pCluster->GetInitialDirection());
@@ -116,6 +129,7 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
     const unsigned int innerPseudoLayer(pCluster->GetInnerPseudoLayer());
     const unsigned int firstPseudoLayer(this->GetPandora().GetPlugins()->GetPseudoLayerPlugin()->GetPseudoLayerAtIp());
 
+    pdebug() << "Looping over pseudolayers of cluster" << std::endl;
     for (unsigned int iLayer = innerPseudoLayer, outerPseudoLayer = pCluster->GetOuterPseudoLayer(); iLayer <= outerPseudoLayer; ++iLayer)
     {
         OrderedCaloHitList::const_iterator iter = orderedCaloHitList.find(iLayer);
@@ -135,6 +149,7 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
         float energyInLayer(0.f);
         float nRadiationLengthsInLayer(0.f);
 
+        pdebug() << "Looping over hits in pseudolayer to calculate energy and average radiation lenghts in layer" << std::endl;
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
             float cosOpeningAngle(std::fabs((*hitIter)->GetCellNormalVector().GetCosOpeningAngle(clusterDirection)));
@@ -158,8 +173,11 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
         {
             nRadiationLengths *= static_cast<float>(innerPseudoLayer + 1 - firstPseudoLayer);
 
-            if (nRadiationLengths > m_maxInnerLayerRadLengths)
+            if (nRadiationLengths > m_maxInnerLayerRadLengths) {
+                pdebug() << "Radiation lengths before the inner layer (" << nRadiationLengths
+                         << ") > threshold (" << m_maxInnerLayerRadLengths << std::endl;
                 return false;
+            }
         }
 
         // Cut on number of radiation lengths before longitudinal layer90
@@ -167,8 +185,11 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
         {
             foundLayer90 = true;
 
-            if ((nRadiationLengths < m_minLayer90RadLengths) || (nRadiationLengths > m_maxLayer90RadLengths))
+            if ((nRadiationLengths < m_minLayer90RadLengths) || (nRadiationLengths > m_maxLayer90RadLengths)) {
+              pdebug() << "Radiation lengths before layer corresponding to 90% of total EM energy (" << nRadiationLengths
+                       << ") not in [ " << m_minLayer90RadLengths << " , " << m_maxLayer90RadLengths << " ]" << std::endl;
                 return false;
+            }
         }
 
         // Identify number of radiation lengths before shower max layer
@@ -186,11 +207,17 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
     }
 
     // Cut on longitudinal shower profile properties
-    if ((showerMaxRadLengths < m_minShowerMaxRadLengths) || (showerMaxRadLengths > m_maxShowerMaxRadLengths))
+    if ((showerMaxRadLengths < m_minShowerMaxRadLengths) || (showerMaxRadLengths > m_maxShowerMaxRadLengths)) {
+        pdebug() << "Maximum of shower longitudinal development divided by X0 ("<< showerMaxRadLengths
+                 << ") not in [ " << m_minShowerMaxRadLengths << " , " << m_maxShowerMaxRadLengths << " ]" << std::endl;
         return false;
-
-    if (energyAboveHighRadLengths > m_maxHighRadLengthEnergyFraction * totalElectromagneticEnergy)
+    }
+    
+    if (energyAboveHighRadLengths > m_maxHighRadLengthEnergyFraction * totalElectromagneticEnergy) {
+        pdebug() << "Energy after m_highRadLengths ("<< energyAboveHighRadLengths
+                 << ") > threshold (" << m_maxHighRadLengthEnergyFraction << "of total EM energy)" << std::endl;
         return false;
+    }
 
     // Cut on transverse shower profile properties
     std::sort(hitEnergyDistanceVector.begin(), hitEnergyDistanceVector.end(), LCEmShowerId::SortHitsByDistance);
@@ -207,8 +234,10 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
         }
     }
 
-    if (radial90 > m_maxRadial90)
+    if (radial90 > m_maxRadial90) {
+        pdebug() << "Transverse width at 90% containment (" << radial90 << ") > threshold (" << m_maxRadial90 << ")" << std::endl;
         return false;
+    }
 
     // Anything remaining at this point is classed as an electromagnetic shower
     return true;
