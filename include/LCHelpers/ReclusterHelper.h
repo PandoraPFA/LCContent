@@ -226,7 +226,8 @@ inline unsigned int ReclusterResult::GetNExcessTrackAssociations() const
 
 inline void ReclusterResult::SetChi(float chi)
 {
-    if (!(m_chi = chi))
+    m_chi = chi;
+    if (!m_chi.IsInitialized())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
@@ -234,7 +235,8 @@ inline void ReclusterResult::SetChi(float chi)
 
 inline void ReclusterResult::SetChi2(float chi2)
 {
-    if (!(m_chi2 = chi2))
+    m_chi2 = chi2;
+    if (!m_chi2.IsInitialized())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
@@ -242,7 +244,8 @@ inline void ReclusterResult::SetChi2(float chi2)
 
 inline void ReclusterResult::SetChiPerDof(float chiPerDof)
 {
-    if (!(m_chiPerDof = chiPerDof))
+    m_chiPerDof = chiPerDof;
+    if (!m_chiPerDof.IsInitialized())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
@@ -250,7 +253,8 @@ inline void ReclusterResult::SetChiPerDof(float chiPerDof)
 
 inline void ReclusterResult::SetChi2PerDof(float chi2PerDof)
 {
-    if (!(m_chi2PerDof = chi2PerDof))
+    m_chi2PerDof = chi2PerDof;
+    if (!m_chi2PerDof.IsInitialized())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
@@ -258,7 +262,8 @@ inline void ReclusterResult::SetChi2PerDof(float chi2PerDof)
 
 inline void ReclusterResult::SetUnassociatedEnergy(float unassociatedEnergy)
 {
-    if (!(m_unassociatedEnergy = unassociatedEnergy))
+    m_unassociatedEnergy = unassociatedEnergy;
+    if (!m_unassociatedEnergy.IsInitialized())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
@@ -266,7 +271,8 @@ inline void ReclusterResult::SetUnassociatedEnergy(float unassociatedEnergy)
 
 inline void ReclusterResult::SetMinTrackAssociationEnergy(float minTrackAssociationEnergy)
 {
-    if (!(m_minTrackAssociationEnergy = minTrackAssociationEnergy))
+    m_minTrackAssociationEnergy = minTrackAssociationEnergy;
+    if (!m_minTrackAssociationEnergy.IsInitialized())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
@@ -274,7 +280,8 @@ inline void ReclusterResult::SetMinTrackAssociationEnergy(float minTrackAssociat
 
 inline void ReclusterResult::SetNExcessTrackAssociations(unsigned int nExcessTrackAssociations)
 {
-    if (!(m_nExcessTrackAssociations = nExcessTrackAssociations))
+    m_nExcessTrackAssociations = nExcessTrackAssociations;
+    if (!m_nExcessTrackAssociations.IsInitialized())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
