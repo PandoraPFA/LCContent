@@ -1,8 +1,8 @@
 /**
  *  @file   LCContent/src/LCUtility/CaloHitPreparationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the calo hit preparation algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -55,8 +55,8 @@ StatusCode CaloHitPreparationAlgorithm::Run()
 
         OrderedCaloHitList orderedCaloHitList;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(*pCaloHitList));
-	m_nPossibleMipHits = 0;
-	m_nIsolatedHits = 0;
+        m_nPossibleMipHits = 0;
+        m_nIsolatedHits = 0;
         for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
         {
             for (CaloHitList::iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
@@ -65,7 +65,7 @@ StatusCode CaloHitPreparationAlgorithm::Run()
             }
         }
         pdebug() << "Initial number of hits: " << pCaloHitList->size() << std::endl;
-        pdebug() << "Number of hits in ordered calo hit list: " << orderedCaloHitList.size() << std::endl;
+        pdebug() << "Size of ordered calo hit list (list of lists of hits up to given pseudoLayer?): " << orderedCaloHitList.size() << std::endl;
         pdebug() << "Isolated hits: " << m_nIsolatedHits << std::endl;
         pdebug() << "Possible MIP hits : " << m_nPossibleMipHits << std::endl;
     }
@@ -80,7 +80,7 @@ StatusCode CaloHitPreparationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CaloHitPreparationAlgorithm::InitializeKDTree(const CaloHitList *const pCaloHitList) 
+void CaloHitPreparationAlgorithm::InitializeKDTree(const CaloHitList *const pCaloHitList)
 {
     m_hitsKdTree4D->clear();
     m_hitNodes4D->clear();
@@ -125,7 +125,7 @@ void CaloHitPreparationAlgorithm::CalculateCaloHitProperties(const CaloHit *cons
                 PandoraContentApi::CaloHit::Metadata metadata;
                 metadata.m_isPossibleMip = true;
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
-		m_nPossibleMipHits++;
+                m_nPossibleMipHits++;
                 continue;
             }
 
@@ -144,7 +144,7 @@ void CaloHitPreparationAlgorithm::CalculateCaloHitProperties(const CaloHit *cons
                 PandoraContentApi::CaloHit::Metadata metadata;
                 metadata.m_isPossibleMip = true;
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
-		m_nPossibleMipHits++;
+                m_nPossibleMipHits++;
             }
         }
     }
@@ -154,8 +154,17 @@ void CaloHitPreparationAlgorithm::CalculateCaloHitProperties(const CaloHit *cons
         PandoraContentApi::CaloHit::Metadata metadata;
         metadata.m_isIsolated = true;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
-	m_nIsolatedHits++;
+        m_nIsolatedHits++;
     }
+
+    pdebug() << "Hit:"
+             << " position = " << pCaloHit->GetPositionVector()
+             << " type = " << pCaloHit->GetHitType()
+             << " region = " << pCaloHit->GetHitRegion()
+             << " pseudolayer = " << pCaloHit->GetPseudoLayer()
+             << " MIP equivalent energy = " << pCaloHit->GetMipEquivalentEnergy()
+             << " isIsolated = " << isIsolated
+             << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

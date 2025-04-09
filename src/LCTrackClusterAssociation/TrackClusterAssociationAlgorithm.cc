@@ -1,8 +1,8 @@
 /**
  *  @file   LCContent/src/LCTrackClusterAssociation/TrackClusterAssociationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the track-cluster association algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -25,7 +25,7 @@ namespace std
     template<>
     struct hash<std::pair<const pandora::Track*,unsigned> >
     {
-        std::size_t operator()(std::pair<const pandora::Track*,unsigned> const& tps) const 
+        std::size_t operator()(std::pair<const pandora::Track*,unsigned> const& tps) const
         {
             std::size_t h1 = std::hash<const pandora::Track*>()(tps.first);
             std::size_t h2 = std::hash<unsigned>()(tps.second);
@@ -97,7 +97,7 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
     pdebug() << "Looping over tracks" << std::endl;
     for (const Track *const pTrack : trackVector)
     {
-        pdebug() << "Processing new track" << std::endl; 
+        pdebug() << "Processing new track" << std::endl;
 
         // Use only tracks that can be used to form a pfo
         if (!pTrack->CanFormPfo()) {
@@ -134,15 +134,18 @@ StatusCode TrackClusterAssociationAlgorithm::Run()
         }
 
         // GM: why for all track states - even those not at calo?
+        pdebug() << "Looping over track states" << std::endl;
         for (auto const& trackState : trackStates)
         {
-
             const CartesianVector &trackPosition(trackState.GetPosition());
+            pdebug() << "Track position: " << trackPosition << std::endl;
 
             // short circuit this loop with a kd-tree search beforehand
             // iterating over a std::map is expensive, avoid where possible
+            pdebug() << "Looping over pseudolayers to search for nearby clusters" << std::endl;
             for (unsigned iPseudoLayer = 0; iPseudoLayer <= m_maxSearchLayer; ++iPseudoLayer)
             {
+                pdebug() << "Pseudolayer: " << iPseudoLayer << std::endl;
                 // save the hash key since we may use it a few times
                 auto hash_key = std::make_pair(pTrack, iPseudoLayer);
                 // see if we have a cached search, otherwise do the search and cache

@@ -1,8 +1,8 @@
 /**
  *  @file   LCContent/src/LCPlugins/LCParticleIdPlugins.cc
- * 
+ *
  *  @brief  Implementation of the lc particle id plugins class.
- * 
+ *
  *  $Log: $
  */
 
@@ -53,6 +53,7 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
 
     // Reject clusters starting outside inner fine granularity detectors
     if (this->GetPandora().GetGeometry()->GetHitTypeGranularity(pCluster->GetInnerLayerHitType()) > FINE) {
+        pdebug() << "Type of inner layer hit is " << pCluster->GetInnerLayerHitType() << std::endl;
         pdebug() << "Granularity of inner layer hit > FINE" << std::endl;
         return false;
     }
@@ -80,7 +81,7 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
     }
 
     if (pCluster->GetMipFraction() > mipCut) {
-      pdebug() << "MIP fraction of cluster (" << pCluster->GetMipFraction() << ") > threshold (" << mipCut << ")" << std::endl;
+        pdebug() << "MIP fraction of cluster (" << pCluster->GetMipFraction() << ") > threshold (" << mipCut << ")" << std::endl;
         return false;
     }
 
@@ -175,7 +176,7 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
 
             if (nRadiationLengths > m_maxInnerLayerRadLengths) {
                 pdebug() << "Radiation lengths before the inner layer (" << nRadiationLengths
-                         << ") > threshold (" << m_maxInnerLayerRadLengths << std::endl;
+                         << ") > threshold (" << m_maxInnerLayerRadLengths << ")" << std::endl;
                 return false;
             }
         }
@@ -186,8 +187,8 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
             foundLayer90 = true;
 
             if ((nRadiationLengths < m_minLayer90RadLengths) || (nRadiationLengths > m_maxLayer90RadLengths)) {
-              pdebug() << "Radiation lengths before layer corresponding to 90% of total EM energy (" << nRadiationLengths
-                       << ") not in [ " << m_minLayer90RadLengths << " , " << m_maxLayer90RadLengths << " ]" << std::endl;
+                pdebug() << "Radiation lengths before layer corresponding to 90% of total EM energy (" << nRadiationLengths
+                         << ") not in [ " << m_minLayer90RadLengths << " , " << m_maxLayer90RadLengths << " ]" << std::endl;
                 return false;
             }
         }
@@ -212,7 +213,7 @@ bool LCParticleIdPlugins::LCEmShowerId::IsMatch(const Cluster *const pCluster) c
                  << ") not in [ " << m_minShowerMaxRadLengths << " , " << m_maxShowerMaxRadLengths << " ]" << std::endl;
         return false;
     }
-    
+
     if (energyAboveHighRadLengths > m_maxHighRadLengthEnergyFraction * totalElectromagneticEnergy) {
         pdebug() << "Energy after m_highRadLengths ("<< energyAboveHighRadLengths
                  << ") > threshold (" << m_maxHighRadLengthEnergyFraction << "of total EM energy)" << std::endl;
@@ -413,8 +414,10 @@ bool LCParticleIdPlugins::LCElectronId::IsMatch(const Cluster *const pCluster) c
         return false;
     }
 
-    if (showerProfileDiscrepancy < m_profileDiscrepancyForAutoId)
+    if (showerProfileDiscrepancy < m_profileDiscrepancyForAutoId) {
+        pdebug() << "    PFO classified as electron since showerProfileDiscrepancy: " << showerProfileDiscrepancy << " is below " << m_profileDiscrepancyForAutoId << std::endl;
         return true;
+    }
 
     pdebug() << "  Looping over tracks associated to PFO" << std::endl;
     for (TrackList::const_iterator iter = associatedTrackList.begin(), iterEnd = associatedTrackList.end(); iter != iterEnd; ++iter)
@@ -648,7 +651,7 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
         }
     }
     */
-    
+
     // Calculate energies per layer
     float energyECalDCos(0.), nHitsPerLayerECal(0.), nHitsPerLayerHCal(0.), mipFractionECal(0.), mipFractionHCal(0.);
 
@@ -756,7 +759,7 @@ bool LCParticleIdPlugins::LCMuonId::IsMatch(const Cluster *const pCluster) const
     int nMuonCutsPassed(0);
 
     if (pseudoLayersMuon.size() > m_minMuonLayersForFit)
-    { 
+    {
         ClusterFitResult newFitResult;
         ClusterFitHelper::FitLayers(pCluster, *pseudoLayersMuon.begin(), *pseudoLayersMuon.rbegin(), newFitResult);
 

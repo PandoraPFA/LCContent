@@ -34,19 +34,22 @@ StatusCode FinalParticleIdAlgorithm::Run()
 
         // Consider only pfos with a single cluster and no track sibling relationships
         if ((clusterList.size() != 1) || (trackList.empty()) || this->ContainsSiblingTrack(trackList)) {
-            pdebug() << "n(cluster)!=1 or empty track list or contains sibling track, skipping" << std::endl;
+            pdebug() << "n(cluster): " << clusterList.size() << std::endl;
+            pdebug() << "track list is empty? " << trackList.empty() << std::endl;
+            pdebug() << "PFO contains sibling track? " << this->ContainsSiblingTrack(trackList) << std::endl;
+            pdebug() << "--> Skipping PFO object" << std::endl;
             continue;
         }
         const int charge(pPfo->GetCharge());
 
         if (0 == charge) {
-            perror() << "charge is zero" << std::endl;
+            perror() << "Charge is zero" << std::endl;
             return STATUS_CODE_FAILURE;
         }
 
         // Ignore particle flow objects already tagged as electrons or muons
         if ((std::abs(pPfo->GetParticleId()) == E_MINUS) || (std::abs(pPfo->GetParticleId()) == MU_MINUS)) {
-            pdebug() << "PFO already tagged as electron or muon, skipping" << std::endl;
+            pdebug() << "Charged PFO already tagged as electron or muon, skipping" << std::endl;
             continue;
         }
 
@@ -58,13 +61,16 @@ StatusCode FinalParticleIdAlgorithm::Run()
 
         if (pParticleId->IsElectron(pCluster))
         {
-            pdebug() << "PFO tagged as electron" << std::endl;
+            pdebug() << "Charged PFO tagged as electron" << std::endl;
             metadata.m_particleId = (charge < 0) ? E_MINUS : E_PLUS;
         }
         else if (pParticleId->IsMuon(pCluster))
         {
-            pdebug() << "PFO tagged as muon" << std::endl;
+            pdebug() << "Charged PFO tagged as muon" << std::endl;
             metadata.m_particleId = (charge < 0) ? MU_MINUS : MU_PLUS;
+        }
+        else {
+            pdebug() << "Charged PFO neither tagged as electron nor muon" << std::endl;
         }
 
         if (metadata.m_particleId.IsInitialized())

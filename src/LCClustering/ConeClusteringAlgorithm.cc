@@ -62,13 +62,15 @@ ConeClusteringAlgorithm::ConeClusteringAlgorithm() :
 
 StatusCode ConeClusteringAlgorithm::Run()
 {
+    pdebug() << "Starting clustering" << std::endl;
+
     m_firstLayer = (PandoraContentApi::GetPlugins(*this)->GetPseudoLayerPlugin()->GetPseudoLayerAtIp());
 
     const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
     if (pCaloHitList->empty()) {
-        pdebug() << "input hit list is empty, nothing to be done" << std::endl;
+        pdebug() << "Input hit list is empty, nothing to be done" << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -87,11 +89,13 @@ StatusCode ConeClusteringAlgorithm::Run()
 
     // do the clustering
     m_hitsToClusters.clear();
+    pdebug() << "Looping over the lists of hits vs pseudolayer" << std::endl;
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         const unsigned int pseudoLayer(iter->first);
+        pdebug() << "Pseudolayer: " << pseudoLayer << std::endl;
+        
         CaloHitVector relevantCaloHits;
-
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
             const CaloHit *const pCaloHit = *hitIter;
