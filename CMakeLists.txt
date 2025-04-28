@@ -15,7 +15,7 @@ project(${LC_CONTENT_LIBRARY_NAME})
 # project version
 set(${PROJECT_NAME}_VERSION_MAJOR 03)
 set(${PROJECT_NAME}_VERSION_MINOR 01)
-set(${PROJECT_NAME}_VERSION_PATCH 07)
+set(${PROJECT_NAME}_VERSION_PATCH 08)
 set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
