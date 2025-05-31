@@ -10,7 +10,7 @@ endif()
 if(NOT LC_CONTENT_LIBRARY_NAME STREQUAL "LCPandoraContent")
     set(LC_CONTENT_LIBRARY_NAME "LCContent")
 endif()
-project(${LC_CONTENT_LIBRARY_NAME})
+project(${LC_CONTENT_LIBRARY_NAME} LANGUAGES CXX)
 
 # project version
 set(${PROJECT_NAME}_VERSION_MAJOR 03)
