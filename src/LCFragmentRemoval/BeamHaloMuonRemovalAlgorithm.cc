@@ -142,7 +142,7 @@ bool BeamHaloMuonRemovalAlgorithm::IsBeamHaloMuon(const pandora::Cluster *const 
     const bool isBeamHaloMuonInertia(this->IsBeamHaloMuonInertia(pCluster));
     bool isBeamHaloMuon(isBeamHaloMuonInertia);
 
-    float sumEnergy(0.f), sumEnergyX(0.f), sumEnergyY(0.f), sumEnergyZ(0.f);
+    float sumEnergy(0.f), sumEnergyZ(0.f);
     float xmin(std::numeric_limits<float>::max()), xmax(-std::numeric_limits<float>::max());
     float ymin(std::numeric_limits<float>::max()), ymax(-std::numeric_limits<float>::max());
     float zmin(std::numeric_limits<float>::max()), zmax(-std::numeric_limits<float>::max());
@@ -161,8 +161,6 @@ bool BeamHaloMuonRemovalAlgorithm::IsBeamHaloMuon(const pandora::Cluster *const 
                 const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
 
                 sumEnergy  += energy;
-                sumEnergyX += energy * hitPosition.GetX();
-                sumEnergyY += energy * hitPosition.GetY();
                 sumEnergyZ += energy * hitPosition.GetZ();
 
                 if (hitPosition.GetX() > xmax)
