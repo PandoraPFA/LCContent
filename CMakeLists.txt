@@ -31,7 +31,7 @@ set(CMAKE_CXX_STANDARD 11 CACHE STRING "")
 # Prevent CMake falls back to the latest standard the compiler does support
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}")
 
 include(CheckCXXCompilerFlag)
 unset(COMPILER_SUPPORTS_CXX_FLAGS CACHE)
