@@ -18,7 +18,7 @@ set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_
 
 include(GNUInstallDirs)
 
-find_package(PandoraSDK 04.00.00 REQUIRED)
+find_package(PandoraSDK 03.00.00 REQUIRED)
 
 if(PANDORA_MONITORING)
     find_package(PandoraMonitoring 03.00.00 REQUIRED)
@@ -43,7 +43,7 @@ endif()
 
 
 file(GLOB_RECURSE LC_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cc")
-file(GLOB_RECURSE headers ${CMAKE_CURRENT_SOURCE_DIR} "include/*.h")
+file(GLOB_RECURSE headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include/*.h")
 
 add_library(${PROJECT_NAME} SHARED ${LC_CONTENT_SRCS})
 target_sources(${PROJECT_NAME} PUBLIC FILE_SET headers TYPE HEADERS BASE_DIRS "include" FILES ${headers})
@@ -58,13 +58,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-if(TARGET PandoraPFA::PandoraMonitoring)
-    target_link_libraries(${PROJECT_NAME} PUBLIC PandoraPFA::PandoraMonitoring)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -DMONITORING ${PandoraMonitoring_DEFINITIONS})
-else()
-    include_directories(${PandoraMonitoring_INCLUDE_DIRS})
-    link_libraries(${PandoraMonitoring_LIBRARIES})
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -DMONITORING ${PandoraMonitoring_DEFINITIONS})
+if(PANDORA_MONITORING)
+  if(TARGET PandoraPFA::PandoraMonitoring)
+      target_link_libraries(${PROJECT_NAME} PUBLIC PandoraPFA::PandoraMonitoring)
+      target_compile_definitions(${PROJECT_NAME} PRIVATE -DMONITORING ${PandoraMonitoring_DEFINITIONS})
+  else()
+      include_directories(${PandoraMonitoring_INCLUDE_DIRS})
+      link_libraries(${PandoraMonitoring_LIBRARIES})
+      target_compile_definitions(${PROJECT_NAME} PRIVATE -DMONITORING ${PandoraMonitoring_DEFINITIONS})
+  endif()
 endif()
 
 option(LCContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
