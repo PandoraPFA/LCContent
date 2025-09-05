@@ -47,7 +47,12 @@ file(GLOB_RECURSE headers ${CMAKE_CURRENT_SOURCE_DIR} "include/*.h")
 
 add_library(${PROJECT_NAME} SHARED ${LC_CONTENT_SRCS})
 target_sources(${PROJECT_NAME} PUBLIC FILE_SET headers TYPE HEADERS BASE_DIRS "include" FILES ${headers})
-target_link_libraries(${PROJECT_NAME} PUBLIC PandoraPFA::PandoraSDK)
+if(TARGET PandoraPFA::PandoraSDK)
+  target_link_libraries(${PROJECT_NAME} PUBLIC PandoraPFA::PandoraSDK)
+else()
+  include_directories(${PandoraSDK_INCLUDE_DIRS})
+  link_libraries(${PandoraSDK_LIBRARIES})
+endif()
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
