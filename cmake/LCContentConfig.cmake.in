@@ -24,9 +24,8 @@
 # @author Jan Engels, Desy
 ##############################################################################
 
-SET( LCContent_ROOT "@CMAKE_INSTALL_PREFIX@" )
+set_and_check(LCContent_ROOT "@CMAKE_INSTALL_PREFIX@")
 SET( LCContent_VERSION "@LCContent_VERSION@" )
-
 
 # ---------- include dirs -----------------------------------------------------
 # do not store find results in cache
@@ -39,27 +38,12 @@ FIND_PATH( LCContent_INCLUDE_DIRS
 	NO_DEFAULT_PATH
 )
 
-
-
-# ---------- libraries --------------------------------------------------------
-INCLUDE( "@PANDORA_CMAKE_MODULES_PATH@/MacroCheckPackageLibs.cmake" )
-
 # only standard libraries should be passed as arguments to CHECK_PACKAGE_LIBS
 # additional components are set by cmake in variable PKG_FIND_COMPONENTS
 # first argument should be the package name
 CHECK_PACKAGE_LIBS( LCContent LCContent )
 
 
-
-
-# ---------- libraries dependencies -------------------------------------------
-# this sets LCContent_${COMPONENT}_LIB_DEPENDS variables
-INCLUDE( "${LCContent_ROOT}/lib/cmake/LCContentLibDeps.cmake" )
- 
-
-
-
-# ---------- final checking ---------------------------------------------------
 INCLUDE( FindPackageHandleStandardArgs )
 # set LCCONTENTNEW_FOUND to TRUE if all listed variables are TRUE and not empty
 # LCContent_COMPONENT_VARIABLES will be set if FIND_PACKAGE is called with REQUIRED argument
