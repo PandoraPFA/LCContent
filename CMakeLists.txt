@@ -61,12 +61,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 if(PANDORA_MONITORING)
   if(TARGET PandoraPFA::PandoraMonitoring)
       target_link_libraries(${PROJECT_NAME} PUBLIC PandoraPFA::PandoraMonitoring)
-      target_compile_definitions(${PROJECT_NAME} PRIVATE -DMONITORING ${PandoraMonitoring_DEFINITIONS})
   else()
       include_directories(${PandoraMonitoring_INCLUDE_DIRS})
       link_libraries(${PandoraMonitoring_LIBRARIES})
-      target_compile_definitions(${PROJECT_NAME} PRIVATE -DMONITORING ${PandoraMonitoring_DEFINITIONS})
   endif()
+  target_compile_definitions(${PROJECT_NAME} PRIVATE -DMONITORING ${PandoraMonitoring_DEFINITIONS})
 endif()
 
 option(LCContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
