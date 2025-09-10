@@ -46,6 +46,8 @@ file(GLOB_RECURSE LC_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cc")
 file(GLOB_RECURSE headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include/*.h")
 
 add_library(${PROJECT_NAME} SHARED ${LC_CONTENT_SRCS})
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+set(LCContent_LIBRARIES ${PROJECT_NAME}::${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PUBLIC FILE_SET headers TYPE HEADERS BASE_DIRS "include" FILES ${headers})
 if(TARGET PandoraPFA::PandoraSDK)
   target_link_libraries(${PROJECT_NAME} PUBLIC PandoraPFA::PandoraSDK)
