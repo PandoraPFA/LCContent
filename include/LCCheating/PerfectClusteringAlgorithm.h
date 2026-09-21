@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LCObjects/LCCaloHit.h"
+
 namespace lc_content {
 
 /**
@@ -71,6 +73,8 @@ private:
   bool m_shouldUseIsolatedHits;        ///< Whether to use isolated hits in the clustering algorithm
   bool m_simpleMCParticleCollection;   ///< Whether to use simple mc particle collection mechanism, or full mechanism
   float m_minWeightFraction;           ///< The minimum mc particle calo hit weight for clustering consideration
+
+  LCCaloHitFragmentFactory m_caloHitFragmentFactory; ///< Factory retaining the LCCaloHit type when fragmenting hits
 };
 
 } // namespace lc_content
