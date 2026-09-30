@@ -71,10 +71,6 @@ LCEnergyCorrectionPlugins::ThetaEnergyTable::ThetaEnergyTable(const FloatVector&
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LCEnergyCorrectionPlugins::ThetaEnergyTable::IsInitialized() const { return !m_scaleFactors.empty(); }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 int LCEnergyCorrectionPlugins::ThetaEnergyTable::FindBin(const FloatVector& edges, const float value,
                                                          const bool includeUpperEdge) {
   if (edges.size() < 2)
@@ -121,8 +117,8 @@ void LCEnergyCorrectionPlugins::RegisterThetaEnergyCorrection(const Pandora& pan
   if (!ThetaEnergyTable::IsValid(thetaBinEdges, energyBinEdges, scaleFactors))
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-  GetThetaEnergyCorrectionTableMap()[ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType)] =
-      ThetaEnergyTable(thetaBinEdges, energyBinEdges, scaleFactors);
+  GetThetaEnergyCorrectionTableMap().insert_or_assign(ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType),
+                                                      ThetaEnergyTable(thetaBinEdges, energyBinEdges, scaleFactors));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,7 +200,7 @@ LCEnergyCorrectionPlugins::NonLinearityCorrection::NonLinearityCorrection(
 LCEnergyCorrectionPlugins::NonLinearityCorrection::NonLinearityCorrection(const FloatVector& thetaBinEdges,
                                                                           const FloatVector& energyBinEdges,
                                                                           const FloatVector& scaleFactors)
-    : m_thetaEnergyTable(thetaBinEdges, energyBinEdges, scaleFactors) {}
+    : m_thetaEnergyTable(std::in_place, thetaBinEdges, energyBinEdges, scaleFactors) {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -220,7 +216,7 @@ LCEnergyCorrectionPlugins::NonLinearityCorrection::~NonLinearityCorrection() {
 pandora::StatusCode
 LCEnergyCorrectionPlugins::NonLinearityCorrection::MakeEnergyCorrections(const pandora::Cluster* const pCluster,
                                                                          float& correctedEnergy) const {
-  if (m_thetaEnergyTable.IsInitialized()) {
+  if (m_thetaEnergyTable) {
     if (NULL == pCluster)
       return pandora::STATUS_CODE_SUCCESS;
 
@@ -233,7 +229,7 @@ LCEnergyCorrectionPlugins::NonLinearityCorrection::MakeEnergyCorrections(const p
 
     const float cosTheta(
         std::max(-1.f, std::min(1.f, clusterDirection.GetCosOpeningAngle(CartesianVector(0.f, 0.f, 1.f)))));
-    correctedEnergy *= m_thetaEnergyTable.GetCorrection(std::acos(cosTheta), correctedEnergy);
+    correctedEnergy *= m_thetaEnergyTable->GetCorrection(std::acos(cosTheta), correctedEnergy);
     return pandora::STATUS_CODE_SUCCESS;
   }
 

@@ -10,6 +10,7 @@
 
 #include "Plugins/EnergyCorrectionsPlugin.h"
 
+#include <optional>
 #include <string>
 
 namespace pandora {
@@ -30,11 +31,6 @@ public:
   class ThetaEnergyTable {
   public:
     /**
-     *  @brief  Default constructor, yielding an uninitialised table that applies no correction
-     */
-    ThetaEnergyTable() = default;
-
-    /**
      *  @brief  Constructor
      *
      *  @param  thetaBinEdges the theta bin edges, which must be strictly increasing
@@ -45,11 +41,6 @@ public:
      */
     ThetaEnergyTable(const pandora::FloatVector& thetaBinEdges, const pandora::FloatVector& energyBinEdges,
                      const pandora::FloatVector& scaleFactors);
-
-    /**
-     *  @brief  Whether the table holds a usable binning
-     */
-    bool IsInitialized() const;
 
     /**
      *  @brief  Get the correction factor for a supplied theta and energy
@@ -177,7 +168,7 @@ public:
 
     pandora::FloatVector m_inputEnergyCorrectionPoints; ///< The input energy points for energy correction
     pandora::FloatVector m_energyCorrections;           ///< The energy correction factors
-    ThetaEnergyTable m_thetaEnergyTable;                ///< The theta-energy table, if this is a 2D correction
+    std::optional<ThetaEnergyTable> m_thetaEnergyTable; ///< The theta-energy table, if this is a 2D correction
   };
 
   /**
