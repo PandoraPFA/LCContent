@@ -160,8 +160,8 @@ float LCEnergyCorrectionPlugins::GetThetaEnergyCorrectedEnergy(const Pandora& pa
   if (direction.GetMagnitude() < std::numeric_limits<float>::epsilon())
     return energy;
 
-  const ThetaEnergyCorrectionTableMap& thetaEnergyCorrectionTableMap(GetThetaEnergyCorrectionTableMap());
-  const ThetaEnergyCorrectionTableMap::const_iterator iter(
+  const auto& thetaEnergyCorrectionTableMap(GetThetaEnergyCorrectionTableMap());
+  const auto iter(
       thetaEnergyCorrectionTableMap.find(ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType)));
 
   if (thetaEnergyCorrectionTableMap.end() == iter)
