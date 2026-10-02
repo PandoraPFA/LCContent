@@ -204,7 +204,7 @@ LCEnergyCorrectionPlugins::NonLinearityCorrection::NonLinearityCorrection(const 
 LCEnergyCorrectionPlugins::NonLinearityCorrection::~NonLinearityCorrection() {
   // Discard the theta-energy tables held for this pandora instance. The plugins associated with an instance are all
   // destroyed together, so clearing the instance's tables here leaves nothing behind once the instance goes away.
-  if (NULL != m_pPandora)
+  if (m_pPandora)
     ForgetThetaEnergyCorrections(*m_pPandora);
 }
 
