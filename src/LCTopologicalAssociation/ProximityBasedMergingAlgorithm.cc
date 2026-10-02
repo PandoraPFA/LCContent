@@ -135,7 +135,8 @@ StatusCode ProximityBasedMergingAlgorithm::Run() {
 
         if (m_useThetaEnergyCorrectionForTrackComparison) {
           // Use the parent direction as the merged-cluster direction estimate for this daughter-candidate test. The
-          // same correction is applied once to each energy, so chi and chi0 remain directly comparable.
+          // parent and merged energies are each corrected for their own energy, so the two factors can differ.
+          // chi0 then compares the corrected parent, and chi the corrected merged cluster, against the track energy.
           const CartesianVector& parentDirection(pParentCluster->GetFitToAllHitsResult().IsFitSuccessful()
                                                      ? pParentCluster->GetFitToAllHitsResult().GetDirection()
                                                      : pParentCluster->GetInitialDirection());
