@@ -143,10 +143,7 @@ bool LCEnergyCorrectionPlugins::HasThetaEnergyCorrection(const Pandora& pandora,
   if (name.empty())
     return false;
 
-  const ThetaEnergyCorrectionTableMap& thetaEnergyCorrectionTableMap(GetThetaEnergyCorrectionTableMap());
-
-  return (thetaEnergyCorrectionTableMap.end() !=
-          thetaEnergyCorrectionTableMap.find(ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType)));
+  return GetThetaEnergyCorrectionTableMap().contains(ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
