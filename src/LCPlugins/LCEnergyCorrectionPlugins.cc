@@ -214,7 +214,7 @@ pandora::StatusCode
 LCEnergyCorrectionPlugins::NonLinearityCorrection::MakeEnergyCorrections(const pandora::Cluster* const pCluster,
                                                                          float& correctedEnergy) const {
   if (m_thetaEnergyTable) {
-    if (NULL == pCluster)
+    if (pCluster)
       return pandora::STATUS_CODE_SUCCESS;
 
     const CartesianVector& clusterDirection(pCluster->GetFitToAllHitsResult().IsFitSuccessful()
