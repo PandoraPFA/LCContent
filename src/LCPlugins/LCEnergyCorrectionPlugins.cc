@@ -126,7 +126,7 @@ void LCEnergyCorrectionPlugins::RegisterThetaEnergyCorrection(const Pandora& pan
 void LCEnergyCorrectionPlugins::ForgetThetaEnergyCorrections(const Pandora& pandora) {
   ThetaEnergyCorrectionTableMap& thetaEnergyCorrectionTableMap(GetThetaEnergyCorrectionTableMap());
 
-  for (ThetaEnergyCorrectionTableMap::iterator iter = thetaEnergyCorrectionTableMap.begin();
+  for (auto iter = thetaEnergyCorrectionTableMap.begin();
        iter != thetaEnergyCorrectionTableMap.end();) {
     if (&pandora == std::get<0>(iter->first)) {
       iter = thetaEnergyCorrectionTableMap.erase(iter);
