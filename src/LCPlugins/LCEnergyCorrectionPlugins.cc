@@ -86,9 +86,9 @@ int LCEnergyCorrectionPlugins::ThetaEnergyTable::FindBin(const FloatVector& edge
     return static_cast<int>(edges.size() - 2);
   }
 
-  for (unsigned int i = 0; i + 1 < edges.size(); ++i) {
-    if ((edges.at(i) <= value) && (value < edges.at(i + 1)))
-      return static_cast<int>(i);
+  auto it = std::upper_bound(edges.begin(), edges.end(), value);
+  if (it != edges.begin() && it != edges.end()) {
+    return static_cast<int>(std::distance(edges.begin(), it) - 1);
   }
 
   return -1;
