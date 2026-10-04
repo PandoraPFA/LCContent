@@ -126,8 +126,7 @@ void LCEnergyCorrectionPlugins::RegisterThetaEnergyCorrection(const Pandora& pan
 void LCEnergyCorrectionPlugins::ForgetThetaEnergyCorrections(const Pandora& pandora) {
   ThetaEnergyCorrectionTableMap& thetaEnergyCorrectionTableMap(GetThetaEnergyCorrectionTableMap());
 
-  for (auto iter = thetaEnergyCorrectionTableMap.begin();
-       iter != thetaEnergyCorrectionTableMap.end();) {
+  for (auto iter = thetaEnergyCorrectionTableMap.begin(); iter != thetaEnergyCorrectionTableMap.end();) {
     if (&pandora == std::get<0>(iter->first)) {
       iter = thetaEnergyCorrectionTableMap.erase(iter);
     } else {
@@ -158,8 +157,7 @@ float LCEnergyCorrectionPlugins::GetThetaEnergyCorrectedEnergy(const Pandora& pa
     return energy;
 
   const auto& thetaEnergyCorrectionTableMap(GetThetaEnergyCorrectionTableMap());
-  const auto iter(
-      thetaEnergyCorrectionTableMap.find(ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType)));
+  const auto iter(thetaEnergyCorrectionTableMap.find(ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType)));
 
   if (thetaEnergyCorrectionTableMap.end() == iter)
     return energy;
@@ -214,7 +212,7 @@ pandora::StatusCode
 LCEnergyCorrectionPlugins::NonLinearityCorrection::MakeEnergyCorrections(const pandora::Cluster* const pCluster,
                                                                          float& correctedEnergy) const {
   if (m_thetaEnergyTable) {
-    if (pCluster)
+    if (!pCluster)
       return pandora::STATUS_CODE_SUCCESS;
 
     const CartesianVector& clusterDirection(pCluster->GetFitToAllHitsResult().IsFitSuccessful()
