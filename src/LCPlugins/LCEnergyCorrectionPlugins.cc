@@ -12,9 +12,156 @@
 
 #include "LCPlugins/LCEnergyCorrectionPlugins.h"
 
+#include <map>
+#include <tuple>
+
 using namespace pandora;
 
 namespace lc_content {
+
+namespace {
+
+  typedef std::tuple<const Pandora*, std::string, EnergyCorrectionType> ThetaEnergyCorrectionKey;
+  typedef std::map<ThetaEnergyCorrectionKey, LCEnergyCorrectionPlugins::ThetaEnergyTable> ThetaEnergyCorrectionTableMap;
+
+  ThetaEnergyCorrectionTableMap& GetThetaEnergyCorrectionTableMap() {
+    static ThetaEnergyCorrectionTableMap thetaEnergyCorrectionTableMap;
+    return thetaEnergyCorrectionTableMap;
+  }
+
+} // namespace
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LCEnergyCorrectionPlugins::ThetaEnergyTable::IsStrictlyIncreasing(const FloatVector& values) {
+  if (values.size() < 2)
+    return false;
+
+  return std::ranges::adjacent_find(values, std::greater_equal<>{}) == std::ranges::end(values);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LCEnergyCorrectionPlugins::ThetaEnergyTable::IsValid(const FloatVector& thetaBinEdges,
+                                                          const FloatVector& energyBinEdges,
+                                                          const FloatVector& scaleFactors) {
+  if (!IsStrictlyIncreasing(thetaBinEdges) || !IsStrictlyIncreasing(energyBinEdges))
+    return false;
+
+  const unsigned int nThetaBins(thetaBinEdges.size() - 1);
+  const unsigned int nEnergyBins(energyBinEdges.size() - 1);
+
+  return ((0 != nThetaBins) && (0 != nEnergyBins) && (nThetaBins * nEnergyBins == scaleFactors.size()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LCEnergyCorrectionPlugins::ThetaEnergyTable::ThetaEnergyTable(const FloatVector& thetaBinEdges,
+                                                              const FloatVector& energyBinEdges,
+                                                              const FloatVector& scaleFactors)
+    : m_thetaBinEdges(thetaBinEdges), m_energyBinEdges(energyBinEdges), m_scaleFactors(scaleFactors) {
+  if (!IsValid(m_thetaBinEdges, m_energyBinEdges, m_scaleFactors))
+    throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int LCEnergyCorrectionPlugins::ThetaEnergyTable::FindBin(const FloatVector& edges, const float value,
+                                                         const bool includeUpperEdge) {
+  if (edges.size() < 2)
+    return -1;
+
+  if (value < edges.front())
+    return -1;
+
+  if (value >= edges.back()) {
+    if (!includeUpperEdge)
+      return -1;
+
+    return static_cast<int>(edges.size() - 2);
+  }
+
+  auto it = std::upper_bound(edges.begin(), edges.end(), value);
+  if (it != edges.begin() && it != edges.end()) {
+    return static_cast<int>(std::distance(edges.begin(), it) - 1);
+  }
+
+  return -1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LCEnergyCorrectionPlugins::ThetaEnergyTable::GetCorrection(const float theta, const float energy) const {
+  const int thetaBin(FindBin(m_thetaBinEdges, theta, false));
+  const int energyBin(FindBin(m_energyBinEdges, energy, true));
+
+  if ((thetaBin < 0) || (energyBin < 0))
+    return 1.f;
+
+  const unsigned int nEnergyBins(m_energyBinEdges.size() - 1);
+  return m_scaleFactors.at(static_cast<unsigned int>(thetaBin) * nEnergyBins + static_cast<unsigned int>(energyBin));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LCEnergyCorrectionPlugins::RegisterThetaEnergyCorrection(const Pandora& pandora, const std::string& name,
+                                                              const EnergyCorrectionType energyCorrectionType,
+                                                              const FloatVector& thetaBinEdges,
+                                                              const FloatVector& energyBinEdges,
+                                                              const FloatVector& scaleFactors) {
+  if (!ThetaEnergyTable::IsValid(thetaBinEdges, energyBinEdges, scaleFactors))
+    throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+  GetThetaEnergyCorrectionTableMap().insert_or_assign(ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType),
+                                                      ThetaEnergyTable(thetaBinEdges, energyBinEdges, scaleFactors));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LCEnergyCorrectionPlugins::ForgetThetaEnergyCorrections(const Pandora& pandora) {
+  ThetaEnergyCorrectionTableMap& thetaEnergyCorrectionTableMap(GetThetaEnergyCorrectionTableMap());
+
+  for (auto iter = thetaEnergyCorrectionTableMap.begin(); iter != thetaEnergyCorrectionTableMap.end();) {
+    if (&pandora == std::get<0>(iter->first)) {
+      iter = thetaEnergyCorrectionTableMap.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LCEnergyCorrectionPlugins::HasThetaEnergyCorrection(const Pandora& pandora, const std::string& name,
+                                                         const EnergyCorrectionType energyCorrectionType) {
+  if (name.empty())
+    return false;
+
+  return GetThetaEnergyCorrectionTableMap().contains(ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LCEnergyCorrectionPlugins::GetThetaEnergyCorrectedEnergy(const Pandora& pandora, const std::string& name,
+                                                               const EnergyCorrectionType energyCorrectionType,
+                                                               const CartesianVector& direction, const float energy) {
+  if (name.empty())
+    return energy;
+
+  if (direction.GetMagnitude() < std::numeric_limits<float>::epsilon())
+    return energy;
+
+  const auto& thetaEnergyCorrectionTableMap(GetThetaEnergyCorrectionTableMap());
+  const auto iter(thetaEnergyCorrectionTableMap.find(ThetaEnergyCorrectionKey(&pandora, name, energyCorrectionType)));
+
+  if (thetaEnergyCorrectionTableMap.end() == iter)
+    return energy;
+
+  const float cosTheta(std::max(-1.f, std::min(1.f, direction.GetCosOpeningAngle(CartesianVector(0.f, 0.f, 1.f)))));
+  const float theta(std::acos(cosTheta));
+
+  return energy * iter->second.GetCorrection(theta, energy);
+}
 
 LCEnergyCorrectionPlugins::NonLinearityCorrection::NonLinearityCorrection(
     const FloatVector& inputEnergyCorrectionPoints, const FloatVector& outputEnergyCorrectionPoints)
@@ -40,8 +187,42 @@ LCEnergyCorrectionPlugins::NonLinearityCorrection::NonLinearityCorrection(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode LCEnergyCorrectionPlugins::NonLinearityCorrection::MakeEnergyCorrections(
-    const pandora::Cluster* const /*const pCluster*/, float& correctedEnergy) const {
+LCEnergyCorrectionPlugins::NonLinearityCorrection::NonLinearityCorrection(const FloatVector& thetaBinEdges,
+                                                                          const FloatVector& energyBinEdges,
+                                                                          const FloatVector& scaleFactors)
+    : m_thetaEnergyTable(std::in_place, thetaBinEdges, energyBinEdges, scaleFactors) {}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LCEnergyCorrectionPlugins::NonLinearityCorrection::~NonLinearityCorrection() {
+  // Discard the theta-energy tables held for this pandora instance. The plugins associated with an instance are all
+  // destroyed together, so clearing the instance's tables here leaves nothing behind once the instance goes away.
+  if (m_pPandora)
+    ForgetThetaEnergyCorrections(*m_pPandora);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::StatusCode
+LCEnergyCorrectionPlugins::NonLinearityCorrection::MakeEnergyCorrections(const pandora::Cluster* const pCluster,
+                                                                         float& correctedEnergy) const {
+  if (m_thetaEnergyTable) {
+    if (!pCluster)
+      return pandora::STATUS_CODE_SUCCESS;
+
+    const CartesianVector& clusterDirection(pCluster->GetFitToAllHitsResult().IsFitSuccessful()
+                                                ? pCluster->GetFitToAllHitsResult().GetDirection()
+                                                : pCluster->GetInitialDirection());
+
+    if (clusterDirection.GetMagnitude() < std::numeric_limits<float>::epsilon())
+      return pandora::STATUS_CODE_SUCCESS;
+
+    const float cosTheta(
+        std::max(-1.f, std::min(1.f, clusterDirection.GetCosOpeningAngle(CartesianVector(0.f, 0.f, 1.f)))));
+    correctedEnergy *= m_thetaEnergyTable->GetCorrection(std::acos(cosTheta), correctedEnergy);
+    return pandora::STATUS_CODE_SUCCESS;
+  }
+
   const unsigned int nEnergyBins(m_energyCorrections.size());
 
   if (0 == nEnergyBins)

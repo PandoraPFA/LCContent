@@ -10,6 +10,14 @@
 
 #include "Plugins/EnergyCorrectionsPlugin.h"
 
+#include <optional>
+#include <string>
+
+namespace pandora {
+class CartesianVector;
+class Pandora;
+} // namespace pandora
+
 namespace lc_content {
 
 /**
@@ -17,6 +25,113 @@ namespace lc_content {
  */
 class LCEnergyCorrectionPlugins {
 public:
+  /**
+   *  @brief  A table of energy correction factors binned in theta and energy
+   */
+  class ThetaEnergyTable {
+  public:
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  thetaBinEdges the theta bin edges, which must be strictly increasing
+     *  @param  energyBinEdges the energy bin edges, which must be strictly increasing
+     *  @param  scaleFactors the row-major correction factors, nThetaBins * nEnergyBins of them
+     *
+     *  @throw  StatusCodeException if the binning and scale factors are not self-consistent
+     */
+    ThetaEnergyTable(const pandora::FloatVector& thetaBinEdges, const pandora::FloatVector& energyBinEdges,
+                     const pandora::FloatVector& scaleFactors);
+
+    /**
+     *  @brief  Get the correction factor for a supplied theta and energy
+     *
+     *  @param  theta the polar angle
+     *  @param  energy the candidate energy
+     *
+     *  @return the correction factor, or unity if either value lies outside the binning
+     */
+    float GetCorrection(const float theta, const float energy) const;
+
+    /**
+     *  @brief  Whether a supplied binning and set of scale factors are self-consistent
+     *
+     *  @param  thetaBinEdges the theta bin edges
+     *  @param  energyBinEdges the energy bin edges
+     *  @param  scaleFactors the row-major correction factors
+     */
+    static bool IsValid(const pandora::FloatVector& thetaBinEdges, const pandora::FloatVector& energyBinEdges,
+                        const pandora::FloatVector& scaleFactors);
+
+  private:
+    /**
+     *  @brief  Find the index of the bin containing a supplied value, or -1 if it lies outside the binning
+     *
+     *  @param  edges the bin edges
+     *  @param  value the value to locate
+     *  @param  includeUpperEdge whether a value on or above the final edge belongs to the final bin
+     */
+    static int FindBin(const pandora::FloatVector& edges, const float value, const bool includeUpperEdge);
+
+    /**
+     *  @brief  Whether a supplied set of values is strictly increasing
+     */
+    static bool IsStrictlyIncreasing(const pandora::FloatVector& values);
+
+    pandora::FloatVector m_thetaBinEdges;  ///< The theta bin edges
+    pandora::FloatVector m_energyBinEdges; ///< The energy bin edges
+    pandora::FloatVector m_scaleFactors;   ///< The row-major correction factors
+  };
+
+  /**
+   *  @brief  Record a registered theta-energy correction table for direct candidate-energy evaluation
+   *
+   *  @param  pandora the pandora instance with which the energy correction plugin is registered
+   *  @param  name the name/label associated with the energy correction plugin
+   *  @param  energyCorrectionType the energy correction type
+   *  @param  thetaBinEdges the theta bin edges for the 2D lookup
+   *  @param  energyBinEdges the energy bin edges for the 2D lookup
+   *  @param  scaleFactors the row-major correction factors for the 2D lookup
+   */
+  static void RegisterThetaEnergyCorrection(const pandora::Pandora& pandora, const std::string& name,
+                                            const pandora::EnergyCorrectionType energyCorrectionType,
+                                            const pandora::FloatVector& thetaBinEdges,
+                                            const pandora::FloatVector& energyBinEdges,
+                                            const pandora::FloatVector& scaleFactors);
+
+  /**
+   *  @brief  Remove any recorded theta-energy correction tables associated with a pandora instance
+   *
+   *  @param  pandora the pandora instance whose tables should be removed
+   */
+  static void ForgetThetaEnergyCorrections(const pandora::Pandora& pandora);
+
+  /**
+   *  @brief  Whether a named theta-energy correction is registered with a pandora instance
+   *
+   *  @param  pandora the pandora instance whose table should be used
+   *  @param  name the name/label associated with the energy correction plugin
+   *  @param  energyCorrectionType the energy correction type
+   *
+   *  @return whether a matching theta-energy table is available
+   */
+  static bool HasThetaEnergyCorrection(const pandora::Pandora& pandora, const std::string& name,
+                                       const pandora::EnergyCorrectionType energyCorrectionType);
+
+  /**
+   *  @brief  Evaluate a named registered theta-energy correction for a supplied candidate energy
+   *
+   *  @param  pandora the pandora instance whose table should be used
+   *  @param  name the name/label associated with the energy correction plugin. An empty name selects no table
+   *  @param  energyCorrectionType the energy correction type
+   *  @param  direction the direction used to determine theta
+   *  @param  energy the candidate energy before theta-energy correction
+   *
+   *  @return corrected candidate energy, or the input energy if no matching theta-energy table is available
+   */
+  static float GetThetaEnergyCorrectedEnergy(const pandora::Pandora& pandora, const std::string& name,
+                                             const pandora::EnergyCorrectionType energyCorrectionType,
+                                             const pandora::CartesianVector& direction, const float energy);
+
   /**
    *   @brief  Correct cluster energy to account for non-linearities in calibration
    */
@@ -31,6 +146,21 @@ public:
     NonLinearityCorrection(const pandora::FloatVector& inputEnergyCorrectionPoints,
                            const pandora::FloatVector& outputEnergyCorrectionPoints);
 
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  thetaBinEdges the theta bin edges for the 2D lookup
+     *  @param  energyBinEdges the energy bin edges for the 2D lookup
+     *  @param  scaleFactors the row-major correction factors for the 2D lookup
+     */
+    NonLinearityCorrection(const pandora::FloatVector& thetaBinEdges, const pandora::FloatVector& energyBinEdges,
+                           const pandora::FloatVector& scaleFactors);
+
+    /**
+     *  @brief  Destructor, discarding any theta-energy tables registered with the associated pandora instance
+     */
+    ~NonLinearityCorrection();
+
     pandora::StatusCode MakeEnergyCorrections(const pandora::Cluster* const pCluster, float& correctedEnergy) const;
 
   private:
@@ -38,6 +168,7 @@ public:
 
     pandora::FloatVector m_inputEnergyCorrectionPoints; ///< The input energy points for energy correction
     pandora::FloatVector m_energyCorrections;           ///< The energy correction factors
+    std::optional<ThetaEnergyTable> m_thetaEnergyTable; ///< The theta-energy table, if this is a 2D correction
   };
 
   /**

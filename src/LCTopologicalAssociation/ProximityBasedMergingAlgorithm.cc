@@ -12,6 +12,8 @@
 #include "LCHelpers/FragmentRemovalHelper.h"
 #include "LCHelpers/SortingHelper.h"
 
+#include "LCPlugins/LCEnergyCorrectionPlugins.h"
+
 #include "LCTopologicalAssociation/ProximityBasedMergingAlgorithm.h"
 
 using namespace pandora;
@@ -20,11 +22,13 @@ namespace lc_content {
 
 ProximityBasedMergingAlgorithm::ProximityBasedMergingAlgorithm()
     : m_canMergeMinMipFraction(0.7f), m_canMergeMaxRms(5.f), m_minClusterInnerLayer(6), m_minLayerSpan(-2),
-      m_minShowerLayerSpan(-4), m_maxTrackClusterChi(2.5f), m_maxTrackClusterDChi2(1.f), m_nGenericDistanceLayers(5),
-      m_maxGenericDistance(50.f), m_nAdjacentLayersToExamine(2), m_maxParallelDistance(1000.f),
-      m_maxInnerLayerSeparation(500.f), m_clusterContactThreshold(2.f), m_minContactFraction(0.3f),
-      m_closeHitThreshold(50.f), m_minCloseHitFraction(0.2f), m_maxHelixPathlengthToDaughter(300.f),
-      m_helixDistanceNLayers(20), m_helixDistanceMaxOccupiedLayers(10), m_maxClusterHelixDistance(50.f) {}
+      m_minShowerLayerSpan(-4), m_maxTrackClusterChi(2.5f), m_maxTrackClusterDChi2(1.f),
+      m_useThetaEnergyCorrectionForTrackComparison(false), m_thetaEnergyCorrectionWarningIssued(false),
+      m_nGenericDistanceLayers(5), m_maxGenericDistance(50.f), m_nAdjacentLayersToExamine(2),
+      m_maxParallelDistance(1000.f), m_maxInnerLayerSeparation(500.f), m_clusterContactThreshold(2.f),
+      m_minContactFraction(0.3f), m_closeHitThreshold(50.f), m_minCloseHitFraction(0.2f),
+      m_maxHelixPathlengthToDaughter(300.f), m_helixDistanceNLayers(20), m_helixDistanceMaxOccupiedLayers(10),
+      m_maxClusterHelixDistance(50.f) {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -32,6 +36,16 @@ StatusCode ProximityBasedMergingAlgorithm::Run() {
   // Begin by recalculating track-cluster associations
   PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
                            PandoraContentApi::RunDaughterAlgorithm(*this, m_trackClusterAssociationAlgName));
+
+  // A named table that was never registered cannot be detected in ReadSettings, as registration may happen later, so
+  // warn once here rather than silently applying no correction.
+  if (m_useThetaEnergyCorrectionForTrackComparison && !m_thetaEnergyCorrectionWarningIssued &&
+      !LCEnergyCorrectionPlugins::HasThetaEnergyCorrection(this->GetPandora(), m_thetaEnergyCorrectionName,
+                                                           pandora::HADRONIC)) {
+    std::cout << "ProximityBasedMergingAlgorithm: no theta-energy correction registered with name '"
+              << m_thetaEnergyCorrectionName << "', track comparison energies will be left uncorrected" << std::endl;
+    m_thetaEnergyCorrectionWarningIssued = true;
+  }
 
   const ClusterList* pClusterList = NULL;
   PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
@@ -116,10 +130,26 @@ StatusCode ProximityBasedMergingAlgorithm::Run() {
         if (sigmaE < std::numeric_limits<float>::epsilon())
           return STATUS_CODE_FAILURE;
 
-        const float clusterEnergySum = (daughterHadronicEnergy + parentHadronicEnergy);
+        float parentTrackComparisonEnergy(parentHadronicEnergy);
+        float clusterEnergySum(parentHadronicEnergy + daughterHadronicEnergy);
+
+        if (m_useThetaEnergyCorrectionForTrackComparison) {
+          // Use the parent direction as the merged-cluster direction estimate for this daughter-candidate test. The
+          // parent and merged energies are each corrected for their own energy, so the two factors can differ.
+          // chi0 then compares the corrected parent, and chi the corrected merged cluster, against the track energy.
+          const CartesianVector& parentDirection(pParentCluster->GetFitToAllHitsResult().IsFitSuccessful()
+                                                     ? pParentCluster->GetFitToAllHitsResult().GetDirection()
+                                                     : pParentCluster->GetInitialDirection());
+
+          parentTrackComparisonEnergy = LCEnergyCorrectionPlugins::GetThetaEnergyCorrectedEnergy(
+              this->GetPandora(), m_thetaEnergyCorrectionName, pandora::HADRONIC, parentDirection,
+              parentTrackComparisonEnergy);
+          clusterEnergySum = LCEnergyCorrectionPlugins::GetThetaEnergyCorrectedEnergy(
+              this->GetPandora(), m_thetaEnergyCorrectionName, pandora::HADRONIC, parentDirection, clusterEnergySum);
+        }
 
         const float chi((clusterEnergySum - trackEnergySum) / sigmaE);
-        const float chi0((parentHadronicEnergy - trackEnergySum) / sigmaE);
+        const float chi0((parentTrackComparisonEnergy - trackEnergySum) / sigmaE);
 
         if ((chi > m_maxTrackClusterChi) || ((chi * chi - chi0 * chi0) > m_maxTrackClusterDChi2))
           continue;
@@ -319,6 +349,19 @@ StatusCode ProximityBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
   PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
                                   XmlHelper::ReadValue(xmlHandle, "MaxTrackClusterDChi2", m_maxTrackClusterDChi2));
+
+  PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                  XmlHelper::ReadValue(xmlHandle, "UseThetaEnergyCorrectionForTrackComparison",
+                                                       m_useThetaEnergyCorrectionForTrackComparison));
+
+  PANDORA_RETURN_RESULT_IF_AND_IF(
+      STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+      XmlHelper::ReadValue(xmlHandle, "ThetaEnergyCorrectionName", m_thetaEnergyCorrectionName));
+
+  // The correction can only be applied if a table has been named, so reject the combination outright rather than
+  // letting the flag silently do nothing.
+  if (m_useThetaEnergyCorrectionForTrackComparison && m_thetaEnergyCorrectionName.empty())
+    return STATUS_CODE_INVALID_PARAMETER;
 
   PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
                                   XmlHelper::ReadValue(xmlHandle, "NGenericDistanceLayers", m_nGenericDistanceLayers));

@@ -11,6 +11,8 @@
 #include "LCHelpers/ClusterHelper.h"
 #include "LCHelpers/SortingHelper.h"
 
+#include "LCPlugins/LCEnergyCorrectionPlugins.h"
+
 #include "LCTopologicalAssociation/ConeBasedMergingAlgorithm.h"
 
 using namespace pandora;
@@ -21,7 +23,8 @@ ConeBasedMergingAlgorithm::ConeBasedMergingAlgorithm()
     : m_canMergeMinMipFraction(0.7f), m_canMergeMaxRms(5.f), m_minHitsInCluster(6), m_minLayersToShowerStart(4),
       m_minConeFraction(0.5f), m_maxInnerLayerSeparation(1000.f), m_maxInnerLayerSeparationNoTrack(250.f),
       m_coneCosineHalfAngle(0.9f), m_minDaughterHadronicEnergy(1.f), m_maxTrackClusterChi(2.5f),
-      m_maxTrackClusterDChi2(1.f), m_minCosConeAngleWrtRadial(0.25f), m_cosConeAngleWrtRadialCut1(0.5f),
+      m_maxTrackClusterDChi2(1.f), m_useThetaEnergyCorrectionForTrackComparison(false),
+      m_thetaEnergyCorrectionWarningIssued(false), m_minCosConeAngleWrtRadial(0.25f), m_cosConeAngleWrtRadialCut1(0.5f),
       m_minHitSeparationCut1(std::sqrt(1000.f)), m_cosConeAngleWrtRadialCut2(0.75f),
       m_minHitSeparationCut2(std::sqrt(1500.f)) {}
 
@@ -31,6 +34,16 @@ StatusCode ConeBasedMergingAlgorithm::Run() {
   // Begin by recalculating track-cluster associations
   PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
                            PandoraContentApi::RunDaughterAlgorithm(*this, m_trackClusterAssociationAlgName));
+
+  // A named table that was never registered cannot be detected in ReadSettings, as registration may happen later, so
+  // warn once here rather than silently applying no correction.
+  if (m_useThetaEnergyCorrectionForTrackComparison && !m_thetaEnergyCorrectionWarningIssued &&
+      !LCEnergyCorrectionPlugins::HasThetaEnergyCorrection(this->GetPandora(), m_thetaEnergyCorrectionName,
+                                                           pandora::HADRONIC)) {
+    std::cout << "ConeBasedMergingAlgorithm: no theta-energy correction registered with name '"
+              << m_thetaEnergyCorrectionName << "', track comparison energies will be left uncorrected" << std::endl;
+    m_thetaEnergyCorrectionWarningIssued = true;
+  }
 
   // Then prepare clusters for this merging algorithm
   ClusterVector daughterVector;
@@ -117,10 +130,25 @@ StatusCode ConeBasedMergingAlgorithm::Run() {
       if (sigmaE < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_FAILURE;
 
-      const float clusterEnergySum = (pBestParentCluster->GetHadronicEnergy() + pDaughterCluster->GetHadronicEnergy());
+      float parentHadronicEnergy(pBestParentCluster->GetHadronicEnergy());
+      float mergedHadronicEnergy(parentHadronicEnergy + pDaughterCluster->GetHadronicEnergy());
 
-      const float chi((clusterEnergySum - trackEnergySum) / sigmaE);
-      const float chi0((pBestParentCluster->GetHadronicEnergy() - trackEnergySum) / sigmaE);
+      if (m_useThetaEnergyCorrectionForTrackComparison) {
+        // Use the parent direction as the merged-cluster direction estimate; the daughter has passed the parent-cone
+        // test. The parent and merged energies are each corrected for their own energy, so the two factors can differ.
+        // chi0 then compares the corrected parent, and chi the corrected merged cluster, against the track energy.
+        const CartesianVector& parentDirection(pBestParentCluster->GetFitToAllHitsResult().IsFitSuccessful()
+                                                   ? pBestParentCluster->GetFitToAllHitsResult().GetDirection()
+                                                   : pBestParentCluster->GetInitialDirection());
+
+        parentHadronicEnergy = LCEnergyCorrectionPlugins::GetThetaEnergyCorrectedEnergy(
+            this->GetPandora(), m_thetaEnergyCorrectionName, pandora::HADRONIC, parentDirection, parentHadronicEnergy);
+        mergedHadronicEnergy = LCEnergyCorrectionPlugins::GetThetaEnergyCorrectedEnergy(
+            this->GetPandora(), m_thetaEnergyCorrectionName, pandora::HADRONIC, parentDirection, mergedHadronicEnergy);
+      }
+
+      const float chi((mergedHadronicEnergy - trackEnergySum) / sigmaE);
+      const float chi0((parentHadronicEnergy - trackEnergySum) / sigmaE);
 
       if (pDaughterCluster->GetHadronicEnergy() > m_minDaughterHadronicEnergy) {
         if ((chi > m_maxTrackClusterChi) || ((chi * chi - chi0 * chi0) > m_maxTrackClusterDChi2))
@@ -296,6 +324,19 @@ StatusCode ConeBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle) 
 
   PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
                                   XmlHelper::ReadValue(xmlHandle, "MaxTrackClusterDChi2", m_maxTrackClusterDChi2));
+
+  PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                  XmlHelper::ReadValue(xmlHandle, "UseThetaEnergyCorrectionForTrackComparison",
+                                                       m_useThetaEnergyCorrectionForTrackComparison));
+
+  PANDORA_RETURN_RESULT_IF_AND_IF(
+      STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+      XmlHelper::ReadValue(xmlHandle, "ThetaEnergyCorrectionName", m_thetaEnergyCorrectionName));
+
+  // The correction can only be applied if a table has been named, so reject the combination outright rather than
+  // letting the flag silently do nothing.
+  if (m_useThetaEnergyCorrectionForTrackComparison && m_thetaEnergyCorrectionName.empty())
+    return STATUS_CODE_INVALID_PARAMETER;
 
   PANDORA_RETURN_RESULT_IF_AND_IF(
       STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
