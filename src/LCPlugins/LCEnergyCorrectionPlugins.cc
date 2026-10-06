@@ -37,12 +37,7 @@ bool LCEnergyCorrectionPlugins::ThetaEnergyTable::IsStrictlyIncreasing(const Flo
   if (values.size() < 2)
     return false;
 
-  for (unsigned int i = 1; i < values.size(); ++i) {
-    if (values.at(i) <= values.at(i - 1))
-      return false;
-  }
-
-  return true;
+  return std::ranges::adjacent_find(values, std::greater_equal<>{}) == std::ranges::end(values);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
