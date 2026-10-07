@@ -25,10 +25,10 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7
 
       - name: Clone PandoraSDK master
-        uses: actions/checkout@v7
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7
         with:
           repository: PandoraPFA/PandoraSDK
           path: PandoraSDK
@@ -40,7 +40,7 @@ jobs:
       - shell: bash
         run: echo "NOW=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@3edfce9056124e459a23f683a21433670d47daca # v5
         with:
           path: /home/runner/.cache/ccache
           key: ccache-pandorasdk-master-${{ env.NOW }}
@@ -101,7 +101,7 @@ jobs:
 
       - name: Upload CTest logs
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: CTest logs_pandorasdk-master_run${{ github.run_id }}_attempt${{ github.run_attempt }}
           path: |
