@@ -151,7 +151,8 @@ inline pandora::StatusCode LCTrackFactory::Read(Parameters& parameters, const pa
   PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fields.Get("numberOfTrackStates", nTrackStates));
   for (int i = 0; i < nTrackStates; ++i) {
     pandora::TrackState trackState(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fields.Get("trackState" + std::to_string(i), trackState));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=,
+                             fields.Get("trackState" + std::to_string(i), trackState));
     trackStates.push_back(pandora::InputTrackState(trackState));
   }
 
