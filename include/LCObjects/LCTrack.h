@@ -14,10 +14,21 @@
 #include "Pandora/ObjectCreation.h"
 #include "Pandora/PandoraObjectFactories.h"
 
+// PandoraSDK v03 replaced the FileReader/FileWriter object factory interface with a FieldMap based one
+#if defined(__has_include)
+#if __has_include("Persistency/FieldMap.h")
+#define LC_PANDORA_FIELD_MAP_PERSISTENCY 1
+#endif
+#endif
+
+#ifdef LC_PANDORA_FIELD_MAP_PERSISTENCY
+#include "Persistency/FieldMap.h"
+#else
 #include "Persistency/BinaryFileReader.h"
 #include "Persistency/BinaryFileWriter.h"
 #include "Persistency/XmlFileReader.h"
 #include "Persistency/XmlFileWriter.h"
+#endif
 
 namespace lc_content {
 
@@ -60,6 +71,23 @@ public:
    */
   Parameters* NewParameters() const;
 
+#ifdef LC_PANDORA_FIELD_MAP_PERSISTENCY
+  /**
+   *  @brief  Read any additional (derived class only) object parameters from the supplied field map
+   *
+   *  @param  parameters the parameters to pass in constructor
+   *  @param  fields the field map, used to extract any additional parameters
+   */
+  pandora::StatusCode Read(Parameters&, const pandora::FieldMap&) const;
+
+  /**
+   *  @brief  Persist any additional (derived class only) object parameters into the supplied field map
+   *
+   *  @param  pObject the address of the object to persist
+   *  @param  fields the field map to receive the additional parameters
+   */
+  pandora::StatusCode Write(const Object* const, pandora::FieldMap&) const;
+#else
   /**
    *  @brief  Read any additional (derived class only) object parameters from file using the specified file reader
    *
@@ -75,6 +103,7 @@ public:
    *  @param  fileWriter the file writer
    */
   pandora::StatusCode Write(const Object* const, pandora::FileWriter&) const;
+#endif
 
   /**
    *  @brief  Create an object with the given parameters
@@ -115,6 +144,40 @@ inline pandora::StatusCode LCTrackFactory::Create(const Parameters& parameters, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+#ifdef LC_PANDORA_FIELD_MAP_PERSISTENCY
+inline pandora::StatusCode LCTrackFactory::Read(Parameters& parameters, const pandora::FieldMap& fields) const {
+  LCInputTrackStates trackStates;
+  int nTrackStates(0);
+  PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fields.Get("numberOfTrackStates", nTrackStates));
+  for (int i = 0; i < nTrackStates; ++i) {
+    pandora::TrackState trackState(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fields.Get("trackState" + std::to_string(i), trackState));
+    trackStates.push_back(pandora::InputTrackState(trackState));
+  }
+
+  LCTrackParameters& lcTrackParameters(dynamic_cast<LCTrackParameters&>(parameters));
+  lcTrackParameters.m_trackStates = trackStates;
+
+  return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::StatusCode LCTrackFactory::Write(const Object* const pObject, pandora::FieldMap& fields) const {
+  const LCTrack* const pLCTrack(dynamic_cast<const LCTrack*>(pObject));
+
+  if (!pLCTrack)
+    return pandora::STATUS_CODE_INVALID_PARAMETER;
+
+  const LCTrackStates& trackStates = pLCTrack->GetTrackStates();
+  fields.Set("numberOfTrackStates", static_cast<int>(trackStates.size()));
+  for (std::size_t i = 0; i < trackStates.size(); ++i) {
+    fields.Set("trackState" + std::to_string(i), trackStates[i]);
+  }
+
+  return pandora::STATUS_CODE_SUCCESS;
+}
+#else
 inline pandora::StatusCode LCTrackFactory::Read(Parameters& parameters, pandora::FileReader& fileReader) const {
   // ATTN: To receive this call-back must have already set file reader track factory to this factory
   LCInputTrackStates trackStates;
@@ -185,6 +248,7 @@ inline pandora::StatusCode LCTrackFactory::Write(const Object* const pObject, pa
 
   return pandora::STATUS_CODE_SUCCESS;
 }
+#endif
 
 } // namespace lc_content
 
