@@ -60,6 +60,7 @@ jobs:
           set -e
           source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
           declare -p | grep -Ev 'BASHOPTS|BASH_VERSINFO|EUID|PPID|SHELLOPTS|UID' > /env.sh
+          declare -f >> /env.sh
           echo cd $GITHUB_WORKSPACE >> /env.sh
 
       - name: Build PandoraSDK from master
