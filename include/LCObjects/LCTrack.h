@@ -15,10 +15,8 @@
 #include "Pandora/PandoraObjectFactories.h"
 
 // PandoraSDK v03 replaced the FileReader/FileWriter object factory interface with a FieldMap based one
-#if defined(__has_include)
 #if __has_include("Persistency/FieldMap.h")
 #define LC_PANDORA_FIELD_MAP_PERSISTENCY 1
-#endif
 #endif
 
 #ifdef LC_PANDORA_FIELD_MAP_PERSISTENCY
