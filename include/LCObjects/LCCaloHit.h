@@ -13,6 +13,15 @@
 #include "Pandora/ObjectCreation.h"
 #include "Pandora/ObjectFactory.h"
 
+// PandoraSDK v03 replaced the FileReader/FileWriter object factory interface with a FieldMap based one
+#if __has_include("Persistency/FieldMap.h")
+#define LC_PANDORA_FIELD_MAP_PERSISTENCY 1
+#endif
+
+#ifdef LC_PANDORA_FIELD_MAP_PERSISTENCY
+#include "Persistency/FieldMap.h"
+#endif
+
 namespace lc_content {
 
 /**
@@ -55,6 +64,23 @@ public:
    */
   Parameters* NewParameters() const { return (new LCCaloHitParameters); }
 
+#ifdef LC_PANDORA_FIELD_MAP_PERSISTENCY
+  /**
+   *  @brief  Read any additional (derived class only) object parameters from the supplied field map
+   *
+   *  @param  parameters the parameters to pass in constructor
+   *  @param  fields the field map, used to extract any additional parameters
+   */
+  pandora::StatusCode Read(Parameters&, const pandora::FieldMap&) const { return pandora::STATUS_CODE_SUCCESS; }
+
+  /**
+   *  @brief  Persist any additional (derived class only) object parameters into the supplied field map
+   *
+   *  @param  pObject the address of the object to persist
+   *  @param  fields the field map to receive the additional parameters
+   */
+  pandora::StatusCode Write(const Object* const, pandora::FieldMap&) const { return pandora::STATUS_CODE_SUCCESS; }
+#else
   /**
    *  @brief  Read any additional (derived class only) object parameters from file using the specified file reader
    *
@@ -70,6 +96,7 @@ public:
    *  @param  fileWriter the file writer
    */
   pandora::StatusCode Write(const Object* const, pandora::FileWriter&) const { return pandora::STATUS_CODE_SUCCESS; }
+#endif
 
   /**
    *  @brief  Create an object with the given parameters
@@ -98,6 +125,23 @@ public:
    */
   Parameters* NewParameters() const { return (new object_creation::CaloHitFragment::Parameters); }
 
+#ifdef LC_PANDORA_FIELD_MAP_PERSISTENCY
+  /**
+   *  @brief  Read any additional (derived class only) object parameters from the supplied field map
+   *
+   *  @param  parameters the parameters to pass in constructor
+   *  @param  fields the field map, used to extract any additional parameters
+   */
+  pandora::StatusCode Read(Parameters&, const pandora::FieldMap&) const { return pandora::STATUS_CODE_SUCCESS; }
+
+  /**
+   *  @brief  Persist any additional (derived class only) object parameters into the supplied field map
+   *
+   *  @param  pObject the address of the object to persist
+   *  @param  fields the field map to receive the additional parameters
+   */
+  pandora::StatusCode Write(const Object* const, pandora::FieldMap&) const { return pandora::STATUS_CODE_SUCCESS; }
+#else
   /**
    *  @brief  Read any additional (derived class only) object parameters from file using the specified file reader
    *
@@ -113,6 +157,7 @@ public:
    *  @param  fileWriter the file writer
    */
   pandora::StatusCode Write(const Object* const, pandora::FileWriter&) const { return pandora::STATUS_CODE_SUCCESS; }
+#endif
 
   /**
    *  @brief  Create an object with the given parameters
