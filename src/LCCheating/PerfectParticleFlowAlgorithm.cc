@@ -177,9 +177,9 @@ void PerfectParticleFlowAlgorithm::FullCaloHitCollection(const MCParticle* const
     const bool shouldFragment(weightFraction + m_minWeightFraction - 1.f < std::numeric_limits<float>::epsilon());
 
     if (shouldFragment)
-      PANDORA_THROW_RESULT_IF(
-          STATUS_CODE_SUCCESS, !=,
-          PandoraContentApi::Fragment(*this, pLocalCaloHit, weightFraction, pCaloHitToAdd, pLocalCaloHit));
+      PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                              PandoraContentApi::Fragment(*this, pLocalCaloHit, weightFraction, pCaloHitToAdd,
+                                                          pLocalCaloHit, m_caloHitFragmentFactory));
 
     caloHitList.push_back(pCaloHitToAdd);
   }
