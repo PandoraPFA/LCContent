@@ -10,6 +10,8 @@
 
 #include "LCObjects/LCTrack.h"
 
+#include "Persistency/FileWriter.h"
+
 using namespace pandora;
 
 namespace lc_content {
