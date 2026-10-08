@@ -8,6 +8,7 @@
 
 #include "LCPersistency/LCEventReadingAlgorithm.h"
 
+#include "LCObjects/LCCaloHit.h"
 #include "LCObjects/LCTrack.h"
 
 #include "Persistency/FileReader.h"
@@ -30,6 +31,7 @@ StatusCode LCEventReadingAlgorithm::Initialize() {
   if (STATUS_CODE_SUCCESS != statusCode)
     return statusCode;
 
+  m_pEventFileReader->SetFactory(new LCCaloHitFactory);
   m_pEventFileReader->SetFactory(new LCTrackFactory);
 
   return STATUS_CODE_SUCCESS;

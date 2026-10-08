@@ -12,6 +12,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LCObjects/LCCaloHit.h"
+
 namespace lc_content {
 
 /**
@@ -113,6 +115,8 @@ private:
   std::string m_outputClusterListName; ///< The output cluster list name
   bool m_simpleCaloHitCollection;      ///< Whether to use simple calo hit collection mechanism, or full mechanism
   float m_minWeightFraction;           ///< The minimum mc particle calo hit weight for hit fragmentation
+
+  LCCaloHitFragmentFactory m_caloHitFragmentFactory; ///< Factory retaining the LCCaloHit type when fragmenting hits
 };
 
 } // namespace lc_content

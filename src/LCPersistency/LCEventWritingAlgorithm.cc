@@ -8,6 +8,7 @@
 
 #include "LCPersistency/LCEventWritingAlgorithm.h"
 
+#include "LCObjects/LCCaloHit.h"
 #include "LCObjects/LCTrack.h"
 
 #include "Persistency/FileWriter.h"
@@ -30,6 +31,7 @@ StatusCode LCEventWritingAlgorithm::Initialize() {
   if (STATUS_CODE_SUCCESS != statusCode)
     return statusCode;
 
+  m_pEventFileWriter->SetFactory(new LCCaloHitFactory);
   m_pEventFileWriter->SetFactory(new LCTrackFactory);
 
   return STATUS_CODE_SUCCESS;
