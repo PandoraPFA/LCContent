@@ -53,7 +53,8 @@ public:
     float GetCorrection(const float theta, const float energy) const;
 
     /**
-     *  @brief  Whether a supplied binning and set of scale factors are self-consistent
+     *  @brief  Whether a supplied binning and set of scale factors are self-consistent, with every scale factor
+     *          finite and positive
      *
      *  @param  thetaBinEdges the theta bin edges
      *  @param  energyBinEdges the energy bin edges
@@ -73,7 +74,7 @@ public:
     static int FindBin(const pandora::FloatVector& edges, const float value, const bool includeUpperEdge);
 
     /**
-     *  @brief  Whether a supplied set of values is strictly increasing
+     *  @brief  Whether a supplied set of values is finite and strictly increasing
      */
     static bool IsStrictlyIncreasing(const pandora::FloatVector& values);
 

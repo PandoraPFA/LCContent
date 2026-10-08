@@ -12,6 +12,7 @@
 
 #include "LCPlugins/LCEnergyCorrectionPlugins.h"
 
+#include <cmath>
 #include <map>
 #include <tuple>
 
@@ -37,6 +38,9 @@ bool LCEnergyCorrectionPlugins::ThetaEnergyTable::IsStrictlyIncreasing(const Flo
   if (values.size() < 2)
     return false;
 
+  if (!std::ranges::all_of(values, [](const float value) { return std::isfinite(value); }))
+    return false;
+
   return std::ranges::adjacent_find(values, std::greater_equal<>{}) == std::ranges::end(values);
 }
 
@@ -51,7 +55,10 @@ bool LCEnergyCorrectionPlugins::ThetaEnergyTable::IsValid(const FloatVector& the
   const unsigned int nThetaBins(thetaBinEdges.size() - 1);
   const unsigned int nEnergyBins(energyBinEdges.size() - 1);
 
-  return ((0 != nThetaBins) && (0 != nEnergyBins) && (nThetaBins * nEnergyBins == scaleFactors.size()));
+  if ((0 == nThetaBins) || (0 == nEnergyBins) || (nThetaBins * nEnergyBins != scaleFactors.size()))
+    return false;
+
+  return std::ranges::all_of(scaleFactors, [](const float scale) { return std::isfinite(scale) && (scale > 0.f); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
